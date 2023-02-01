@@ -1,10 +1,8 @@
 /**
  * This example creates a new voting event
  */
+require('dotenv').config({ path: '../.env' });
 const getUnlockedManager = require('./account-manager');
-
-// Replace with an event id published to the Tangle
-const EVENT_ID = '0x7ba318a26a1f639389a3428f159f40aebbcc776a4f8ca17de4fa45221ac79fbd'
 
 async function run() {
     try {
@@ -12,10 +10,14 @@ async function run() {
 
         const account = await manager.getAccount('0');
 
+        const eventIds = await account.getParticipationEventIds();
+        console.log('Event ids from the node:', eventIds)
+        let EVENT_ID = eventIds[0]
+
         // store the event information from a node locally
         await account.registerParticipationEvent(
             EVENT_ID,
-            [{ url: 'https://api.testnet.shimmer.network' }]
+            [{ url: process.env.NODE_URL }]
         )
 
         // get the participation events that are stored in wallet.rs

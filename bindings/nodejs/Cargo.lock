@@ -1067,7 +1067,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "2.0.1-rc.5"
-source = "git+https://github.com/iotaledger/iota.rs?rev=eb49a5e77d717919bf7cf755070a2781b266a5c8#eb49a5e77d717919bf7cf755070a2781b266a5c8"
+source = "git+https://github.com/iotaledger/iota.rs?rev=767eb0e3d2e3ac7a4653a736b5ca20f8ff0b3dd1#767eb0e3d2e3ac7a4653a736b5ca20f8ff0b3dd1"
 dependencies = [
  "async-trait",
  "backtrace",
@@ -1149,7 +1149,7 @@ dependencies = [
 [[package]]
 name = "iota-pow"
 version = "1.0.0-rc.2"
-source = "git+https://github.com/iotaledger/iota.rs?rev=eb49a5e77d717919bf7cf755070a2781b266a5c8#eb49a5e77d717919bf7cf755070a2781b266a5c8"
+source = "git+https://github.com/iotaledger/iota.rs?rev=767eb0e3d2e3ac7a4653a736b5ca20f8ff0b3dd1#767eb0e3d2e3ac7a4653a736b5ca20f8ff0b3dd1"
 dependencies = [
  "instant",
  "iota-crypto",
@@ -1160,7 +1160,7 @@ dependencies = [
 [[package]]
 name = "iota-types"
 version = "1.0.0-rc.4"
-source = "git+https://github.com/iotaledger/iota.rs?rev=eb49a5e77d717919bf7cf755070a2781b266a5c8#eb49a5e77d717919bf7cf755070a2781b266a5c8"
+source = "git+https://github.com/iotaledger/iota.rs?rev=767eb0e3d2e3ac7a4653a736b5ca20f8ff0b3dd1#767eb0e3d2e3ac7a4653a736b5ca20f8ff0b3dd1"
 dependencies = [
  "bech32 0.9.1",
  "bitflags",
