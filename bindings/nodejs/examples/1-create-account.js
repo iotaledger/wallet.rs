@@ -28,7 +28,7 @@ async function createAccountManager() {
     const accountManagerOptions = {
         storagePath: './alice-database',
         clientOptions: {
-            nodes: ['https://api.testnet.shimmer.network'],
+            nodes: [process.env.NODE_URL],
             localPow: true,
         },
         coinType: CoinType.Shimmer,

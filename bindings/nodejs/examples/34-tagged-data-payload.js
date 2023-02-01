@@ -13,7 +13,7 @@ async function run() {
         //TODO: Replace with the address of your choice!
         const address =
             'rms1qrrv7flg6lz5cssvzv2lsdt8c673khad060l4quev6q09tkm9mgtupgf0h0';
-        const amount = '1000000';
+        const amount = '500000';
 
         const response = await account.sendAmount([
             {
@@ -32,7 +32,7 @@ async function run() {
         console.log(response);
 
         console.log(
-            `Check your block on http://localhost:14265/api/core/v2/blocks/${response.blockId}`,
+            `Check your block on ${process.env.NODE_URL}/api/core/v2/blocks/${response.blockId}`,
         );
     } catch (error) {
         console.log('Error: ', error);

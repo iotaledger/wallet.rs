@@ -436,7 +436,10 @@ pub enum AccountMethod {
     },
     /// Expected response: [`ParticipationEventIds`](crate::message_interface::Response::ParticipationEventIds)
     #[cfg(feature = "participation")]
-    GetParticipationEventIds(Option<ParticipationEventType>),
+    GetParticipationEventIds {
+        #[serde(rename = "eventType")]
+        event_type: Option<ParticipationEventType>,
+    },
     /// Expected response: [`ParticipationEventStatus`](crate::message_interface::Response::ParticipationEventStatus)
     #[cfg(feature = "participation")]
     GetParticipationEventStatus {
