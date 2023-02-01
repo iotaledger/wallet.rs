@@ -82,6 +82,7 @@ jobs:
         working-directory: bindings/java/
         run: |
           buildGradle="$(cat build.gradle)"
+          buildGradle=$(echo $buildGradle | tr '\n' ' ')
           echo "build-gradle=$buildGradle" >> $GITHUB_OUTPUT   
 
       - name: Extract version from build.gradle
@@ -230,7 +231,8 @@ jobs:
         working-directory: bindings/java/
         run: |
           buildGradle="$(cat build.gradle)"
-          echo "build-gradle=$buildGradle" >> $GITHUB_OUTPUT   
+          buildGradle=$(echo $buildGradle | tr '\n' ' ')
+          echo "build-gradle=$buildGradle" >> $GITHUB_OUTPUT 
 
       - name: Extract version from build.gradle
         uses: actions-ecosystem/action-regex-match@v2
