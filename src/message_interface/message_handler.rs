@@ -11,6 +11,9 @@ use std::{
     time::Duration,
 };
 
+#[cfg(feature = "stronghold")]
+use std::path::PathBuf;
+
 use backtrace::Backtrace;
 use futures::{Future, FutureExt};
 use iota_client::{
