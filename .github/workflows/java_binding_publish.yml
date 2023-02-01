@@ -76,6 +76,29 @@ jobs:
           java-version: ${{ matrix.java }}
           distribution: 'temurin'
 
+      - name: Read build.gradle
+        shell: bash
+        id: read-build-gradle
+        working-directory: bindings/java/
+        run: |
+          buildGradle="$(cat build.gradle)"
+          "build-gradle=$buildGradle" >> $GITHUB_OUTPUT   
+
+      - name: Extract version from build.gradle
+        uses: actions-ecosystem/action-regex-match@v2
+        id: prepare-tag
+        working-directory: bindings/java/
+        with:
+          text: ${{ steps.read-build-gradle.outputs.build-gradle }}
+          regex: 'version = '(.*?)''
+          flags: m
+
+      - name: Construct tag
+        shell: bash
+        id: construct-tag
+        run: |
+          echo "tag=iota-wallet-java-${{ steps.prepare-tag.outputs.group1 }}-new" >> $GITHUB_OUTPUT
+
       - name: Build JAR for default target and an additional JAR that does not contain the native library
         shell: bash
         working-directory: bindings/java/
@@ -99,20 +122,6 @@ jobs:
           cd lib/build/libs/
           fileName="$(ls | grep -m 1 jar)"
           echo "FILE_NAME=$fileName" >> $GITHUB_OUTPUT
-
-      - name: Prepare tag
-        uses: actions-ecosystem/action-regex-match@v2
-        id: prepare-tag
-        with:
-          text: ${{ steps.filename.outputs.FILE_NAME }}
-          regex: '(.*)(\d.\d.\d(-rc.\d)?)'
-          flags: m
-
-      - name: Construct tag
-        shell: bash
-        id: construct-tag
-        run: |
-          echo "tag=${{ steps.prepare-tag.outputs.group1 }}java-${{ steps.prepare-tag.outputs.group2 }}-new" >> $GITHUB_OUTPUT   
 
       - name: Upload JAR to Github
         uses: softprops/action-gh-release@v1
@@ -217,6 +226,29 @@ jobs:
         run: |
           rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android
 
+      - name: Read build.gradle
+        shell: bash
+        id: read-build-gradle
+        working-directory: bindings/java/
+        run: |
+          buildGradle="$(cat build.gradle)"
+          "build-gradle=$buildGradle" >> $GITHUB_OUTPUT   
+
+      - name: Extract version from build.gradle
+        uses: actions-ecosystem/action-regex-match@v2
+        id: prepare-tag
+        working-directory: bindings/java/
+        with:
+          text: ${{ steps.read-build-gradle.outputs.build-gradle }}
+          regex: 'version = '(.*?)''
+          flags: m
+
+      - name: Construct tag
+        shell: bash
+        id: construct-tag
+        run: |
+          echo "tag=iota-wallet-java-${{ steps.prepare-tag.outputs.group1 }}-new" >> $GITHUB_OUTPUT
+
       - name: Build for the Android targets
         shell: bash
         working-directory: bindings/java/
@@ -247,6 +279,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
             bindings/java/lib/native/cargo-ndk/jniLibs.zip
-          tag_name: ${{ needs.release-desktop.outputs.tag }}
+          tag_name: ${{ steps.construct-tag.outputs.tag }}
           append_body: true
           prerelease: true
