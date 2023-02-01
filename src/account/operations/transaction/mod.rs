@@ -30,6 +30,7 @@ pub use self::options::{RemainderValueStrategy, TransactionOptions, TransactionO
 use crate::{
     account::{
         handle::AccountHandle,
+        operations::helpers::task,
         types::{InclusionState, Transaction},
     },
     iota_client::Error,

@@ -4,7 +4,7 @@
 use std::time::Instant;
 
 use crate::{
-    account::handle::AccountHandle,
+    account::{handle::AccountHandle, operations::helpers::task},
     account_manager::{AccountManager, SyncOptions},
     task,
 };
