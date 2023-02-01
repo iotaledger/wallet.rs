@@ -87,7 +87,6 @@ jobs:
       - name: Extract version from build.gradle
         uses: actions-ecosystem/action-regex-match@v2
         id: prepare-tag
-        working-directory: bindings/java/
         with:
           text: ${{ steps.read-build-gradle.outputs.build-gradle }}
           regex: 'version = '(.*?)''
@@ -237,7 +236,6 @@ jobs:
       - name: Extract version from build.gradle
         uses: actions-ecosystem/action-regex-match@v2
         id: prepare-tag
-        working-directory: bindings/java/
         with:
           text: ${{ steps.read-build-gradle.outputs.build-gradle }}
           regex: 'version = '(.*?)''
