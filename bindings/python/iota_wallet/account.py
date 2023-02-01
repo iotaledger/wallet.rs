@@ -10,7 +10,9 @@ class Account:
     def __str__(self):
         message = {
             'cmd': 'getAccount',
-            'payload': self.alias_index,
+            'payload': {
+                'accountId': self.alias_index,
+            }
         }
         return message
 

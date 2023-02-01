@@ -33,7 +33,10 @@ pub enum Message {
     },
     /// Read account.
     /// Expected response: [`Account`](crate::message_interface::Response::Account)
-    GetAccount(AccountIdentifier),
+    GetAccount {
+        #[serde(rename = "accountId")]
+        account_id: AccountIdentifier,
+    },
     /// Return the account indexes.
     /// Expected response: [`AccountIndexes`](crate::message_interface::Response::AccountIndexes)
     GetAccountIndexes,
@@ -114,10 +117,13 @@ pub enum Message {
     GenerateMnemonic,
     /// Checks if the given mnemonic is valid.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
-    VerifyMnemonic(String),
+    VerifyMnemonic { mnemonic: String },
     /// Updates the client options for all accounts.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
-    SetClientOptions(Box<ClientOptions>),
+    SetClientOptions {
+        #[serde(rename = "clientOptions")]
+        client_options: Box<ClientOptions>,
+    },
     /// Generate an address without storing it
     /// Expected response: [`Bech32Address`](crate::message_interface::Response::Bech32Address)
     GenerateAddress {
@@ -149,13 +155,16 @@ pub enum Message {
     },
     /// Set the stronghold password.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
-    SetStrongholdPassword(String),
+    SetStrongholdPassword { password: String },
     /// Set the stronghold password clear interval.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
-    SetStrongholdPasswordClearInterval(Option<u64>),
+    SetStrongholdPasswordClearInterval {
+        #[serde(rename = "intervalInMilliseconds")]
+        interval_in_milliseconds: Option<u64>,
+    },
     /// Store a mnemonic into the Stronghold vault.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
-    StoreMnemonic(String),
+    StoreMnemonic { mnemonic: String },
     /// Start background syncing.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     StartBackgroundSync {
@@ -171,10 +180,13 @@ pub enum Message {
     /// Emits an event for testing if the event system is working
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "events")]
-    EmitTestEvent(WalletEvent),
-    /// Transforms bech32 to hex
+    EmitTestEvent { event: WalletEvent },
+    /// Transforms a bech32 encoded address to hex
     /// Expected response: [`HexAddress`](crate::message_interface::Response::HexAddress)
-    Bech32ToHex(String),
+    Bech32ToHex {
+        #[serde(rename = "bech32Address")]
+        bech32_address: String,
+    },
     /// Transforms a hex encoded address to a bech32 encoded address
     /// Expected response: [`Bech32Address`](crate::message_interface::Response::Bech32Address)
     HexToBech32 {
@@ -187,7 +199,10 @@ pub enum Message {
     // Remove all listeners of this type. Empty vec clears all listeners
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "events")]
-    ClearListeners(Vec<WalletEventType>),
+    ClearListeners {
+        #[serde(rename = "eventTypes")]
+        event_types: Vec<WalletEventType>,
+    },
 }
 
 // Custom Debug implementation to not log secrets
@@ -198,7 +213,7 @@ impl Debug for Message {
                 write!(f, "CreateAccount{{ alias: {alias:?}, bech32_hrp: {bech32_hrp:?} }}")
             }
             Self::GetAccountIndexes => write!(f, "GetAccountIndexes"),
-            Self::GetAccount(identifier) => write!(f, "GetAccount({identifier:?})"),
+            Self::GetAccount { account_id } => write!(f, "GetAccount{{ account_id: {account_id:?} }}"),
             Self::GetAccounts => write!(f, "GetAccounts"),
             Self::CallAccountMethod { account_id, method } => write!(
                 f,
@@ -234,8 +249,10 @@ impl Debug for Message {
             #[cfg(feature = "stronghold")]
             Self::RestoreBackup { source, password: _ } => write!(f, "RestoreBackup{{ source: {source:?} }}"),
             Self::GenerateMnemonic => write!(f, "GenerateMnemonic"),
-            Self::VerifyMnemonic(_) => write!(f, "VerifyMnemonic(<omitted>)"),
-            Self::SetClientOptions(options) => write!(f, "SetClientOptions({options:?})"),
+            Self::VerifyMnemonic { mnemonic: _ } => write!(f, "VerifyMnemonic{{ mnemonic: <omitted> }}"),
+            Self::SetClientOptions { client_options } => {
+                write!(f, "SetClientOptions{{ client_options: {client_options:?} }}")
+            }
             #[cfg(feature = "ledger_nano")]
             Self::GetLedgerNanoStatus => write!(f, "GetLedgerNanoStatus"),
             Self::GenerateAddress {
@@ -249,11 +266,18 @@ impl Debug for Message {
                 "GenerateAddress{{ account_index: {account_index:?}, internal: {internal:?}, address_index: {address_index:?}, options: {options:?}, bech32_hrp: {bech32_hrp:?} }}"
             ),
             Self::GetNodeInfo { url, auth: _ } => write!(f, "GetNodeInfo{{ url: {url:?} }}"),
-            Self::SetStrongholdPassword(_) => write!(f, "SetStrongholdPassword(<omitted>)"),
-            Self::SetStrongholdPasswordClearInterval(interval_in_milliseconds) => {
-                write!(f, "SetStrongholdPassword({interval_in_milliseconds:?})")
+            Self::SetStrongholdPassword { password: _ } => {
+                write!(f, "SetStrongholdPassword{{  password: <omitted> }}")
             }
-            Self::StoreMnemonic(_) => write!(f, "StoreMnemonic(<omitted>)"),
+            Self::SetStrongholdPasswordClearInterval {
+                interval_in_milliseconds,
+            } => {
+                write!(
+                    f,
+                    "SetStrongholdPassword{{ interval_in_milliseconds: {interval_in_milliseconds:?} }}"
+                )
+            }
+            Self::StoreMnemonic { mnemonic: _ } => write!(f, "StoreMnemonic{{ mnemonic: <omitted> }}"),
             Self::StartBackgroundSync {
                 options,
                 interval_in_milliseconds,
@@ -263,14 +287,13 @@ impl Debug for Message {
             ),
             Self::StopBackgroundSync => write!(f, "StopBackgroundSync"),
             #[cfg(feature = "events")]
-            Self::EmitTestEvent(event) => write!(f, "EmitTestEvent({event:?})"),
-            Self::Bech32ToHex(bech32_address) => write!(f, "Bech32ToHex({bech32_address:?})"),
+            Self::EmitTestEvent { event } => write!(f, "EmitTestEvent{{ event: {event:?} }}"),
+            Self::Bech32ToHex { bech32_address } => write!(f, "Bech32ToHex{{ bech32_address: {bech32_address:?} }}"),
             Self::HexToBech32 { hex, bech32_hrp } => {
                 write!(f, "HexToBech32{{ hex: {hex:?}, bech32_hrp: {bech32_hrp:?} }}")
             }
-
             #[cfg(feature = "events")]
-            Self::ClearListeners(events) => write!(f, "ClearListeners({events:?})"),
+            Self::ClearListeners { event_types } => write!(f, "ClearListeners{{ event_types: {event_types:?} }}"),
         }
     }
 }
