@@ -39,7 +39,7 @@ use self::types::{
     AccountBalance, OutputData, Transaction,
 };
 pub use self::{
-    handle::AccountHandle,
+    handle::{AccountHandle, FilterOptions},
     operations::{
         address_generation::AddressGenerationOptions,
         output_claiming::OutputsToClaim,
@@ -97,7 +97,7 @@ pub struct Account {
     #[serde(deserialize_with = "deserialize_or_convert")]
     incoming_transactions: HashMap<TransactionId, Transaction>,
     /// Some incoming transactions can be pruned by the node before we requested them, then this node can never return
-    /// it. To avoid useless requestes these transaction ids are stored here and cleared when new client options are
+    /// it. To avoid useless requests, these transaction ids are stored here and cleared when new client options are
     /// set, because another node might still have them.
     #[serde(default)]
     inaccessible_incoming_transactions: HashSet<TransactionId>,

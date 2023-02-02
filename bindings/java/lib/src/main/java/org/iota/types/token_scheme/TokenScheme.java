@@ -10,7 +10,7 @@ import org.iota.types.transaction_essence.TransactionEssence;
 
 import java.lang.reflect.Type;
 @JsonAdapter(TokenSchemeAdapter.class)
-public abstract class TokenScheme  {}
+public abstract class TokenScheme {}
 
 class TokenSchemeAdapter implements JsonDeserializer<TokenScheme>, JsonSerializer<TokenScheme> {
     @Override

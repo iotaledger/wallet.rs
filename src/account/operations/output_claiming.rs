@@ -210,7 +210,7 @@ impl AccountHandle {
         }
 
         if outputs_to_claim.is_empty() {
-            return Err(crate::Error::CustomInputError(
+            return Err(crate::Error::CustomInput(
                 "provided outputs can't be claimed".to_string(),
             ));
         }

@@ -75,6 +75,8 @@ impl AccountHandle {
             protocol_parameters.bech32_hrp(),
             &outputs,
             burn,
+            custom_inputs.as_ref(),
+            mandatory_inputs.as_ref(),
         )?;
 
         // if custom inputs are provided we should only use them (validate if we have the outputs in this account and
@@ -83,7 +85,7 @@ impl AccountHandle {
             // Check that no input got already locked
             for input in custom_inputs.iter() {
                 if account.locked_outputs.contains(input) {
-                    return Err(crate::Error::CustomInputError(format!(
+                    return Err(crate::Error::CustomInput(format!(
                         "provided custom input {input} is already used in another transaction",
                     )));
                 }
@@ -118,7 +120,7 @@ impl AccountHandle {
             // Check that no input got already locked
             for input in mandatory_inputs.iter() {
                 if account.locked_outputs.contains(input) {
-                    return Err(crate::Error::CustomInputError(format!(
+                    return Err(crate::Error::CustomInput(format!(
                         "provided custom input {input} is already used in another transaction",
                     )));
                 }
@@ -225,21 +227,31 @@ fn filter_inputs(
     bech32_hrp: &str,
     outputs: &[Output],
     burn: Option<&Burn>,
+    custom_inputs: Option<&HashSet<OutputId>>,
+    mandatory_inputs: Option<&HashSet<OutputId>>,
 ) -> crate::Result<Vec<InputSigningData>> {
     let mut available_outputs_signing_data = Vec::new();
 
     for output_data in available_outputs {
-        let output_can_be_unlocked_now_and_in_future = can_output_be_unlocked_forever_from_now_on(
-            // We use the addresses with unspent outputs, because other addresses of the
-            // account without unspent outputs can't be related to this output
-            &account.addresses_with_unspent_outputs,
-            output_data,
-            current_time,
-        );
+        if !custom_inputs
+            .map(|inputs| inputs.contains(&output_data.output_id))
+            .unwrap_or(false)
+            && !mandatory_inputs
+                .map(|inputs| inputs.contains(&output_data.output_id))
+                .unwrap_or(false)
+        {
+            let output_can_be_unlocked_now_and_in_future = can_output_be_unlocked_forever_from_now_on(
+                // We use the addresses with unspent outputs, because other addresses of the
+                // account without unspent outputs can't be related to this output
+                &account.addresses_with_unspent_outputs,
+                output_data,
+                current_time,
+            );
 
-        // Outputs that could get unlocked in the future will not be included
-        if !output_can_be_unlocked_now_and_in_future {
-            continue;
+            // Outputs that could get unlocked in the future will not be included
+            if !output_can_be_unlocked_now_and_in_future {
+                continue;
+            }
         }
 
         // Defaults to state transition if it is not explicitly a governance transition or a burn.

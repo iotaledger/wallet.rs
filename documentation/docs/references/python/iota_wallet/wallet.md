@@ -31,7 +31,7 @@ Create a new account
 ### get\_account
 
 ```python
-def get_account(alias_index)
+def get_account(account_id)
 ```
 
 Get the account instance
@@ -39,7 +39,7 @@ Get the account instance
 ### get\_account\_data
 
 ```python
-def get_account_data(alias_index)
+def get_account_data(account_id)
 ```
 
 Get account data
@@ -59,6 +59,14 @@ def backup(destination, password)
 ```
 
 Backup storage.
+
+### bech32\_to\_hex
+
+```python
+def bech32_to_hex(bech32_address)
+```
+
+Transforms a bech32 encoded address to hex
 
 ### change\_stronghold\_password
 
@@ -195,4 +203,22 @@ def stop_background_sync()
 ```
 
 Stop background syncing.
+
+### listen
+
+```python
+def listen(handler, events=None)
+```
+
+Listen to wallet events, empty array or None will listen to all events
+The default value for events is None
+
+### clear\_listeners
+
+```python
+def clear_listeners(events=None)
+```
+
+Remove wallet event listeners, empty array or None will remove all listeners
+The default value for events is None
 

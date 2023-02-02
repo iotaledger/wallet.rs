@@ -84,7 +84,7 @@ impl OutputData {
                     address.key_index,
                 ]))
             } else {
-                return Err(crate::Error::CustomInputError(
+                return Err(crate::Error::CustomInput(
                     "unlock address not found in account addresses".to_string(),
                 ));
             }
@@ -269,13 +269,13 @@ impl<'de> Deserialize<'de> for AccountIdentifier {
             Some(number) => {
                 let index: u32 =
                     u32::try_from(number).map_err(|_| D::Error::custom("account index is greater than u32::MAX"))?;
-                AccountIdentifier::Index(index)
+                Self::Index(index)
             }
             None => {
                 let alias_or_index_str = v
                     .as_str()
                     .ok_or_else(|| D::Error::custom("accountIdentifier is no number or string"))?;
-                AccountIdentifier::from(alias_or_index_str)
+                Self::from(alias_or_index_str)
             }
         })
     }

@@ -387,7 +387,7 @@ ___
 
 ### setClientOptions
 
-▸ **setClientOptions**(`options`): `Promise`<`void`\>
+▸ **setClientOptions**(`clientOptions`): `Promise`<`void`\>
 
 Set ClientOptions.
 
@@ -395,7 +395,7 @@ Set ClientOptions.
 
 | Name | Type |
 | :------ | :------ |
-| `options` | [`ClientOptions`](../interfaces/ClientOptions.md) |
+| `clientOptions` | [`ClientOptions`](../interfaces/ClientOptions.md) |
 
 #### Returns
 

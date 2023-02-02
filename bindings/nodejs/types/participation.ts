@@ -1,3 +1,4 @@
+import type { Node } from './network';
 import type { OutputId } from './output';
 
 export interface ParticipationOverview {
@@ -21,6 +22,12 @@ export interface TrackedParticipationOverview {
 export interface ParticipationEvent {
     id: ParticipationEventId;
     data: ParticipationEventData;
+}
+
+export interface ParticipationEventWithNodes {
+    id: ParticipationEventId;
+    data: ParticipationEventData;
+    nodes: Node[];
 }
 
 export type ParticipationEventId = string;

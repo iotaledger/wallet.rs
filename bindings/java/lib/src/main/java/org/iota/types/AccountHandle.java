@@ -103,7 +103,10 @@ public class AccountHandle extends AbstractObject {
      * @return A copy of the account.
      */
     public Account getAccountCopy() throws WalletException {
-        return CustomGson.get().fromJson(callBaseApi(new WalletCommand("getAccount", CustomGson.get().toJsonTree(accountIdentifier))), Account.class);
+        JsonObject o = new JsonObject();
+        o.add("accountId", CustomGson.get().toJsonTree(accountIdentifier));
+
+        return CustomGson.get().fromJson(callBaseApi(new WalletCommand("getAccount", o)), Account.class);
     }
 
     // Account Method APIs

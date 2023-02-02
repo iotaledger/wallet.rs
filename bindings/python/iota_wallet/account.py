@@ -2,15 +2,17 @@ from iota_wallet.common import send_message_routine
 
 
 class Account:
-    def __init__(self, alias_index, handle):
-        self.alias_index = alias_index
+    def __init__(self, account_id, handle):
+        self.account_id = account_id
         self.handle = handle
 
     @send_message_routine
     def __str__(self):
         message = {
             'cmd': 'getAccount',
-            'payload': self.alias_index,
+            'payload': {
+                'accountId': self.account_id,
+            }
         }
         return message
 
@@ -19,7 +21,7 @@ class Account:
         message = {
             'cmd': 'callAccountMethod',
             'payload': {
-                'accountId': self.alias_index,
+                'accountId': self.account_id,
                 'method': {
                     'name': method,
                 }
@@ -126,7 +128,7 @@ class Account:
             'burnNativeToken', {
                 'tokenId': token_id,
                 'burnAmount': burn_amount,
-                'options':  options
+                'options': options
             }
         )
 
@@ -140,7 +142,7 @@ class Account:
         return self._call_account_method(
             'burnNft', {
                 'nftId': nft_id,
-                'options':  options
+                'options': options
             }
         )
 
@@ -152,7 +154,7 @@ class Account:
         return self._call_account_method(
             'consolidateOutputs', {
                 'force': force,
-                'outputConsolidationThreshold':  output_consolidation_threshold
+                'outputConsolidationThreshold': output_consolidation_threshold
             }
         )
 
@@ -164,7 +166,7 @@ class Account:
         return self._call_account_method(
             'createAliasOutput', {
                 'aliasOutputOptions': alias_output_options,
-                'options':  options
+                'options': options
             }
         )
 
@@ -178,7 +180,7 @@ class Account:
         return self._call_account_method(
             'destroyAlias', {
                 'aliasId': alias_id,
-                'options':  options
+                'options': options
             }
         )
 
@@ -191,7 +193,7 @@ class Account:
         return self._call_account_method(
             'destroyFoundry', {
                 'foundryId': foundry_id,
-                'options':  options
+                'options': options
             }
         )
 
@@ -296,7 +298,7 @@ class Account:
             'decreaseNativeTokenSupply', {
                 'tokenId': token_id,
                 'meltAmount': melt_amount,
-                'options':  options
+                'options': options
             }
         )
 

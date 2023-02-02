@@ -2,10 +2,17 @@ require('dotenv').config({ path: '../.env' });
 const { AccountManager, CoinType } = require('@iota/wallet');
 
 async function getUnlockedManager() {
+    if (!process.env.NODE_URL) {
+        throw new Error('.env NODE_URL is undefined, see .env.example');
+    }
+    if (!process.env.SH_PASSWORD) {
+        throw new Error('.env SH_PASSWORD is undefined, see .env.example');
+    }
+
     const manager = new AccountManager({
         storagePath: './alice-database',
         clientOptions: {
-            nodes: ['https://api.testnet.shimmer.network'],
+            nodes: [process.env.NODE_URL],
             localPow: true,
         },
         coinType: CoinType.Shimmer,
@@ -16,7 +23,6 @@ async function getUnlockedManager() {
             },
         },
     });
-    await manager.setStrongholdPassword(process.env.SH_PASSWORD);
     return manager;
 }
 

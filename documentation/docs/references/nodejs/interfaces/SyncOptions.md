@@ -60,7 +60,7 @@ ___
 
 • `Optional` **syncPendingTransactions**: `boolean`
 
-Checks pending transactions and promotes/reattaches them if necessary.  Default: true.
+Checks pending transactions and promotes/reattaches them if necessary. Default: true.
 
 ___
 
@@ -92,7 +92,7 @@ ___
 
 • `Optional` **syncOnlyMostBasicOutputs**: `boolean`
 
-Specifies if only basic outputs with an AddressUnlockCondition alone should be synced, will overwrite `account`, `alias` and `nft` options.  Default: false.
+Specifies if only basic outputs with an AddressUnlockCondition alone should be synced, will overwrite `account`, `alias` and `nft` options. Default: false.
 
 ___
 

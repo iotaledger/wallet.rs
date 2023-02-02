@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `SyncOptions::{account, alias, nft}` fields;
 - `{TransactionOptions, TransactionOptionsDto}::burn`;
 - `Memory` storage adapter;
+- `ParticipationEventWithNodes`;
 
 ### Changed
 
@@ -49,6 +50,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Default `SyncOptions` don't sync alias and nft outputs anymore;
 - `{OutputData, OutputDataDto}::metadata` type from `OutputMetadataResponse` to `OutputMetadataDto`;
 - `RocksDb` storage is now an optional storage adapter;
+- `Account::{register_participation_event(), get_participation_event(), get_participation_events()}` have `ParticipationEventWithNodes` instead of `(ParticipationEvent, Vec<Node>)` in their return type;
+- `Response::{ParticipationEvents, ParticipationEvents}` contain `ParticipationEventWithNodes` instead of `(ParticipationEvent, Vec<Node>)`;
+- Remove `Error` suffix on some `Error` variants;
+- Exposed `FilterOptions` so it can be imported from `account::FilterOptions`;
+- `Message::{GetAccount, VerifyMnemonic, SetClientOptions, SetStrongholdPassword, SetStrongholdPasswordClearInterval, StoreMnemonic, EmitTestEvent, Bech32ToHex, ClearListeners}` to named fields for better error messages;
 
 ### Removed
 
@@ -59,7 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Stop endlessly requesting inaccessible incoming trasactions;
+- Stop endlessly requesting inaccessible incoming transactions;
 - Update addresses when a client config with a different HRP is passed;
 
 ## 1.0.0-rc.4 - 2022-12-23

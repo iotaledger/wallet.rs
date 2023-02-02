@@ -17,8 +17,9 @@ use iota_client::{
 use serde::Serialize;
 #[cfg(feature = "participation")]
 use {
-    crate::account::operations::participation::AccountParticipationOverview,
-    iota_client::node_api::participation::types::{ParticipationEvent, ParticipationEventId, ParticipationEventStatus},
+    crate::account::operations::participation::{AccountParticipationOverview, ParticipationEventWithNodes},
+    iota_client::node_api::participation::types::{ParticipationEventId, ParticipationEventStatus},
+    std::collections::HashMap,
 };
 
 use crate::{
@@ -138,7 +139,7 @@ pub enum Response {
     /// [`GetParticipationEvent`](crate::message_interface::GetParticipationEvent)
     /// [`RegisterParticipationEvent`](crate::message_interface::RegisterParticipationEvent)
     #[cfg(feature = "participation")]
-    ParticipationEvent(Option<ParticipationEvent>),
+    ParticipationEvent(Option<ParticipationEventWithNodes>),
     /// Response for
     /// [`GetParticipationEventIds`](crate::message_interface::GetParticipationEventIds)
     #[cfg(feature = "participation")]
@@ -150,7 +151,7 @@ pub enum Response {
     /// Response for
     /// [`GetParticipationEvents`](crate::message_interface::GetParticipationEvents)
     #[cfg(feature = "participation")]
-    ParticipationEvents(Vec<ParticipationEvent>),
+    ParticipationEvents(HashMap<ParticipationEventId, ParticipationEventWithNodes>),
     /// Response for
     /// [`GetVotingPower`](crate::message_interface::AccountMethod::GetVotingPower)
     #[cfg(feature = "participation")]
@@ -187,66 +188,66 @@ pub enum Response {
 impl Debug for Response {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
-            Response::Account(account) => write!(f, "Account({account:?})"),
-            Response::AccountIndexes(account_indexes) => write!(f, "AccountIndexes({account_indexes:?})"),
-            Response::Accounts(accounts) => write!(f, "Accounts({accounts:?})"),
-            Response::Addresses(addresses) => write!(f, "Addresses({addresses:?})"),
-            Response::AddressesWithUnspentOutputs(addresses) => {
+            Self::Account(account) => write!(f, "Account({account:?})"),
+            Self::AccountIndexes(account_indexes) => write!(f, "AccountIndexes({account_indexes:?})"),
+            Self::Accounts(accounts) => write!(f, "Accounts({accounts:?})"),
+            Self::Addresses(addresses) => write!(f, "Addresses({addresses:?})"),
+            Self::AddressesWithUnspentOutputs(addresses) => {
                 write!(f, "AddressesWithUnspentOutputs({addresses:?})")
             }
-            Response::BlockId(block_id) => write!(f, "BlockId({block_id:?})"),
-            Response::Output(output) => write!(f, "Output({output:?})"),
-            Response::MinimumRequiredStorageDeposit(amount) => write!(f, "MinimumRequiredStorageDeposit({amount:?})"),
-            Response::OutputIds(output_ids) => write!(f, "OutputIds({output_ids:?})"),
-            Response::OutputData(output) => write!(f, "OutputData({output:?})"),
-            Response::OutputsData(outputs) => write!(f, "OutputsData{outputs:?}"),
-            Response::PreparedTransaction(transaction_data) => {
+            Self::BlockId(block_id) => write!(f, "BlockId({block_id:?})"),
+            Self::Output(output) => write!(f, "Output({output:?})"),
+            Self::MinimumRequiredStorageDeposit(amount) => write!(f, "MinimumRequiredStorageDeposit({amount:?})"),
+            Self::OutputIds(output_ids) => write!(f, "OutputIds({output_ids:?})"),
+            Self::OutputData(output) => write!(f, "OutputData({output:?})"),
+            Self::OutputsData(outputs) => write!(f, "OutputsData{outputs:?}"),
+            Self::PreparedTransaction(transaction_data) => {
                 write!(f, "PreparedTransaction({transaction_data:?})")
             }
-            Response::Transaction(transaction) => write!(f, "Transaction({transaction:?})"),
-            Response::Transactions(transactions) => write!(f, "Transactions({transactions:?})"),
-            Response::SignedTransactionData(signed_transaction_data) => {
+            Self::Transaction(transaction) => write!(f, "Transaction({transaction:?})"),
+            Self::Transactions(transactions) => write!(f, "Transactions({transactions:?})"),
+            Self::SignedTransactionData(signed_transaction_data) => {
                 write!(f, "SignedTransactionData({signed_transaction_data:?})")
             }
-            Response::GeneratedAddress(addresses) => write!(f, "GeneratedAddress({addresses:?})"),
-            Response::Balance(balance) => write!(f, "Balance({balance:?})"),
-            Response::IncomingTransactionData(transaction_data) => {
+            Self::GeneratedAddress(addresses) => write!(f, "GeneratedAddress({addresses:?})"),
+            Self::Balance(balance) => write!(f, "Balance({balance:?})"),
+            Self::IncomingTransactionData(transaction_data) => {
                 write!(f, "IncomingTransactionData({transaction_data:?})")
             }
-            Response::IncomingTransactionsData(transactions_data) => {
+            Self::IncomingTransactionsData(transactions_data) => {
                 write!(f, "IncomingTransactionsData({transactions_data:?})")
             }
-            Response::SentTransaction(transaction) => write!(f, "SentTransaction({transaction:?})"),
-            Response::MintTokenTransaction(mint_transaction) => {
+            Self::SentTransaction(transaction) => write!(f, "SentTransaction({transaction:?})"),
+            Self::MintTokenTransaction(mint_transaction) => {
                 write!(f, "MintTokenTransaction({mint_transaction:?})")
             }
-            Response::StrongholdPasswordIsAvailable(is_available) => {
+            Self::StrongholdPasswordIsAvailable(is_available) => {
                 write!(f, "StrongholdPasswordIsAvailable({is_available:?})")
             }
-            Response::Error(error) => write!(f, "Error({error:?})"),
-            Response::Panic(panic_msg) => write!(f, "Panic({panic_msg:?})"),
-            Response::GeneratedMnemonic(_) => write!(f, "GeneratedMnemonic(<omitted>)"),
+            Self::Error(error) => write!(f, "Error({error:?})"),
+            Self::Panic(panic_msg) => write!(f, "Panic({panic_msg:?})"),
+            Self::GeneratedMnemonic(_) => write!(f, "GeneratedMnemonic(<omitted>)"),
             #[cfg(feature = "ledger_nano")]
-            Response::LedgerNanoStatus(ledger_nano_status) => write!(f, "LedgerNanoStatus({ledger_nano_status:?})"),
-            Response::NodeInfo(info) => write!(f, "NodeInfo({info:?})"),
-            Response::HexAddress(hex_address) => write!(f, "Hex encoded address({hex_address:?})"),
-            Response::Bech32Address(bech32_address) => write!(f, "Bech32 encoded address({bech32_address:?})"),
-            Response::Ok(()) => write!(f, "Ok(())"),
+            Self::LedgerNanoStatus(ledger_nano_status) => write!(f, "LedgerNanoStatus({ledger_nano_status:?})"),
+            Self::NodeInfo(info) => write!(f, "NodeInfo({info:?})"),
+            Self::HexAddress(hex_address) => write!(f, "Hex encoded address({hex_address:?})"),
+            Self::Bech32Address(bech32_address) => write!(f, "Bech32 encoded address({bech32_address:?})"),
+            Self::Ok(()) => write!(f, "Ok(())"),
             #[cfg(feature = "participation")]
-            Response::ParticipationEvent(event) => write!(f, "ParticipationEvent({event:?})"),
+            Self::ParticipationEvent(event) => write!(f, "ParticipationEvent({event:?})"),
             #[cfg(feature = "participation")]
-            Response::ParticipationEventStatus(event_status) => write!(f, "ParticipationEventStatus({event_status:?})"),
+            Self::ParticipationEventStatus(event_status) => write!(f, "ParticipationEventStatus({event_status:?})"),
             #[cfg(feature = "participation")]
-            Response::ParticipationEvents(events) => write!(f, "ParticipationEvents({events:?})"),
+            Self::ParticipationEvents(events) => write!(f, "ParticipationEvents({events:?})"),
             #[cfg(feature = "participation")]
-            Response::ParticipationEventIds(event_ids) => write!(f, "ParticipationEventIds({event_ids:?})"),
+            Self::ParticipationEventIds(event_ids) => write!(f, "ParticipationEventIds({event_ids:?})"),
             #[cfg(feature = "participation")]
-            Response::VotingPower(amount) => write!(f, "VotingPower({amount:?})"),
+            Self::VotingPower(amount) => write!(f, "VotingPower({amount:?})"),
             #[cfg(feature = "participation")]
-            Response::AccountParticipationOverview(overview) => {
+            Self::AccountParticipationOverview(overview) => {
                 write!(f, "AccountParticipationOverview({overview:?})")
             }
-            Response::Faucet(response) => write!(f, "Faucet({response:?})"),
+            Self::Faucet(response) => write!(f, "Faucet({response:?})"),
         }
     }
 }

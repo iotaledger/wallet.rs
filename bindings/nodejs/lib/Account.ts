@@ -28,10 +28,10 @@ import type {
     Transaction,
     TransactionOptions,
     ParticipationOverview,
-    ParticipationEvent,
     ParticipationEventId,
     ParticipationEventStatus,
     ParticipationEventType,
+    ParticipationEventWithNodes,
 } from '../types';
 import type { SignedTransactionEssence } from '../types/signedTransactionEssence';
 import type {
@@ -413,7 +413,7 @@ export class Account {
 
     async getParticipationEvent(
         eventId: ParticipationEventId,
-    ): Promise<ParticipationEvent> {
+    ): Promise<ParticipationEventWithNodes> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -441,7 +441,9 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
-    async getParticipationEvents(): Promise<ParticipationEvent[]> {
+    async getParticipationEvents(): Promise<{
+        [eventId: ParticipationEventId]: ParticipationEventWithNodes;
+    }> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -769,7 +771,7 @@ export class Account {
      * below the minimum required storage deposit, by default the remaining
      * amount will automatically be added with a `StorageDepositReturn` `UnlockCondition`,
      * when setting the `ReturnStrategy` to `gift`, the full minimum required
-     * storage deposit will be sent  to the recipient. When the assets contain
+     * storage deposit will be sent to the recipient. When the assets contain
      * an nft id, the data from the existing `NftOutput` will be used, just with
      * the address unlock conditions replaced.
      * @param transactionOptions The options to define a `RemainderValueStrategy`
@@ -844,7 +846,7 @@ export class Account {
     async registerParticipationEvent(
         eventId: ParticipationEventId,
         nodes: Node[],
-    ): Promise<ParticipationEvent> {
+    ): Promise<ParticipationEventWithNodes> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
