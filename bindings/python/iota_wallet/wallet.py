@@ -36,10 +36,10 @@ class IotaWallet():
             }
         )
 
-    def get_account(self, alias_index):
+    def get_account(self, account_id):
         """Get the account instance
         """
-        return Account(alias_index, self.handle)
+        return Account(account_id, self.handle)
 
     @send_message_routine
     def _send_cmd_routine(self, cmd, payload=None):
@@ -50,12 +50,12 @@ class IotaWallet():
             message['payload'] = payload
         return message
 
-    def get_account_data(self, alias_index):
+    def get_account_data(self, account_id):
         """Get account data
         """
         return self._send_cmd_routine(
             'getAccount', {
-                'accountId': alias_index
+                'accountId': account_id
             }
         )
 

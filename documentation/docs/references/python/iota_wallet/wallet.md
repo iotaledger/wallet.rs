@@ -31,7 +31,7 @@ Create a new account
 ### get\_account
 
 ```python
-def get_account(alias_index)
+def get_account(account_id)
 ```
 
 Get the account instance
@@ -39,7 +39,7 @@ Get the account instance
 ### get\_account\_data
 
 ```python
-def get_account_data(alias_index)
+def get_account_data(account_id)
 ```
 
 Get account data

@@ -2,8 +2,8 @@ from iota_wallet.common import send_message_routine
 
 
 class Account:
-    def __init__(self, alias_index, handle):
-        self.alias_index = alias_index
+    def __init__(self, account_id, handle):
+        self.account_id = account_id
         self.handle = handle
 
     @send_message_routine
@@ -11,7 +11,7 @@ class Account:
         message = {
             'cmd': 'getAccount',
             'payload': {
-                'accountId': self.alias_index,
+                'accountId': self.account_id,
             }
         }
         return message
@@ -21,7 +21,7 @@ class Account:
         message = {
             'cmd': 'callAccountMethod',
             'payload': {
-                'accountId': self.alias_index,
+                'accountId': self.account_id,
                 'method': {
                     'name': method,
                 }
