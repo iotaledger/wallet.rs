@@ -46,13 +46,13 @@ impl TryFrom<&str> for WalletEventType {
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         let event_type = match value {
-            "ConsolidationRequired" => WalletEventType::ConsolidationRequired,
+            "ConsolidationRequired" => Self::ConsolidationRequired,
             #[cfg(feature = "ledger_nano")]
-            "LedgerAddressGeneration" => WalletEventType::LedgerAddressGeneration,
-            "NewOutput" => WalletEventType::NewOutput,
-            "SpentOutput" => WalletEventType::SpentOutput,
-            "TransactionInclusion" => WalletEventType::TransactionInclusion,
-            "TransactionProgress" => WalletEventType::TransactionProgress,
+            "LedgerAddressGeneration" => Self::LedgerAddressGeneration,
+            "NewOutput" => Self::NewOutput,
+            "SpentOutput" => Self::SpentOutput,
+            "TransactionInclusion" => Self::TransactionInclusion,
+            "TransactionProgress" => Self::TransactionProgress,
             _ => return Err(format!("invalid event type {value}")),
         };
         Ok(event_type)

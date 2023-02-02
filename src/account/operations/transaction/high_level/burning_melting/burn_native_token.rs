@@ -32,7 +32,7 @@ struct StrippedOutput {
 
 impl StrippedOutput {
     fn new(output_id: OutputId, amount: U256, output: Output) -> Self {
-        StrippedOutput {
+        Self {
             output_id,
             amount,
             output,
