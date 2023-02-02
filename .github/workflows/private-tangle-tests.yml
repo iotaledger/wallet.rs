@@ -21,9 +21,11 @@ concurrency:
 
 jobs:
   crate:
-    runs-on: ubuntu-lates
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
 
     steps:
     - uses: actions/checkout@v3
