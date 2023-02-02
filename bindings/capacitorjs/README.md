@@ -21,4 +21,4 @@ npx cap sync
 ```sh
 npm run build
 ```
-This command copy the already built libraries from Java and Swift bindings.
+This command copies the already built libraries from Java and Swift bindings.
