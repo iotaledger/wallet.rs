@@ -1,6 +1,8 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+mod common;
+
 use std::path::PathBuf;
 
 use iota_client::{
@@ -14,13 +16,15 @@ use iota_wallet::{account_manager::AccountManager, ClientOptions, Result};
 #[cfg(all(feature = "stronghold", feature = "storage"))]
 // Backup and restore with Stronghold
 async fn backup_and_restore() -> Result<()> {
-    std::fs::remove_dir_all("test-storage/backup_and_restore").unwrap_or(());
-    let client_options = ClientOptions::new().with_node("http://some-not-default-node:14265")?;
+    let storage_path = "test-storage/backup_and_restore";
+    common::setup(storage_path)?;
+
+    let client_options = ClientOptions::new().with_node(common::NODE_OTHER)?;
 
     let stronghold_password = "some_hopefully_secure_password";
 
     // Create directory if not existing, because stronghold panics otherwise
-    std::fs::create_dir_all("test-storage/backup_and_restore").unwrap_or(());
+    std::fs::create_dir_all(storage_path).unwrap_or(());
     let mut stronghold = StrongholdSecretManager::builder()
         .password(stronghold_password)
         .build(PathBuf::from("test-storage/backup_and_restore/1.stronghold"))?;
@@ -56,7 +60,7 @@ async fn backup_and_restore() -> Result<()> {
     let restore_manager = AccountManager::builder()
         .with_storage_path("test-storage/backup_and_restore/2")
         .with_secret_manager(SecretManager::Stronghold(stronghold))
-        .with_client_options(ClientOptions::new().with_node("http://some-other-node:14265")?)
+        .with_client_options(ClientOptions::new().with_node(common::NODE_OTHER)?)
         // Build with a different coin type, to check if it gets replaced by the one from the backup
         .with_coin_type(IOTA_COIN_TYPE)
         .finish()
@@ -87,7 +91,7 @@ async fn backup_and_restore() -> Result<()> {
 
     // compare restored client options
     let client_options = restore_manager.get_client_options().await;
-    let node_dto = NodeDto::Node(Node::from(Url::parse("http://some-not-default-node:14265").unwrap()));
+    let node_dto = NodeDto::Node(Node::from(Url::parse(common::NODE_OTHER).unwrap()));
     assert!(client_options.node_manager_builder.nodes.contains(&node_dto));
 
     // Get account
@@ -99,16 +103,17 @@ async fn backup_and_restore() -> Result<()> {
         account.generate_addresses(1, None).await?,
         recovered_account.generate_addresses(1, None).await?
     );
-    std::fs::remove_dir_all("test-storage/backup_and_restore").unwrap_or(());
-    Ok(())
+    common::tear_down(storage_path)
 }
 
 #[tokio::test]
 #[cfg(all(feature = "stronghold", feature = "storage"))]
 // Backup and restore with Stronghold and MnemonicSecretManager
 async fn backup_and_restore_mnemonic_secret_manager() -> Result<()> {
-    std::fs::remove_dir_all("test-storage/backup_and_restore_mnemonic_secret_manager").unwrap_or(());
-    let client_options = ClientOptions::new().with_node("http://some-not-default-node:14265")?;
+    let storage_path = "test-storage/backup_and_restore_mnemonic_secret_manager";
+    common::setup(storage_path)?;
+
+    let client_options = ClientOptions::new().with_node(common::NODE_OTHER)?;
 
     let secret_manager = MnemonicSecretManager::try_from_mnemonic(
         "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
@@ -131,7 +136,7 @@ async fn backup_and_restore_mnemonic_secret_manager() -> Result<()> {
     let stronghold_password = "some_hopefully_secure_password";
 
     // Create directory if not existing, because stronghold panics otherwise
-    std::fs::create_dir_all("test-storage/backup_and_restore_mnemonic_secret_manager").unwrap_or(());
+    std::fs::create_dir_all(storage_path).unwrap_or(());
     manager
         .backup(
             PathBuf::from("test-storage/backup_and_restore_mnemonic_secret_manager/backup.stronghold"),
@@ -150,7 +155,7 @@ async fn backup_and_restore_mnemonic_secret_manager() -> Result<()> {
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         // Build with a different coin type, to check if it gets replaced by the one from the backup
         .with_coin_type(IOTA_COIN_TYPE)
-        .with_client_options(ClientOptions::new().with_node("http://some-other-node:14265")?)
+        .with_client_options(ClientOptions::new().with_node(common::NODE_OTHER)?)
         .finish()
         .await?;
 
@@ -169,7 +174,7 @@ async fn backup_and_restore_mnemonic_secret_manager() -> Result<()> {
 
     // compare restored client options
     let client_options = restore_manager.get_client_options().await;
-    let node_dto = NodeDto::Node(Node::from(Url::parse("http://some-not-default-node:14265").unwrap()));
+    let node_dto = NodeDto::Node(Node::from(Url::parse(common::NODE_OTHER).unwrap()));
     assert!(client_options.node_manager_builder.nodes.contains(&node_dto));
 
     // Get account
@@ -181,6 +186,5 @@ async fn backup_and_restore_mnemonic_secret_manager() -> Result<()> {
         account.generate_addresses(1, None).await?,
         recovered_account.generate_addresses(1, None).await?
     );
-    std::fs::remove_dir_all("test-storage/backup_and_restore_mnemonic_secret_manager").unwrap_or(());
-    Ok(())
+    common::tear_down(storage_path)
 }

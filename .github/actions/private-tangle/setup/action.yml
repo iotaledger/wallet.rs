@@ -23,7 +23,7 @@ runs:
         # tar -xf private_tangle.tar.gz
         # TODO: remove next lines when a working hornet release is published
         # Set protocol_parameters to the same values as in the shimmer network
-        jq '.tokenSupply="1813620509061365" | .rentStructure.vByteCost=100' protocol_parameters.json > tmp.json && mv tmp.json protocol_parameters.json
+        jq '.tokenSupply="1813620509061365" | .rentStructure.vByteCost=100 | .bech32HRP="rms"' protocol_parameters.json > tmp.json && mv tmp.json protocol_parameters.json
         jq --color-output . protocol_parameters.json
         
         # Reduce milestone interval to 1 second
