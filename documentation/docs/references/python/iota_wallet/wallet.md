@@ -60,6 +60,14 @@ def backup(destination, password)
 
 Backup storage.
 
+### bech32\_to\_hex
+
+```python
+def bech32_to_hex(bech32_address)
+```
+
+Transforms a bech32 encoded address to hex
+
 ### change\_stronghold\_password
 
 ```python
@@ -195,4 +203,22 @@ def stop_background_sync()
 ```
 
 Stop background syncing.
+
+### listen
+
+```python
+def listen(handler, events=None)
+```
+
+Listen to wallet events, empty array or None will listen to all events
+The default value for events is None
+
+### clear\_listeners
+
+```python
+def clear_listeners(events=None)
+```
+
+Remove wallet event listeners, empty array or None will remove all listeners
+The default value for events is None
 
