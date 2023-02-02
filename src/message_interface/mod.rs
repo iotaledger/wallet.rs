@@ -159,7 +159,9 @@ mod tests {
         for count in 1..11 {
             let response = message_interface::send_message(
                 &wallet_handle,
-                Message::EmitTestEvent(WalletEvent::ConsolidationRequired),
+                Message::EmitTestEvent {
+                    event: WalletEvent::ConsolidationRequired,
+                },
             )
             .await
             .expect("No send message response");
@@ -172,10 +174,12 @@ mod tests {
             dbg!(&count);
         }
 
-        message_interface::send_message(&wallet_handle, Message::ClearListeners(vec![])).await;
+        message_interface::send_message(&wallet_handle, Message::ClearListeners { event_types: vec![] }).await;
         message_interface::send_message(
             &wallet_handle,
-            Message::EmitTestEvent(WalletEvent::ConsolidationRequired),
+            Message::EmitTestEvent {
+                event: WalletEvent::ConsolidationRequired,
+            },
         )
         .await
         .expect("No send message response");
@@ -209,10 +213,14 @@ mod tests {
 
         match response {
             Response::GeneratedMnemonic(mnemonic) => {
-                let response =
-                    message_interface::send_message(&wallet_handle, Message::VerifyMnemonic(mnemonic.to_string()))
-                        .await
-                        .expect("No send message response");
+                let response = message_interface::send_message(
+                    &wallet_handle,
+                    Message::VerifyMnemonic {
+                        mnemonic: mnemonic.to_string(),
+                    },
+                )
+                .await
+                .expect("No send message response");
 
                 match response {
                     Response::Ok(()) => {}
