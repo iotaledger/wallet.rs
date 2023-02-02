@@ -33,7 +33,7 @@ pub struct TransactionOptions {
 impl TransactionOptions {
     /// Conversion from [`TransactionOptionsDto`] to [`TransactionOptions`].
     pub fn try_from_dto(value: &TransactionOptionsDto) -> Result<Self, DtoError> {
-        Ok(TransactionOptions {
+        Ok(Self {
             remainder_value_strategy: value.remainder_value_strategy.clone(),
             tagged_data_payload: value
                 .tagged_data_payload

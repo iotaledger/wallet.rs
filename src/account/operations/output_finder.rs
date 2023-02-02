@@ -15,7 +15,7 @@ impl AccountHandle {
     /// Addresses that got crated during this operation and have a higher key_index than the latest one with outputs,
     /// will be removed again, to keep the account size smaller
     pub(crate) async fn search_addresses_with_outputs(
-        self: &AccountHandle,
+        &self,
         mut address_gap_limit: u32,
         mut sync_options: Option<SyncOptions>,
     ) -> crate::Result<usize> {

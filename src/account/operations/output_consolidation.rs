@@ -35,7 +35,7 @@ use crate::{
 
 impl AccountHandle {
     fn should_consolidate_output(
-        self: &AccountHandle,
+        &self,
         output_data: &OutputData,
         current_time: u32,
         account_addresses: &[AddressWithUnspentOutputs],
@@ -67,7 +67,7 @@ impl AccountHandle {
     /// address again if the output amount is >= the output_consolidation_threshold. When `force` is set to `true`, the
     /// threshold is ignored. Only consolidates the amount of outputs that fit into a single transaction.
     pub async fn consolidate_outputs(
-        self: &AccountHandle,
+        &self,
         force: bool,
         output_consolidation_threshold: Option<usize>,
     ) -> Result<Transaction> {
