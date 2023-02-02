@@ -55,7 +55,8 @@ class IotaWallet():
         """
         return self._send_cmd_routine(
             'getAccount', {
-                'accountId': alias_index}
+                'accountId': alias_index
+            }
         )
 
     def get_accounts(self):
