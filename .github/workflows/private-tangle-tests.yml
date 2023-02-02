@@ -83,7 +83,7 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: test
-        args: --all-features --release -- --ignored
+        args: --tests --all-features -- --ignored
     
     - name: Tear down private tangle
       if: always()
