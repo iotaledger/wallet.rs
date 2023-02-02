@@ -267,7 +267,7 @@ def retry_transaction_until_included(transaction_id,
 Retries (promotes or reattaches) a transaction sent from the account for a provided transaction id until it&#x27;s
 included (referenced by a milestone). Returns the included block id.
 
-### sync\_account
+### sync
 
 ```python
 def sync(options=None)
@@ -348,4 +348,12 @@ def send_outputs(outputs, options=None)
 ```
 
 Send outputs in a transaction.
+
+### request\_funds\_from\_faucet
+
+```python
+def request_funds_from_faucet(url=None, address=None)
+```
+
+Requests funds from the faucet
 

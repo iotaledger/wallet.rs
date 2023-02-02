@@ -21,7 +21,9 @@ export type __BackupMessage__ = {
 
 export type __Bech32ToHex__ = {
     cmd: 'bech32ToHex';
-    payload: string;
+    payload: {
+        bech32Address: string;
+    };
 };
 
 export type __ChangeStrongholdPasswordMessage__ = {
@@ -38,7 +40,7 @@ export type __ClearStrongholdPasswordMessage__ = {
 
 export type __ClearListenersMessage__ = {
     cmd: 'clearListeners';
-    payload: EventType[];
+    payload: { eventTypes: EventType[] };
 };
 
 export type __CreateAccountMessage__ = {
@@ -48,7 +50,7 @@ export type __CreateAccountMessage__ = {
 
 export type __EmitTestEventMessage__ = {
     cmd: 'emitTestEvent';
-    payload: WalletEvent;
+    payload: { event: WalletEvent };
 };
 
 export type __GenerateMnemonicMessage__ = {
@@ -65,7 +67,7 @@ export type __GetAccountsMessage__ = {
 
 export type __GetAccountMessage__ = {
     cmd: 'getAccount';
-    payload: AccountId;
+    payload: { accountId: AccountId };
 };
 
 export type __GetLedgerNanoStatusMessage__ = {
@@ -127,17 +129,17 @@ export type __RestoreBackupMessage__ = {
 
 export type __SetClientOptionsMessage__ = {
     cmd: 'setClientOptions';
-    payload: ClientOptions;
+    payload: { clientOptions: ClientOptions };
 };
 
 export type __SetStrongholdPasswordMessage__ = {
     cmd: 'setStrongholdPassword';
-    payload: string;
+    payload: { password: string };
 };
 
 export type __SetStrongholdPasswordClearIntervalMessage__ = {
     cmd: 'setStrongholdPasswordClearInterval';
-    payload?: number;
+    payload?: { intervalInMilliseconds?: number };
 };
 
 export type __StartBackgroundSyncMessage__ = {
@@ -154,10 +156,10 @@ export type __StopBackgroundSyncMessage__ = {
 
 export type __StoreMnemonicMessage__ = {
     cmd: 'storeMnemonic';
-    payload: string;
+    payload: { mnemonic: string };
 };
 
 export type __VerifyMnemonicMessage__ = {
     cmd: 'verifyMnemonic';
-    payload: string;
+    payload: { mnemonic: string };
 };

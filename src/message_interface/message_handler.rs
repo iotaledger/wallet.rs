@@ -114,7 +114,7 @@ impl WalletMessageHandler {
             Message::CreateAccount { alias, bech32_hrp } => {
                 convert_async_panics(|| async { self.create_account(alias, bech32_hrp).await }).await
             }
-            Message::GetAccount(account_id) => {
+            Message::GetAccount { account_id } => {
                 convert_async_panics(|| async { self.get_account(&account_id).await }).await
             }
             Message::GetAccountIndexes => {
@@ -203,14 +203,14 @@ impl WalletMessageHandler {
                     .generate_mnemonic()
                     .map(Response::GeneratedMnemonic)
             }),
-            Message::VerifyMnemonic(mut mnemonic) => convert_panics(|| {
+            Message::VerifyMnemonic { mut mnemonic } => convert_panics(|| {
                 self.account_manager.verify_mnemonic(&mnemonic)?;
                 mnemonic.zeroize();
                 Ok(Response::Ok(()))
             }),
-            Message::SetClientOptions(options) => {
+            Message::SetClientOptions { client_options } => {
                 convert_async_panics(|| async {
-                    self.account_manager.set_client_options(*options).await?;
+                    self.account_manager.set_client_options(*client_options).await?;
                     Ok(Response::Ok(()))
                 })
                 .await
@@ -257,7 +257,7 @@ impl WalletMessageHandler {
                 })
                 .await
             }
-            Message::SetStrongholdPassword(mut password) => {
+            Message::SetStrongholdPassword { mut password } => {
                 convert_async_panics(|| async {
                     self.account_manager.set_stronghold_password(&password).await?;
                     password.zeroize();
@@ -265,7 +265,9 @@ impl WalletMessageHandler {
                 })
                 .await
             }
-            Message::SetStrongholdPasswordClearInterval(interval_in_milliseconds) => {
+            Message::SetStrongholdPasswordClearInterval {
+                interval_in_milliseconds,
+            } => {
                 convert_async_panics(|| async {
                     let duration = interval_in_milliseconds.map(Duration::from_millis);
                     self.account_manager
@@ -275,7 +277,7 @@ impl WalletMessageHandler {
                 })
                 .await
             }
-            Message::StoreMnemonic(mnemonic) => {
+            Message::StoreMnemonic { mnemonic } => {
                 convert_async_panics(|| async {
                     self.account_manager.store_mnemonic(mnemonic).await?;
                     Ok(Response::Ok(()))
@@ -301,14 +303,16 @@ impl WalletMessageHandler {
                 .await
             }
             #[cfg(feature = "events")]
-            Message::EmitTestEvent(event) => {
+            Message::EmitTestEvent { event } => {
                 convert_async_panics(|| async {
                     self.account_manager.emit_test_event(event.clone()).await?;
                     Ok(Response::Ok(()))
                 })
                 .await
             }
-            Message::Bech32ToHex(bech32) => convert_panics(|| Ok(Response::HexAddress(utils::bech32_to_hex(&bech32)?))),
+            Message::Bech32ToHex { bech32_address } => {
+                convert_panics(|| Ok(Response::HexAddress(utils::bech32_to_hex(&bech32_address)?)))
+            }
             Message::HexToBech32 { hex, bech32_hrp } => {
                 convert_async_panics(|| async {
                     let bech32_hrp = match bech32_hrp {
@@ -324,9 +328,9 @@ impl WalletMessageHandler {
                 .await
             }
             #[cfg(feature = "events")]
-            Message::ClearListeners(events) => {
+            Message::ClearListeners { event_types } => {
                 convert_async_panics(|| async {
-                    self.account_manager.clear_listeners(events).await;
+                    self.account_manager.clear_listeners(event_types).await;
                     Ok(Response::Ok(()))
                 })
                 .await

@@ -45,7 +45,7 @@ export class AccountManager {
     async bech32ToHex(bech32Address: string): Promise<string> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'bech32ToHex',
-            payload: bech32Address,
+            payload: { bech32Address },
         });
         return JSON.parse(response).payload;
     }
@@ -99,7 +99,7 @@ export class AccountManager {
     async emitTestEvent(event: WalletEvent): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'emitTestEvent',
-            payload: event,
+            payload: { event },
         });
     }
 
@@ -119,7 +119,7 @@ export class AccountManager {
     async getAccount(accountId: AccountId): Promise<Account> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'getAccount',
-            payload: accountId,
+            payload: { accountId },
         });
 
         const account = new Account(
@@ -242,7 +242,7 @@ export class AccountManager {
     async clearListeners(eventTypes: EventType[]): Promise<void> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'clearListeners',
-            payload: eventTypes,
+            payload: { eventTypes },
         });
         return JSON.parse(response).payload;
     }
@@ -302,10 +302,10 @@ export class AccountManager {
     /**
      * Set ClientOptions.
      */
-    async setClientOptions(options: ClientOptions): Promise<void> {
+    async setClientOptions(clientOptions: ClientOptions): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'setClientOptions',
-            payload: options,
+            payload: { clientOptions },
         });
     }
 
@@ -315,7 +315,7 @@ export class AccountManager {
     async setStrongholdPassword(password: string): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'setStrongholdPassword',
-            payload: password,
+            payload: { password },
         });
     }
 
@@ -327,7 +327,7 @@ export class AccountManager {
     ): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'setStrongholdPasswordClearInterval',
-            payload: intervalInMilliseconds,
+            payload: { intervalInMilliseconds },
         });
     }
 
@@ -362,7 +362,7 @@ export class AccountManager {
     async storeMnemonic(mnemonic: string): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'storeMnemonic',
-            payload: mnemonic,
+            payload: { mnemonic },
         });
     }
 
@@ -372,7 +372,7 @@ export class AccountManager {
     async verifyMnemonic(mnemonic: string): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'verifyMnemonic',
-            payload: mnemonic,
+            payload: { mnemonic },
         });
     }
 }
