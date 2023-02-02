@@ -274,7 +274,7 @@ impl Debug for Message {
             } => {
                 write!(
                     f,
-                    "SetStrongholdPassword{{ interval_in_milliseconds: {interval_in_milliseconds:?} }}"
+                    "SetStrongholdPasswordClearInterval{{ interval_in_milliseconds: {interval_in_milliseconds:?} }}"
                 )
             }
             Self::StoreMnemonic { mnemonic: _ } => write!(f, "StoreMnemonic{{ mnemonic: <omitted> }}"),
