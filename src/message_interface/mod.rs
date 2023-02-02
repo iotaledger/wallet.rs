@@ -152,7 +152,6 @@ mod tests {
         let event_counter_clone = Arc::clone(&event_counter);
         wallet_handle
             .listen(vec![], move |_name| {
-                // println!("Any event: {:?}", name);
                 event_counter_clone.fetch_add(1, Ordering::SeqCst);
             })
             .await;
