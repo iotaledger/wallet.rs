@@ -62,7 +62,7 @@ In order to use the library, you need to create a `Wallet` instance.
 **Note**: Android applications must necessarily configure a suitable storage path for the wallet to avoid problems with file system permissions. Specify a suitable storage path as illustrated below:
 
 ```java
-// Copyright 2022 IOTA Stiftung
+// Copyright 2023 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 import org.iota.Wallet;

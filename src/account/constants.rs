@@ -1,4 +1,4 @@
-// Copyright 2021 IOTA Stiftung
+// Copyright 2023 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 /// Amount at which outputs on a single addresses will get consolidated by default if consolidatioin is enabled
