@@ -302,10 +302,10 @@ export class AccountManager {
     /**
      * Set ClientOptions.
      */
-    async setClientOptions(options: ClientOptions): Promise<void> {
+    async setClientOptions(clientOptions: ClientOptions): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'setClientOptions',
-            payload: { clientOptions: options },
+            payload: { clientOptions },
         });
     }
 
