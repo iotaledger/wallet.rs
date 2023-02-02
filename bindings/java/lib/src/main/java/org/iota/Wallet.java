@@ -60,7 +60,7 @@ public class Wallet extends NativeApi {
      */
     public AccountHandle getAccount(AccountIdentifier accountIdentifier) throws WalletException {
         JsonObject o = new JsonObject();
-        o.addProperty("accountId", CustomGson.get().toJsonTree(accountIdentifier).toString());
+        o.add("accountId", CustomGson.get().toJsonTree(accountIdentifier));
 
         Account a = CustomGson.get().fromJson(
                 callBaseApi(new WalletCommand("getAccount", o)),
