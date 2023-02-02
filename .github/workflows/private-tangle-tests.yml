@@ -3,10 +3,8 @@ name: Build and run specific tests on a private tangle
 on:
   push:
     branches:
-      - main
-      - dev
+      - production
       - develop
-      - ci/**
   pull_request:
     branches:
       - dev

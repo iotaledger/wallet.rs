@@ -24,7 +24,7 @@ async fn account_ordering() -> Result<()> {
     std::fs::remove_dir_all("test-storage/account_ordering").unwrap_or(());
     #[cfg(debug_assertions)]
     manager.verify_integrity().await?;
-    Ok(())
+    common::tear_down(storage_path)
 }
 
 #[tokio::test]

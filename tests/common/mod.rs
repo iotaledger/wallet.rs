@@ -3,13 +3,14 @@
 
 mod constants;
 
-pub use constants::*;
 use iota_client::constants::SHIMMER_COIN_TYPE;
 use iota_wallet::{
     account_manager::AccountManager,
     secret::{mnemonic::MnemonicSecretManager, SecretManager},
     ClientOptions, Result,
 };
+
+pub use self::constants::*;
 
 /// It creates a new account manager with a mnemonic secret manager, a client options object,
 /// SHIMMER_COIN_TYPE, and a storage path

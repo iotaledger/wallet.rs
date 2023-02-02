@@ -38,7 +38,7 @@ cargo +nightly cov -- export ${BINARIES} \
   >> coverage/coverage.info
   
 
-# Ensure intermediate coverage files are deleted. ignore errors
+# Ensure intermediate coverage files are deleted, ignore errors
 echo "Removing intermediate files..."
 find . -name "*.profraw" -type f -delete &> /dev/null || true
 find . -name "*.profdata" -type f -delete &> /dev/null || true
