@@ -32,14 +32,14 @@ class IotaWallet():
         return self._send_cmd_routine(
             'createAccount', {
                 'alias': self.__return_str_or_none(alias),
-                'bech32_hrp': self.__return_str_or_none(bech32_hrp),
+                'bech32Hrp': self.__return_str_or_none(bech32_hrp),
             }
         )
 
-    def get_account(self, alias_index):
+    def get_account(self, account_id):
         """Get the account instance
         """
-        return Account(alias_index, self.handle)
+        return Account(account_id, self.handle)
 
     @send_message_routine
     def _send_cmd_routine(self, cmd, payload=None):
@@ -50,12 +50,13 @@ class IotaWallet():
             message['payload'] = payload
         return message
 
-    def get_account_data(self, alias_index):
+    def get_account_data(self, account_id):
         """Get account data
         """
         return self._send_cmd_routine(
-            'getAccount',
-            alias_index
+            'getAccount', {
+                'accountId': account_id
+            }
         )
 
     def get_accounts(self):
@@ -72,6 +73,15 @@ class IotaWallet():
             'backup', {
                 'destination': destination,
                 'password': password
+            }
+        )
+
+    def bech32_to_hex(self, bech32_address):
+        """Transforms a bech32 encoded address to hex
+        """
+        return self._send_cmd_routine(
+            'bech32ToHex', {
+                'bech32Address': bech32_address,
             }
         )
 
@@ -142,8 +152,9 @@ class IotaWallet():
         """Checks if the given mnemonic is valid.
         """
         return self._send_cmd_routine(
-            'verifyMnemonic',
-            mnemonic
+            'verifyMnemonic', {
+                'mnemonic': mnemonic
+            }
         )
 
     def set_client_options(self, client_options):
@@ -151,7 +162,9 @@ class IotaWallet():
         """
         return self._send_cmd_routine(
             'setClientOptions',
-            client_options
+            {
+                'clientOptions': client_options
+            }
         )
 
     def generate_address(self, account_index, internal, address_index, options=None, bech32_hrp=None):
@@ -181,8 +194,10 @@ class IotaWallet():
         """Set stronghold password.
         """
         return self._send_cmd_routine(
-            'setStrongholdPassword',
-            password
+            'setStrongholdPassword', {
+                'password': password
+            }
+
         )
 
     def set_stronghold_password_clear_interval(self, interval_in_milliseconds):
@@ -198,8 +213,10 @@ class IotaWallet():
         """Store mnemonic.
         """
         return self._send_cmd_routine(
-            'storeMnemonic',
-            mnemonic
+            'storeMnemonic', {
+                'mnemonic': mnemonic
+            }
+
         )
 
     def start_background_sync(self, options, interval_in_milliseconds):
@@ -232,8 +249,10 @@ class IotaWallet():
         """
         events_array = [] if events is None else events
         return self._send_cmd_routine(
-            'clearListeners',
-            events_array
+            'clearListeners', {
+                'eventTypes': events_array
+            }
+
         )
 
     @staticmethod

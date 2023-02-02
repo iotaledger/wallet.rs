@@ -28,13 +28,13 @@ pub(crate) enum ManagerStorage {
 }
 
 impl Default for ManagerStorage {
-    fn default() -> ManagerStorage {
+    fn default() -> Self {
         #[cfg(feature = "rocksdb")]
-        return ManagerStorage::Rocksdb;
+        return Self::Rocksdb;
         #[cfg(target_family = "wasm")]
-        return ManagerStorage::Wasm;
+        return Self::Wasm;
         #[cfg(not(any(feature = "rocksdb", target_family = "wasm")))]
-        ManagerStorage::Memory
+        Self::Memory
     }
 }
 

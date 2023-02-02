@@ -278,11 +278,13 @@ mod tests {
         // Set password and store mnemonic
         let _ = message_interface::send_message(
             &wallet_handle,
-            Message::SetStrongholdPassword("some_hopefully_secure_password".to_string()),
+            Message::SetStrongholdPassword {
+                password: "some_hopefully_secure_password".to_string(),
+            },
         )
         .await;
         let mnemonic = "acoustic trophy damage hint search taste love bicycle foster cradle brown govern endless depend situate athlete pudding blame question genius transfer van random vast".to_string();
-        let _ = message_interface::send_message(&wallet_handle, Message::StoreMnemonic(mnemonic)).await;
+        let _ = message_interface::send_message(&wallet_handle, Message::StoreMnemonic { mnemonic }).await;
 
         // create an account, if password or storing mnemonic failed, it would fail here, because it couldn't generate
         // an address
@@ -327,9 +329,14 @@ mod tests {
         let bech32_address = "rms1qqk4svqpc89lxx89w7vksv9jgjjm2vwnrhad2j3cds9ev4cu434wjapdsxs";
         let hex_address = "0x2d583001c1cbf318e577996830b244a5b531d31dfad54a386c0b96571cac6ae9";
 
-        let response = message_interface::send_message(&wallet_handle, Message::Bech32ToHex(bech32_address.into()))
-            .await
-            .expect("No send message response");
+        let response = message_interface::send_message(
+            &wallet_handle,
+            Message::Bech32ToHex {
+                bech32_address: bech32_address.into(),
+            },
+        )
+        .await
+        .expect("No send message response");
 
         match response {
             Response::HexAddress(hex) => {

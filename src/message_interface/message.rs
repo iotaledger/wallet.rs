@@ -32,7 +32,10 @@ pub enum Message {
     },
     /// Read account.
     /// Expected response: [`Account`](crate::message_interface::Response::Account)
-    GetAccount(AccountIdentifier),
+    GetAccount {
+        #[serde(rename = "accountId")]
+        account_id: AccountIdentifier,
+    },
     /// Return the account indexes.
     /// Expected response: [`AccountIndexes`](crate::message_interface::Response::AccountIndexes)
     GetAccountIndexes,
@@ -113,10 +116,13 @@ pub enum Message {
     GenerateMnemonic,
     /// Checks if the given mnemonic is valid.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
-    VerifyMnemonic(String),
+    VerifyMnemonic { mnemonic: String },
     /// Updates the client options for all accounts.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
-    SetClientOptions(Box<ClientOptions>),
+    SetClientOptions {
+        #[serde(rename = "clientOptions")]
+        client_options: Box<ClientOptions>,
+    },
     /// Generate an address without storing it
     /// Expected response: [`Bech32Address`](crate::message_interface::Response::Bech32Address)
     GenerateAddress {
@@ -149,15 +155,18 @@ pub enum Message {
     /// Set the stronghold password.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "stronghold")]
-    SetStrongholdPassword(String),
+    SetStrongholdPassword { password: String },
     /// Set the stronghold password clear interval.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "stronghold")]
-    SetStrongholdPasswordClearInterval(Option<u64>),
+    SetStrongholdPasswordClearInterval {
+        #[serde(rename = "intervalInMilliseconds")]
+        interval_in_milliseconds: Option<u64>,
+    },
     /// Store a mnemonic into the Stronghold vault.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "stronghold")]
-    StoreMnemonic(String),
+    StoreMnemonic { mnemonic: String },
     /// Start background syncing.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     StartBackgroundSync {
@@ -173,10 +182,13 @@ pub enum Message {
     /// Emits an event for testing if the event system is working
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "events")]
-    EmitTestEvent(WalletEvent),
-    /// Transforms bech32 to hex
+    EmitTestEvent { event: WalletEvent },
+    /// Transforms a bech32 encoded address to hex
     /// Expected response: [`HexAddress`](crate::message_interface::Response::HexAddress)
-    Bech32ToHex(String),
+    Bech32ToHex {
+        #[serde(rename = "bech32Address")]
+        bech32_address: String,
+    },
     /// Transforms a hex encoded address to a bech32 encoded address
     /// Expected response: [`Bech32Address`](crate::message_interface::Response::Bech32Address)
     HexToBech32 {
@@ -189,25 +201,28 @@ pub enum Message {
     // Remove all listeners of this type. Empty vec clears all listeners
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "events")]
-    ClearListeners(Vec<WalletEventType>),
+    ClearListeners {
+        #[serde(rename = "eventTypes")]
+        event_types: Vec<WalletEventType>,
+    },
 }
 
 // Custom Debug implementation to not log secrets
 impl Debug for Message {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
-            Message::CreateAccount { alias, bech32_hrp } => {
+            Self::CreateAccount { alias, bech32_hrp } => {
                 write!(f, "CreateAccount{{ alias: {alias:?}, bech32_hrp: {bech32_hrp:?} }}")
             }
-            Message::GetAccountIndexes => write!(f, "GetAccountIndexes"),
-            Message::GetAccount(identifier) => write!(f, "GetAccount({identifier:?})"),
-            Message::GetAccounts => write!(f, "GetAccounts"),
-            Message::CallAccountMethod { account_id, method } => write!(
+            Self::GetAccountIndexes => write!(f, "GetAccountIndexes"),
+            Self::GetAccount { account_id } => write!(f, "GetAccount{{ account_id: {account_id:?} }}"),
+            Self::GetAccounts => write!(f, "GetAccounts"),
+            Self::CallAccountMethod { account_id, method } => write!(
                 f,
                 "CallAccountMethod{{ account_id: {account_id:?}, method: {method:?} }}"
             ),
             #[cfg(feature = "stronghold")]
-            Message::ChangeStrongholdPassword {
+            Self::ChangeStrongholdPassword {
                 current_password: _,
                 new_password: _,
             } => write!(
@@ -215,15 +230,15 @@ impl Debug for Message {
                 "ChangeStrongholdPassword{{ current_password: <omitted>, new_password: <omitted> }}"
             ),
             #[cfg(feature = "stronghold")]
-            Message::ClearStrongholdPassword => write!(f, "ClearStrongholdPassword"),
+            Self::ClearStrongholdPassword => write!(f, "ClearStrongholdPassword"),
             #[cfg(feature = "stronghold")]
-            Message::IsStrongholdPasswordAvailable => write!(f, "IsStrongholdPasswordAvailable"),
+            Self::IsStrongholdPasswordAvailable => write!(f, "IsStrongholdPasswordAvailable"),
             #[cfg(feature = "stronghold")]
-            Message::Backup {
+            Self::Backup {
                 destination,
                 password: _,
             } => write!(f, "Backup{{ destination: {destination:?} }}"),
-            Message::RecoverAccounts {
+            Self::RecoverAccounts {
                 account_start_index,
                 account_gap_limit,
                 address_gap_limit,
@@ -232,15 +247,17 @@ impl Debug for Message {
                 f,
                 "RecoverAccounts{{ account_start_index: {account_start_index:?}, account_gap_limit: {account_gap_limit:?}, address_gap_limit: {address_gap_limit:?}, sync_options: {sync_options:?} }}"
             ),
-            Message::RemoveLatestAccount => write!(f, "RemoveLatestAccount"),
+            Self::RemoveLatestAccount => write!(f, "RemoveLatestAccount"),
             #[cfg(feature = "stronghold")]
-            Message::RestoreBackup { source, password: _ } => write!(f, "RestoreBackup{{ source: {source:?} }}"),
-            Message::GenerateMnemonic => write!(f, "GenerateMnemonic"),
-            Message::VerifyMnemonic(_) => write!(f, "VerifyMnemonic(<omitted>)"),
-            Message::SetClientOptions(options) => write!(f, "SetClientOptions({options:?})"),
+            Self::RestoreBackup { source, password: _ } => write!(f, "RestoreBackup{{ source: {source:?} }}"),
+            Self::GenerateMnemonic => write!(f, "GenerateMnemonic"),
+            Self::VerifyMnemonic { mnemonic: _ } => write!(f, "VerifyMnemonic{{ mnemonic: <omitted> }}"),
+            Self::SetClientOptions { client_options } => {
+                write!(f, "SetClientOptions{{ client_options: {client_options:?} }}")
+            }
             #[cfg(feature = "ledger_nano")]
-            Message::GetLedgerNanoStatus => write!(f, "GetLedgerNanoStatus"),
-            Message::GenerateAddress {
+            Self::GetLedgerNanoStatus => write!(f, "GetLedgerNanoStatus"),
+            Self::GenerateAddress {
                 account_index,
                 internal,
                 address_index,
@@ -250,33 +267,38 @@ impl Debug for Message {
                 f,
                 "GenerateAddress{{ account_index: {account_index:?}, internal: {internal:?}, address_index: {address_index:?}, options: {options:?}, bech32_hrp: {bech32_hrp:?} }}"
             ),
-            Message::GetNodeInfo { url, auth: _ } => write!(f, "GetNodeInfo{{ url: {url:?} }}"),
+            Self::GetNodeInfo { url, auth: _ } => write!(f, "GetNodeInfo{{ url: {url:?} }}"),
             #[cfg(feature = "stronghold")]
-            Message::SetStrongholdPassword(_) => write!(f, "SetStrongholdPassword(<omitted>)"),
-            #[cfg(feature = "stronghold")]
-            Message::SetStrongholdPasswordClearInterval(interval_in_milliseconds) => {
-                write!(f, "SetStrongholdPassword({interval_in_milliseconds:?})")
+            Self::SetStrongholdPassword { password: _ } => {
+                write!(f, "SetStrongholdPassword{{  password: <omitted> }}")
             }
-
             #[cfg(feature = "stronghold")]
-            Message::StoreMnemonic(_) => write!(f, "StoreMnemonic(<omitted>)"),
-            Message::StartBackgroundSync {
+            Self::SetStrongholdPasswordClearInterval {
+                interval_in_milliseconds,
+            } => {
+                write!(
+                    f,
+                    "SetStrongholdPasswordClearInterval{{ interval_in_milliseconds: {interval_in_milliseconds:?} }}"
+                )
+            }
+            #[cfg(feature = "stronghold")]
+            Self::StoreMnemonic { mnemonic: _ } => write!(f, "StoreMnemonic{{ mnemonic: <omitted> }}"),
+            Self::StartBackgroundSync {
                 options,
                 interval_in_milliseconds,
             } => write!(
                 f,
                 "StartBackgroundSync{{ options: {options:?}, interval: {interval_in_milliseconds:?} }}"
             ),
-            Message::StopBackgroundSync => write!(f, "StopBackgroundSync"),
+            Self::StopBackgroundSync => write!(f, "StopBackgroundSync"),
             #[cfg(feature = "events")]
-            Message::EmitTestEvent(event) => write!(f, "EmitTestEvent({event:?})"),
-            Message::Bech32ToHex(bech32_address) => write!(f, "Bech32ToHex({bech32_address:?})"),
-            Message::HexToBech32 { hex, bech32_hrp } => {
+            Self::EmitTestEvent { event } => write!(f, "EmitTestEvent{{ event: {event:?} }}"),
+            Self::Bech32ToHex { bech32_address } => write!(f, "Bech32ToHex{{ bech32_address: {bech32_address:?} }}"),
+            Self::HexToBech32 { hex, bech32_hrp } => {
                 write!(f, "HexToBech32{{ hex: {hex:?}, bech32_hrp: {bech32_hrp:?} }}")
             }
-
             #[cfg(feature = "events")]
-            Message::ClearListeners(events) => write!(f, "ClearListeners({events:?})"),
+            Self::ClearListeners { event_types } => write!(f, "ClearListeners{{ event_types: {event_types:?} }}"),
         }
     }
 }

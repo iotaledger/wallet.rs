@@ -45,7 +45,7 @@ pub struct StorageOptions {
 #[cfg(feature = "storage")]
 impl Default for StorageOptions {
     fn default() -> Self {
-        StorageOptions {
+        Self {
             storage_path: default_storage_path().into(),
             storage_file_name: None,
             storage_encryption_key: None,
