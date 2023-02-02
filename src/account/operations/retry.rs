@@ -76,7 +76,7 @@ impl AccountHandle {
                     std::time::Duration::from_secs(interval.unwrap_or(DEFAULT_RETRY_UNTIL_INCLUDED_INTERVAL));
 
                 #[cfg(target_family = "wasm")]
-                wasm_timer::Delay::new(duration).await?;
+                gloo_timers::future::TimeoutFuture::new(duration.as_millis() as u32).await;
 
                 #[cfg(not(target_family = "wasm"))]
                 tokio::time::sleep(duration).await;
