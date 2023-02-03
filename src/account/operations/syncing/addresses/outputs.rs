@@ -3,9 +3,12 @@
 
 use std::time::Instant;
 
-use crate::account::{
-    constants::PARALLEL_REQUESTS_AMOUNT, handle::AccountHandle, operations::helpers::task,
-    types::address::AddressWithUnspentOutputs, OutputData,
+use crate::{
+    account::{
+        constants::PARALLEL_REQUESTS_AMOUNT, handle::AccountHandle, types::address::AddressWithUnspentOutputs,
+        OutputData,
+    },
+    task,
 };
 
 impl AccountHandle {

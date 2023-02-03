@@ -13,7 +13,10 @@ use iota_client::{
     node_api::indexer::query_parameters::QueryParameter,
 };
 
-use crate::account::{handle::AccountHandle, operations::helpers::task, SyncOptions};
+use crate::{
+    account::{handle::AccountHandle, SyncOptions},
+    task,
+};
 
 impl AccountHandle {
     /// Returns output ids of alias outputs

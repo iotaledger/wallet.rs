@@ -17,9 +17,11 @@ use iota_client::{
     Client,
 };
 
-use crate::account::{
-    build_transaction_from_payload_and_inputs, handle::AccountHandle, operations::helpers::task, types::OutputData,
-    AddressWithUnspentOutputs,
+use crate::{
+    account::{
+        build_transaction_from_payload_and_inputs, handle::AccountHandle, types::OutputData, AddressWithUnspentOutputs,
+    },
+    task,
 };
 
 impl AccountHandle {

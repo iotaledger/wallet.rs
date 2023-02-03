@@ -26,8 +26,8 @@ use iota_client::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    account::{handle::AccountHandle, operations::helpers::task, OutputData},
-    Result,
+    account::{handle::AccountHandle, OutputData},
+    task, Result,
 };
 
 /// An object containing an account's entire participation overview.

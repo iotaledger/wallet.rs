@@ -4,8 +4,9 @@
 use std::time::Instant;
 
 use crate::{
-    account::{handle::AccountHandle, operations::helpers::task},
+    account::handle::AccountHandle,
     account_manager::{AccountManager, SyncOptions},
+    task,
 };
 
 impl AccountManager {

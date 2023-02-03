@@ -1,9 +1,9 @@
 // Copyright 2023 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::StorageAdapter;
-
 use gloo_storage::LocalStorage;
+
+use super::StorageAdapter;
 
 /// The storage id.
 pub const STORAGE_ID: &str = "Wasm";

@@ -20,7 +20,7 @@ use crate::events::EventEmitter;
 use crate::storage::adapter::memory::Memory;
 #[cfg(feature = "storage")]
 use crate::storage::{constants::default_storage_path, manager::ManagerStorage};
-use crate::{account::handle::AccountHandle, account_manager::AccountManager, ClientOptions, Error};
+use crate::{account::handle::AccountHandle, account_manager::AccountManager, ClientOptions};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 /// Builder for the account manager.
@@ -135,7 +135,7 @@ impl AccountManagerBuilder {
         #[cfg(feature = "storage")]
         let read_manager_builder = match storage_manager.lock().await.get_account_manager_data().await {
             Ok(x) => Some(x),
-            Err(Error::RecordNotFound(_)) => None,
+            Err(crate::Error::RecordNotFound(_)) => None,
             Err(e) => return Err(e),
         };
         #[cfg(not(feature = "storage"))]

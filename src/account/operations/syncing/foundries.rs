@@ -5,7 +5,7 @@ use std::collections::HashSet;
 
 use iota_client::block::output::{FoundryId, Output};
 
-use crate::account::{handle::AccountHandle, operations::helpers::task};
+use crate::{account::handle::AccountHandle, task};
 
 impl AccountHandle {
     pub(crate) async fn request_and_store_foundry_outputs(&self, foundry_ids: HashSet<FoundryId>) -> crate::Result<()> {
