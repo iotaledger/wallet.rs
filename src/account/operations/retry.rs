@@ -72,19 +72,14 @@ impl AccountHandle {
             // Attachments of the Block to check inclusion state
             let mut block_ids = vec![block_id];
             for _ in 0..max_attempts.unwrap_or(DEFAULT_RETRY_UNTIL_INCLUDED_MAX_AMOUNT) {
+                let duration =
+                    std::time::Duration::from_secs(interval.unwrap_or(DEFAULT_RETRY_UNTIL_INCLUDED_INTERVAL));
+
                 #[cfg(target_family = "wasm")]
-                gloo_timers::future::TimeoutFuture::new(
-                    (interval.unwrap_or(DEFAULT_RETRY_UNTIL_INCLUDED_INTERVAL) * 1000)
-                        .try_into()
-                        .unwrap(),
-                )
-                .await;
+                gloo_timers::future::TimeoutFuture::new(duration.as_millis() as u32).await;
 
                 #[cfg(not(target_family = "wasm"))]
-                tokio::time::sleep(std::time::Duration::from_secs(
-                    interval.unwrap_or(DEFAULT_RETRY_UNTIL_INCLUDED_INTERVAL),
-                ))
-                .await;
+                tokio::time::sleep(duration).await;
 
                 // Check inclusion state for each attachment
                 let block_ids_len = block_ids.len();

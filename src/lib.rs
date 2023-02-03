@@ -25,6 +25,8 @@ pub mod events;
 #[cfg(feature = "storage")]
 /// The storage module.
 pub mod storage;
+/// The module for spawning tasks on a thread
+pub(crate) mod task;
 
 // Expose for high level functions
 pub use iota_client::{self, secret};

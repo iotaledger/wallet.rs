@@ -1,10 +1,9 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{
-    fmt::{Debug, Formatter, Result},
-    path::PathBuf,
-};
+use std::fmt::{Debug, Formatter, Result};
+#[cfg(feature = "stronghold")]
+use std::path::PathBuf;
 
 use iota_client::{node_manager::node::NodeAuth, secret::GenerateAddressOptions};
 use serde::{Deserialize, Serialize};
@@ -155,15 +154,18 @@ pub enum Message {
     },
     /// Set the stronghold password.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
+    #[cfg(feature = "stronghold")]
     SetStrongholdPassword { password: String },
     /// Set the stronghold password clear interval.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
+    #[cfg(feature = "stronghold")]
     SetStrongholdPasswordClearInterval {
         #[serde(rename = "intervalInMilliseconds")]
         interval_in_milliseconds: Option<u64>,
     },
     /// Store a mnemonic into the Stronghold vault.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
+    #[cfg(feature = "stronghold")]
     StoreMnemonic { mnemonic: String },
     /// Start background syncing.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
@@ -266,9 +268,11 @@ impl Debug for Message {
                 "GenerateAddress{{ account_index: {account_index:?}, internal: {internal:?}, address_index: {address_index:?}, options: {options:?}, bech32_hrp: {bech32_hrp:?} }}"
             ),
             Self::GetNodeInfo { url, auth: _ } => write!(f, "GetNodeInfo{{ url: {url:?} }}"),
+            #[cfg(feature = "stronghold")]
             Self::SetStrongholdPassword { password: _ } => {
                 write!(f, "SetStrongholdPassword{{  password: <omitted> }}")
             }
+            #[cfg(feature = "stronghold")]
             Self::SetStrongholdPasswordClearInterval {
                 interval_in_milliseconds,
             } => {
@@ -277,6 +281,7 @@ impl Debug for Message {
                     "SetStrongholdPasswordClearInterval{{ interval_in_milliseconds: {interval_in_milliseconds:?} }}"
                 )
             }
+            #[cfg(feature = "stronghold")]
             Self::StoreMnemonic { mnemonic: _ } => write!(f, "StoreMnemonic{{ mnemonic: <omitted> }}"),
             Self::StartBackgroundSync {
                 options,

@@ -32,6 +32,7 @@ tokio = { version = "1.24.2", default-features = false, features = [ "sync", "rt
 zeroize = { version = "1.5.7", default-features = false, features = [ "zeroize_derive" ] }
 
 [target.'cfg(target_family = "wasm")'.dependencies]
+gloo-storage = { version = "0.2.2", default-features = false }
 gloo-timers = { version = "0.2.6", default-features = false, features = [ "futures" ] }
 
 [dev-dependencies]

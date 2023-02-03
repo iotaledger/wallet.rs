@@ -3,8 +3,12 @@
 
 use std::time::Instant;
 
-use crate::account::{
-    constants::PARALLEL_REQUESTS_AMOUNT, handle::AccountHandle, types::address::AddressWithUnspentOutputs, OutputData,
+use crate::{
+    account::{
+        constants::PARALLEL_REQUESTS_AMOUNT, handle::AccountHandle, types::address::AddressWithUnspentOutputs,
+        OutputData,
+    },
+    task,
 };
 
 impl AccountHandle {
@@ -28,7 +32,7 @@ impl AccountHandle {
             for address in addresses_chunk {
                 let account_handle = self.clone();
                 tasks.push(async move {
-                    tokio::spawn(async move {
+                    task::spawn(async move {
                         let output_responses = account_handle.get_outputs(address.output_ids.clone()).await?;
 
                         let outputs = account_handle
