@@ -1,15 +1,19 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+#[cfg(all(feature = "stronghold", feature = "storage"))]
 mod common;
 
+#[cfg(all(feature = "stronghold", feature = "storage"))]
 use std::path::PathBuf;
 
+#[cfg(all(feature = "stronghold", feature = "storage"))]
 use iota_client::{
     constants::{IOTA_COIN_TYPE, SHIMMER_COIN_TYPE},
     node_manager::node::{Node, NodeDto, Url},
     secret::{mnemonic::MnemonicSecretManager, stronghold::StrongholdSecretManager, SecretManager},
 };
+#[cfg(all(feature = "stronghold", feature = "storage"))]
 use iota_wallet::{account_manager::AccountManager, ClientOptions, Result};
 
 #[tokio::test]

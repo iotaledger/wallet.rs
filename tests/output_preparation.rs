@@ -3,15 +3,19 @@
 
 mod common;
 
+#[cfg(feature = "storage")]
 use std::str::FromStr;
 
+#[cfg(feature = "storage")]
 use iota_client::block::address::Address;
+#[cfg(feature = "storage")]
 use iota_wallet::{
     account::{Assets, Features, OutputOptions, Unlocks},
     iota_client::block::output::{NativeToken, NftId, TokenId},
     Result, U256,
 };
 
+#[cfg(feature = "storage")]
 #[tokio::test]
 async fn output_preparation() -> Result<()> {
     let storage_path = "test-storage/output_preparation";

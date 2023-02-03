@@ -18,9 +18,9 @@ use tokio::sync::RwLock;
 use crate::events::EventEmitter;
 #[cfg(all(feature = "storage", not(feature = "rocksdb")))]
 use crate::storage::adapter::memory::Memory;
+use crate::{account::handle::AccountHandle, account_manager::AccountManager, ClientOptions};
 #[cfg(feature = "storage")]
 use crate::storage::{constants::default_storage_path, manager::ManagerStorage};
-use crate::{account::handle::AccountHandle, account_manager::AccountManager, ClientOptions};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 /// Builder for the account manager.

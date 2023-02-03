@@ -3,37 +3,23 @@
 
 mod common;
 
-use std::time::Duration;
-
-use iota_client::{
-    block::output::{NftId, OutputId},
-    request_funds_from_faucet,
-};
+#[cfg(feature = "storage")]
+use iota_client::block::output::{NftId, OutputId};
+#[cfg(feature = "storage")]
 use iota_wallet::{account::AccountHandle, NativeTokenOptions, NftOptions, Result, U256};
 
 #[ignore]
+#[cfg(feature = "storage")]
 #[tokio::test]
 async fn mint_and_burn_nft() -> Result<()> {
     let storage_path = "test-storage/mint_and_burn_outputs";
     common::setup(storage_path)?;
 
     let manager = common::make_manager(storage_path, None, None).await?;
-    let account = manager.create_account().finish().await?;
-
-    let account_addresses = account.generate_addresses(1, None).await.unwrap();
-
-    request_funds_from_faucet(
-        "http://localhost:8091/api/enqueue",
-        &account_addresses[0].address().to_bech32(),
-    )
-    .await?;
-
-    // Wait for faucet transaction
-    tokio::time::sleep(Duration::new(5, 0)).await;
-    account.sync(None).await?;
+    let account = &common::create_accounts_with_funds(&manager, 1).await?[0];
 
     let nft_options = vec![NftOptions {
-        address: Some(account_addresses[0].address().to_bech32()),
+        address: Some(account.addresses().await?[0].address().to_bech32()),
         sender: None,
         metadata: Some(b"some nft metadata".to_vec()),
         tag: None,
@@ -42,18 +28,22 @@ async fn mint_and_burn_nft() -> Result<()> {
     }];
 
     let transaction = account.mint_nfts(nft_options, None).await.unwrap();
+    account
+        .retry_transaction_until_included(&transaction.transaction_id, None, None)
+        .await?;
+    let balance = account.sync(None).await.unwrap();
 
     let output_id = OutputId::new(transaction.transaction_id, 0u16).unwrap();
     let nft_id = NftId::from(&output_id);
 
-    tokio::time::sleep(Duration::new(5, 0)).await;
-    let balance = account.sync(None).await.unwrap();
     let search = balance.nfts.iter().find(|&balance_nft_id| *balance_nft_id == nft_id);
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
     assert!(search.is_some());
 
-    let _ = account.burn_nft(nft_id, None).await.unwrap();
-    tokio::time::sleep(Duration::new(5, 0)).await;
+    let transaction = account.burn_nft(nft_id, None).await.unwrap();
+    account
+        .retry_transaction_until_included(&transaction.transaction_id, None, None)
+        .await?;
     let balance = account.sync(None).await.unwrap();
     let search = balance.nfts.iter().find(|&balance_nft_id| *balance_nft_id == nft_id);
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
@@ -63,24 +53,14 @@ async fn mint_and_burn_nft() -> Result<()> {
 }
 
 #[ignore]
+#[cfg(feature = "storage")]
 #[tokio::test]
 async fn mint_and_decrease_native_token_supply() -> Result<()> {
     let storage_path = "test-storage/mint_and_decrease_native_token_supply";
     common::setup(storage_path)?;
 
     let manager = common::make_manager(storage_path, None, None).await?;
-    let account = manager.create_account().finish().await?;
-
-    let account_addresses = account.generate_addresses(1, None).await.unwrap();
-    request_funds_from_faucet(
-        "http://localhost:8091/api/enqueue",
-        &account_addresses[0].address().to_bech32(),
-    )
-    .await?;
-
-    // Wait for faucet transaction
-    tokio::time::sleep(Duration::new(10, 0)).await;
-    account.sync(None).await?;
+    let account = &common::create_accounts_with_funds(&manager, 1).await?[0];
 
     // First create an alias output, this needs to be done only once, because an alias can have many foundry outputs
     let transaction = account.create_alias_output(None, None).await?;
@@ -89,9 +69,6 @@ async fn mint_and_decrease_native_token_supply() -> Result<()> {
     account
         .retry_transaction_until_included(&transaction.transaction_id, None, None)
         .await?;
-
-    tokio::time::sleep(Duration::new(5, 0)).await;
-
     account.sync(None).await?;
 
     let circulating_supply = U256::from(60i32);
@@ -102,58 +79,65 @@ async fn mint_and_decrease_native_token_supply() -> Result<()> {
         foundry_metadata: None,
     };
 
-    let transaction = account.mint_native_token(native_token_options, None).await.unwrap();
+    let mint_transaction = account.mint_native_token(native_token_options, None).await.unwrap();
 
-    tokio::time::sleep(Duration::new(5, 0)).await;
+    account
+        .retry_transaction_until_included(&mint_transaction.transaction.transaction_id, None, None)
+        .await?;
     let balance = account.sync(None).await.unwrap();
 
     let search = balance
         .native_tokens
         .iter()
-        .find(|token| token.token_id == transaction.token_id && token.available == circulating_supply);
+        .find(|token| token.token_id == mint_transaction.token_id && token.available == circulating_supply);
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
     assert!(search.is_some());
 
-    // Burn some of the circulating supply
-    let burn_amount = U256::from(40i32);
-    let _ = account
-        .decrease_native_token_supply(transaction.token_id, burn_amount, None)
+    // Melt some of the circulating supply
+    let melt_amount = U256::from(40i32);
+    let transaction = account
+        .decrease_native_token_supply(mint_transaction.token_id, melt_amount, None)
         .await
         .unwrap();
 
-    tokio::time::sleep(Duration::new(10, 0)).await;
+    account
+        .retry_transaction_until_included(&transaction.transaction_id, None, None)
+        .await?;
     let balance = account.sync(None).await.unwrap();
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
 
     let search = balance.native_tokens.iter().find(|token| {
-        (token.token_id == transaction.token_id) && (token.available == circulating_supply - burn_amount)
+        (token.token_id == mint_transaction.token_id) && (token.available == circulating_supply - melt_amount)
     });
     assert!(search.is_some());
 
-    // The burn the rest of the supply
-    let melt_amount = circulating_supply - burn_amount;
-    let _ = account
-        .decrease_native_token_supply(transaction.token_id, melt_amount, None)
+    // Then melt the rest of the supply
+    let melt_amount = circulating_supply - melt_amount;
+    let transaction = account
+        .decrease_native_token_supply(mint_transaction.token_id, melt_amount, None)
         .await
         .unwrap();
 
-    tokio::time::sleep(Duration::new(5, 0)).await;
+    account
+        .retry_transaction_until_included(&transaction.transaction_id, None, None)
+        .await?;
     let balance = account.sync(None).await.unwrap();
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
 
     let search = balance
         .native_tokens
         .iter()
-        .find(|token| token.token_id == transaction.token_id);
+        .find(|token| token.token_id == mint_transaction.token_id);
     assert!(search.is_none());
 
     // Call to run tests in sequence
-    destroy_foundry(&account).await?;
-    destroy_alias(&account).await?;
+    destroy_foundry(account).await?;
+    destroy_alias(account).await?;
 
     common::tear_down(storage_path)
 }
 
+#[cfg(feature = "storage")]
 async fn destroy_foundry(account: &AccountHandle) -> Result<()> {
     let balance = account.sync(None).await?;
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
@@ -162,8 +146,10 @@ async fn destroy_foundry(account: &AccountHandle) -> Result<()> {
     // idea
     let foundry_id = *balance.foundries.first().unwrap();
 
-    let _ = account.destroy_foundry(foundry_id, None).await.unwrap();
-    tokio::time::sleep(Duration::new(5, 0)).await;
+    let transaction = account.destroy_foundry(foundry_id, None).await.unwrap();
+    account
+        .retry_transaction_until_included(&transaction.transaction_id, None, None)
+        .await?;
     let balance = account.sync(None).await.unwrap();
     let search = balance
         .foundries
@@ -175,6 +161,7 @@ async fn destroy_foundry(account: &AccountHandle) -> Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "storage")]
 async fn destroy_alias(account: &AccountHandle) -> Result<()> {
     let balance = account.sync(None).await.unwrap();
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
@@ -182,8 +169,10 @@ async fn destroy_alias(account: &AccountHandle) -> Result<()> {
     // Let's destroy the first alias we can find
     let alias_id = *balance.aliases.first().unwrap();
     println!("alias_id -> {alias_id}");
-    let _ = account.destroy_alias(alias_id, None).await.unwrap();
-    tokio::time::sleep(Duration::new(5, 0)).await;
+    let transaction = account.destroy_alias(alias_id, None).await.unwrap();
+    account
+        .retry_transaction_until_included(&transaction.transaction_id, None, None)
+        .await?;
     let balance = account.sync(None).await.unwrap();
     let search = balance
         .aliases
@@ -193,4 +182,54 @@ async fn destroy_alias(account: &AccountHandle) -> Result<()> {
     assert!(search.is_none());
 
     Ok(())
+}
+
+#[ignore]
+#[cfg(feature = "storage")]
+#[tokio::test]
+async fn mint_and_burn_native_tokens() -> Result<()> {
+    let storage_path = "test-storage/mint_and_burn_native_tokens";
+    common::setup(storage_path)?;
+
+    common::setup(storage_path)?;
+
+    let manager = common::make_manager(storage_path, None, None).await?;
+
+    let account = &common::create_accounts_with_funds(&manager, 1).await?[0];
+
+    let native_token_amount = U256::from(100);
+
+    let tx = account.create_alias_output(None, None).await?;
+    account
+        .retry_transaction_until_included(&tx.transaction_id, None, None)
+        .await?;
+    account.sync(None).await?;
+
+    let mint_tx = account
+        .mint_native_token(
+            NativeTokenOptions {
+                alias_id: None,
+                circulating_supply: native_token_amount,
+                maximum_supply: native_token_amount,
+                foundry_metadata: None,
+            },
+            None,
+        )
+        .await?;
+    account
+        .retry_transaction_until_included(&mint_tx.transaction.transaction_id, None, None)
+        .await?;
+    account.sync(None).await?;
+
+    let tx = account
+        .burn_native_token(mint_tx.token_id, native_token_amount, None)
+        .await?;
+    account
+        .retry_transaction_until_included(&tx.transaction_id, None, None)
+        .await?;
+    let balance = account.sync(None).await?;
+
+    assert!(balance.native_tokens.is_empty());
+
+    common::tear_down(storage_path)
 }

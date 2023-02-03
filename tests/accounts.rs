@@ -4,13 +4,14 @@
 mod common;
 
 #[cfg(feature = "stronghold")]
-use std::path::PathBuf;
+use {
+    iota_client::constants::SHIMMER_COIN_TYPE,
+    iota_client::secret::stronghold::StrongholdSecretManager,
+    iota_wallet::{account_manager::AccountManager, secret::SecretManager, ClientOptions, Result},
+    std::path::PathBuf,
+};
 
-use iota_client::constants::SHIMMER_COIN_TYPE;
-#[cfg(feature = "stronghold")]
-use iota_client::secret::stronghold::StrongholdSecretManager;
-use iota_wallet::{account_manager::AccountManager, secret::SecretManager, ClientOptions, Result};
-
+#[cfg(feature = "storage")]
 #[tokio::test]
 async fn account_ordering() -> Result<()> {
     let storage_path = "test-storage/account_ordering";
@@ -27,6 +28,7 @@ async fn account_ordering() -> Result<()> {
     common::tear_down(storage_path)
 }
 
+#[cfg(feature = "storage")]
 #[tokio::test]
 async fn remove_latest_account() -> Result<()> {
     let storage_path = "test-storage/remove_latest_account";
@@ -98,6 +100,7 @@ async fn remove_latest_account() -> Result<()> {
     common::tear_down(storage_path)
 }
 
+#[cfg(feature = "storage")]
 #[tokio::test]
 async fn account_alias_already_exists() -> Result<()> {
     let storage_path = "test-storage/account_alias_already_exists";
@@ -146,6 +149,7 @@ async fn account_alias_already_exists() -> Result<()> {
     common::tear_down(storage_path)
 }
 
+#[cfg(feature = "storage")]
 #[tokio::test]
 async fn account_rename_alias() -> Result<()> {
     let storage_path = "test-storage/account_rename_alias";
@@ -168,6 +172,7 @@ async fn account_rename_alias() -> Result<()> {
     common::tear_down(storage_path)
 }
 
+#[cfg(feature = "storage")]
 #[tokio::test]
 async fn account_first_address_exists() -> Result<()> {
     let storage_path = "test-storage/account_first_address_exists";
