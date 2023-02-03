@@ -21,7 +21,7 @@ use crate::{
 impl AccountHandle {
     /// Returns output ids of alias outputs
     pub(crate) async fn get_alias_and_foundry_output_ids(
-        self,
+        &self,
         bech32_address: &str,
         sync_options: SyncOptions,
     ) -> crate::Result<Vec<OutputId>> {
@@ -83,7 +83,7 @@ impl AccountHandle {
 
         // Get all results
         if sync_options.alias.foundry_outputs {
-            let foundry_output_ids = self.get_foundry_output_ids(&output_ids).await?;
+            let foundry_output_ids = &self.get_foundry_output_ids(&output_ids).await?;
             output_ids.extend(foundry_output_ids);
         }
 
@@ -92,7 +92,7 @@ impl AccountHandle {
 
     /// Returns output ids of foundries controlled by the provided aliases
     pub(crate) async fn get_foundry_output_ids(
-        self,
+        &self,
         alias_output_ids: &HashSet<OutputId>,
     ) -> crate::Result<Vec<OutputId>> {
         log::debug!("[SYNC] get_foundry_output_ids");

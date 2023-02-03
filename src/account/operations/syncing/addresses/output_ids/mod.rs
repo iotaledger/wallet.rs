@@ -49,8 +49,7 @@ impl AccountHandle {
             #[cfg(target_family = "wasm")]
             {
                 results.push(
-                    self.clone()
-                        .get_basic_output_ids_with_any_unlock_condition(&bech32_address)
+                    self.get_basic_output_ids_with_any_unlock_condition(&bech32_address)
                         .await,
                 )
             }
@@ -80,11 +79,7 @@ impl AccountHandle {
             // nfts
             #[cfg(target_family = "wasm")]
             {
-                results.push(
-                    self.clone()
-                        .get_nft_output_ids_with_any_unlock_condition(&bech32_address)
-                        .await,
-                )
+                results.push(self.get_nft_output_ids_with_any_unlock_condition(&bech32_address).await)
             }
 
             #[cfg(not(target_family = "wasm"))]
@@ -113,8 +108,7 @@ impl AccountHandle {
             #[cfg(target_family = "wasm")]
             {
                 results.push(
-                    self.clone()
-                        .get_alias_and_foundry_output_ids(&bech32_address, sync_options.clone())
+                    self.get_alias_and_foundry_output_ids(&bech32_address, sync_options.clone())
                         .await,
                 )
             }

@@ -30,7 +30,7 @@ impl AccountHandle {
     /// Returns output ids of basic outputs that have the address in the `AddressUnlockCondition`,
     /// `ExpirationUnlockCondition` or `StorageDepositReturnUnlockCondition`
     pub(crate) async fn get_basic_output_ids_with_any_unlock_condition(
-        self,
+        &self,
         bech32_address: &str,
     ) -> crate::Result<Vec<OutputId>> {
         // aliases and foundries

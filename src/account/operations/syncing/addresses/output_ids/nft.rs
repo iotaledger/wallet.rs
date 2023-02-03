@@ -13,7 +13,7 @@ use crate::account::handle::AccountHandle;
 impl AccountHandle {
     /// Returns output ids of nft outputs that have the address in any unlock condition
     pub(crate) async fn get_nft_output_ids_with_any_unlock_condition(
-        self,
+        &self,
         bech32_address: &str,
     ) -> crate::Result<Vec<OutputId>> {
         #[cfg(target_family = "wasm")]
