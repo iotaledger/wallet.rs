@@ -31,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `AccountSyncOptions, AliasSyncOptions, NftSyncOptions`;
 - `SyncOptions::{account, alias, nft}` fields;
 - `{TransactionOptions, TransactionOptionsDto}::burn`;
-- `Memory` and `Wasm` storage adapter;
+- `Memory` and `Wasm` storage adapters;
 - `ParticipationEventWithNodes`;
 - Support for target `wasm32-unknown-unknown`;
 

@@ -21,6 +21,7 @@ impl WasmAdapter {
 
 #[async_trait::async_trait]
 impl StorageAdapter for WasmAdapter {
+    /// Gets the record associated with the given key from the storage.
     async fn get(&self, key: &str) -> crate::Result<String> {
         self.0.get(key)
     }
@@ -30,7 +31,7 @@ impl StorageAdapter for WasmAdapter {
         self.0.set(key, record)
     }
 
-    /// Batch write.
+    /// Batch writes records to the storage.
     async fn batch_set(&mut self, records: HashMap<String, String>) -> crate::Result<()> {
         records.into_iter().map(|s| self.set(s.0, s.1));
         Ok(())
