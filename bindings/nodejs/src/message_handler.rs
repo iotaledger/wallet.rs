@@ -178,10 +178,13 @@ pub fn listen(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     Ok(cx.undefined())
 }
 
-pub fn destroy(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+pub fn destroy(mut cx: FunctionContext) -> JsResult<JsPromise> {
     let message_handler = Arc::clone(&&cx.argument::<JsBox<MessageHandlerWrapper>>(0)?.0);
+    let channel = cx.channel();
+    let (deferred, promise) = cx.promise();
     crate::RUNTIME.spawn(async move {
         *message_handler.write().await = None;
+        deferred.settle_with(&channel, move |mut cx| Ok(cx.undefined()));
     });
-    Ok(cx.undefined())
+    Ok(promise)
 }

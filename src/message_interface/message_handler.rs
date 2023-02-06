@@ -301,7 +301,7 @@ impl WalletMessageHandler {
             }
             Message::StopBackgroundSync => {
                 convert_async_panics(|| async {
-                    self.account_manager.stop_background_syncing()?;
+                    self.account_manager.stop_background_syncing().await?;
                     Ok(Response::Ok(()))
                 })
                 .await

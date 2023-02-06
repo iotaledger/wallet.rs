@@ -63,7 +63,7 @@ export class MessageHandler {
         return listen(eventTypes, callback, this.messageHandler);
     }
 
-    destroy(): void {
+    async destroy(): Promise<void> {
         return destroy(this.messageHandler);
     }
 }
