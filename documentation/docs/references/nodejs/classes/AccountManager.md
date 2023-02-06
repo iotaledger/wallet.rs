@@ -125,13 +125,13 @@ ___
 
 ### destroy
 
-▸ **destroy**(): `void`
+▸ **destroy**(): `Promise`<`void`\>
 
 Destroy the AccountManager and drop its database connection.
 
 #### Returns
 
-`void`
+`Promise`<`void`\>
 
 ___
 

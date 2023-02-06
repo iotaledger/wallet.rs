@@ -89,8 +89,8 @@ export class AccountManager {
     /**
      * Destroy the AccountManager and drop its database connection.
      */
-    destroy(): void {
-        this.messageHandler.destroy();
+    async destroy(): Promise<void> {
+        await this.messageHandler.destroy();
     }
 
     /**

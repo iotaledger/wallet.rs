@@ -78,3 +78,9 @@ impl Storage {
         self.inner.remove(key).await
     }
 }
+
+impl Drop for Storage {
+    fn drop(&mut self) {
+        log::debug!("drop Storage");
+    }
+}
