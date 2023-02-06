@@ -5,7 +5,9 @@ use std::{convert::TryFrom, sync::Mutex};
 
 use iota_wallet::{
     events::types::{Event, WalletEventType},
-    message_interface::{create_message_handler, init_logger, send_message, ManagerOptions, Message, WalletMessageHandler},
+    message_interface::{
+        create_message_handler, init_logger, send_message, ManagerOptions, Message, WalletMessageHandler,
+    },
 };
 use jni::{
     objects::{GlobalRef, JClass, JObject, JStaticMethodID, JString, JValue},
@@ -28,12 +30,13 @@ lazy_static::lazy_static! {
 // A macro that checks if the result is an error and throws an exception if it is.
 macro_rules! jni_err_assert {
     ($env:ident, $result:expr, $ret:expr ) => {{
-        if let Err(err) = $result {
-            throw_exception(&$env, err.to_string());
-            return $ret;
+        match $result {
+            Err(err) => {
+                throw_exception(&$env, err.to_string());
+                return $ret;
+            }
+            Ok(res) => res,
         }
-        // Can unwrap as we just checked and returned if its an error
-        $result.unwrap()
     }};
 }
 
@@ -45,7 +48,6 @@ macro_rules! string_from_jni {
         String::from(jni_err_assert!($env, string, $r))
     }};
 }
-
 
 /// A macro that takes in a JNIEnv, a JString, a type, and a return value. It then gets the string from
 /// the JNIEnv, and checks if it is an error. If it is an error, it throws an exception and returns
@@ -72,7 +74,7 @@ macro_rules! env_assert {
 #[no_mangle]
 pub extern "system" fn Java_org_iota_api_NativeApi_initLogger(env: JNIEnv, _class: JClass, command: JString) {
     // This is a safety check to make sure that the JNIEnv is not in an exception state.
-    env_assert!(env,());
+    env_assert!(env, ());
     let ret = init_logger(string_from_jni!(env, command, ()));
     jni_err_assert!(env, ret, ());
 }
@@ -93,9 +95,12 @@ pub extern "system" fn Java_org_iota_api_NativeApi_createMessageHandler(
     if let Ok(mut message_handler_store) = MESSAGE_HANDLER.lock() {
         message_handler_store.replace(jni_err_assert!(
             env,
-            crate::block_on(create_message_handler(Some(
-                jni_from_json_make!(env, config, ManagerOptions, ()),
-            ))),
+            crate::block_on(create_message_handler(Some(jni_from_json_make!(
+                env,
+                config,
+                ManagerOptions,
+                ()
+            ),))),
             ()
         ));
     };
@@ -239,12 +244,16 @@ fn event_handle(callback_ref: GlobalRef, e: &Event) {
     let cb = JValue::Object(callback_ref.as_obj()).to_jni();
 
     // Call NativeApi, METHOD_CACHE assumed initialised if we received a VM
-    jni_err_assert!(env, env.call_static_method_unchecked(
-        "org/iota/api/NativeApi",
-        METHOD_CACHE.lock().unwrap().unwrap(),
-        ReturnType::Object,
-        &[event, cb],
-    ), ());
+    jni_err_assert!(
+        env,
+        env.call_static_method_unchecked(
+            "org/iota/api/NativeApi",
+            METHOD_CACHE.lock().unwrap().unwrap(),
+            ReturnType::Object,
+            &[event, cb],
+        ),
+        ()
+    );
 }
 
 pub(crate) fn block_on<C: futures::Future>(cb: C) -> C::Output {
