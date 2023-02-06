@@ -257,12 +257,11 @@ fn filter_inputs(
         // Defaults to state transition if it is not explicitly a governance transition or a burn.
         let alias_state_transition = alias_state_transition(output_data, outputs, burn)?.unwrap_or(true);
 
-        available_outputs_signing_data.push(output_data.input_signing_data(
-            account,
-            current_time,
-            bech32_hrp,
-            alias_state_transition,
-        )?);
+        if let Some(available_input) =
+            output_data.input_signing_data(account, current_time, bech32_hrp, alias_state_transition)?
+        {
+            available_outputs_signing_data.push(available_input);
+        }
     }
 
     Ok(available_outputs_signing_data)
