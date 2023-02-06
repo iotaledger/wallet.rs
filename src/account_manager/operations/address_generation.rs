@@ -20,7 +20,7 @@ impl AccountManager {
     ///         0,
     ///         false,
     ///         0,
-    ///         false,
+    ///         None,
     ///     )
     ///     .await?;
     /// ```
