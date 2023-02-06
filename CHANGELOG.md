@@ -58,6 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Only expose `MessageHandler` methods `SetStrongholdPassword`, `SetStrongholdPasswordClearInterval` and `StoreMnemonic` when `feature = "stronghold"` is enabled; 
 - `Message::{GetAccount, VerifyMnemonic, SetClientOptions, SetStrongholdPassword, SetStrongholdPasswordClearInterval, StoreMnemonic, EmitTestEvent, Bech32ToHex, ClearListeners}` to named fields for better error messages;
 - Made `AccountManager::stop_background_syncing()` async to await until syncing actually stopped;
+- `OutputData::input_signing_data` returns `Result<Option<InputSigningData>>` instead of `Result<InputSigningData>>`;
 
 ### Removed
 
