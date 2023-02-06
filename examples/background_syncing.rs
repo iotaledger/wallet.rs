@@ -49,7 +49,7 @@ async fn main() -> Result<()> {
 
     manager.start_background_syncing(None, None).await?;
     sleep(Duration::from_secs(10)).await;
-    manager.stop_background_syncing()?;
+    manager.stop_background_syncing().await?;
     manager.start_background_syncing(None, None).await?;
 
     Ok(())

@@ -202,10 +202,15 @@ impl AccountManager {
     }
 
     /// Stop the background syncing of the accounts
-    pub fn stop_background_syncing(&self) -> crate::Result<()> {
+    pub async fn stop_background_syncing(&self) -> crate::Result<()> {
         log::debug!("[stop_background_syncing]");
         // send stop request
         self.background_syncing_status.store(2, Ordering::Relaxed);
+        // wait until it stopped
+        while self.background_syncing_status.load(Ordering::Relaxed) != 0 {
+            log::debug!("[stop_background_syncing]: waiting for the background syncing to stop");
+            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+        }
         Ok(())
     }
 
@@ -244,5 +249,11 @@ impl AccountManager {
     pub async fn emit_test_event(&self, event: crate::events::types::WalletEvent) -> crate::Result<()> {
         self.event_emitter.lock().await.emit(0, event);
         Ok(())
+    }
+}
+
+impl Drop for AccountManager {
+    fn drop(&mut self) {
+        log::debug!("drop AccountManager");
     }
 }

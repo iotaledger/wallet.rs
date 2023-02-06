@@ -20,7 +20,7 @@ use iota_client::{
             dto::{OutputDto, OutputMetadataDto},
             Output,
         },
-        payload::transaction::{TransactionId, TransactionPayload},
+        payload::transaction::TransactionPayload,
         semantic::ConflictReason,
     },
     secret::types::InputSigningData,
@@ -33,7 +33,6 @@ use crate::{
         types::{InclusionState, Transaction},
     },
     iota_client::Error,
-    task,
 };
 
 impl AccountHandle {
@@ -135,8 +134,7 @@ impl AccountHandle {
             return Err(Error::TransactionSemantic(conflict).into());
         }
 
-        // Ignore errors from sending, we will try to send it again during [`sync_pending_transactions`] and in
-        // [`monitor_tx_confirmation`]
+        // Ignore errors from sending, we will try to send it again during [`sync_pending_transactions`]
         let block_id = match self
             .submit_transaction_payload(signed_transaction_data.transaction_payload.clone())
             .await
@@ -149,7 +147,6 @@ impl AccountHandle {
         };
 
         let transaction_id = signed_transaction_data.transaction_payload.id();
-        self.monitor_tx_confirmation(transaction_id);
 
         // store transaction payload to account (with db feature also store the account to the db)
         let network_id = self.client.get_network_id().await?;
@@ -164,7 +161,7 @@ impl AccountHandle {
             .collect();
 
         let transaction = Transaction {
-            transaction_id: signed_transaction_data.transaction_payload.id(),
+            transaction_id,
             payload: signed_transaction_data.transaction_payload,
             block_id,
             network_id,
@@ -203,19 +200,5 @@ impl AccountHandle {
             );
         }
         Ok(())
-    }
-
-    // Try to get a transaction confirmed
-    fn monitor_tx_confirmation(&self, transaction_id: TransactionId) {
-        // spawn a task which tries to get the block confirmed
-        let account = self.clone();
-        task::spawn(async move {
-            if let Ok(block_id) = account
-                .retry_transaction_until_included(&transaction_id, None, None)
-                .await
-            {
-                log::debug!("[TRANSACTION] {} confirmed in block {}", transaction_id, block_id,);
-            }
-        });
     }
 }
