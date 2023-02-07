@@ -6,8 +6,7 @@ use iota_client::{
     block::{
         address::{Address, AliasAddress},
         output::{
-            unlock_condition::AddressUnlockCondition, AliasId, AliasTransition, BasicOutputBuilder, Output, OutputId,
-            UnlockCondition,
+            unlock_condition::AddressUnlockCondition, AliasId, BasicOutputBuilder, Output, OutputId, UnlockCondition,
         },
     },
 };
@@ -42,7 +41,7 @@ impl AccountHandle {
                 &[Address::Alias(AliasAddress::new(alias_id))],
                 &output_data,
                 current_time,
-                Some(AliasTransition::State),
+                None,
             )? {
                 owned_outputs.push(output_data);
             }
