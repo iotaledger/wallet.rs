@@ -5,7 +5,6 @@ import {
     sendMessageAsync,
     messageHandlerNew,
     listen,
-    clearListeners,
     destroy,
 } from './bindings';
 import type {
@@ -35,9 +34,9 @@ export class MessageHandler {
         return sendMessageAsync(
             JSON.stringify(message),
             this.messageHandler,
-        ).catch((error) => {
+        ).catch((error: Error) => {
             try {
-                error = JSON.parse(error).payload;
+                error = JSON.parse(error.toString()).payload;
             } catch (e) {}
             return Promise.reject(error);
         });
