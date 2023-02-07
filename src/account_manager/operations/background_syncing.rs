@@ -31,7 +31,13 @@ impl AccountManager {
         background_syncing_status.store(1, Ordering::Relaxed);
         let accounts = self.accounts.clone();
         let _background_syncing = std::thread::spawn(move || {
+            #[cfg(not(target_family = "wasm"))]
             let runtime = tokio::runtime::Builder::new_multi_thread()
+                .enable_all()
+                .build()
+                .unwrap();
+            #[cfg(target_family = "wasm")]
+            let runtime = tokio::runtime::Builder::new_current_thread()
                 .enable_all()
                 .build()
                 .unwrap();

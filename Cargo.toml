@@ -32,6 +32,7 @@ tokio = { version = "1.24.2", default-features = false, features = [ "sync", "rt
 zeroize = { version = "1.5.7", default-features = false, features = [ "zeroize_derive" ] }
 
 [target.'cfg(target_family = "wasm")'.dependencies]
+gloo-storage = { version = "0.2.2", default-features = false }
 gloo-timers = { version = "0.2.6", default-features = false, features = [ "futures" ] }
 
 [dev-dependencies]
@@ -60,34 +61,42 @@ strip = "symbols"
 [[example]]
 name = "mint_issuer_nft"
 path = "examples/nft_collection/00_mint_issuer_nft.rs"
+required-features = [ "storage", "stronghold" ]
 
 [[example]]
 name = "mint_collection_nft"
 path = "examples/nft_collection/01_mint_collection_nft.rs"
+required-features = [ "stronghold" ]
 
 [[example]]
 name = "0_generate_addresses"
 path = "examples/offline_signing/0_generate_addresses.rs"
+required-features = [ "stronghold" ]
 
 [[example]]
 name = "1_prepare_transaction"
 path = "examples/offline_signing/1_prepare_transaction.rs"
+required-features = [ "storage" ]
 
 [[example]]
 name = "2_sign_transaction"
 path = "examples/offline_signing/2_sign_transaction.rs"
+required-features = [ "stronghold" ]
 
 [[example]]
 name = "3_send_transaction"
 path = "examples/offline_signing/3_send_transaction.rs"
+required-features = [ "storage" ]
 
 [[example]]
 name = "create_wallet"
 path = "examples/01_create_wallet.rs"
+required-features = [ "storage", "stronghold" ]
 
 [[example]]
 name = "generate_address"
 path = "examples/02_generate_address.rs"
+required-features = [ "stronghold" ]
 
 [[example]]
 name = "get_funds"
@@ -100,50 +109,62 @@ path = "examples/04_get_balance.rs"
 [[example]]
 name = "transaction"
 path = "examples/05_transaction.rs"
+required-features = [ "stronghold" ]
 
 [[example]]
 name = "send_micro_transaction"
 path = "examples/06_send_micro_transaction.rs"
+required-features = [ "stronghold" ]
 
 [[example]]
 name = "send_native_tokens"
 path = "examples/07_send_native_tokens.rs"
+required-features = [ "stronghold" ]
 
 [[example]]
 name = "send_nft"
 path = "examples/08_send_nft.rs"
+required-features = [ "stronghold" ]
 
 [[example]]
 name = "mint_native_token"
 path = "examples/09_mint_native_token.rs"
+required-features = [ "stronghold" ]
 
 [[example]]
 name = "mint_nft"
 path = "examples/10_mint_nft.rs"
+required-features = [ "stronghold" ]
 
 [[example]]
 name = "decrease_native_token_supply"
 path = "examples/11_decrease_native_token_supply.rs"
+required-features = [ "stronghold" ]
 
 [[example]]
 name = "increase_native_token_supply"
 path = "examples/12_increase_native_token_supply.rs"
+required-features = [ "stronghold" ]
 
 [[example]]
 name = "burn_native_token"
 path = "examples/13_burn_native_token.rs"
+required-features = [ "stronghold" ]
 
 [[example]]
 name = "burn_nft"
 path = "examples/14_burn_nft.rs"
+required-features = [ "stronghold" ]
 
 [[example]]
 name = "destroy_foundry"
 path = "examples/15_destroy_foundry.rs"
+required-features = [ "stronghold" ]
 
 [[example]]
 name = "destroy_alias"
 path = "examples/16_destroy_alias.rs"
+required-features = [ "stronghold" ]
 
 [[example]]
 name = "accounts"
@@ -175,14 +196,17 @@ path = "examples/logger.rs"
 [[example]]
 name = "output_consolidation"
 path = "examples/output_consolidation.rs"
+required-features = [ "stronghold" ]
 
 [[example]]
 name = "ping"
 path = "examples/ping.rs"
+required-features = [ "storage" ]
 
 [[example]]
 name = "pong"
 path = "examples/pong.rs"
+required-features = [ "storage" ]
 
 [[example]]
 name = "recover_accounts"
@@ -195,6 +219,7 @@ path = "examples/split_funds.rs"
 [[example]]
 name = "storage"
 path = "examples/storage.rs"
+required-features = [ "storage" ]
 
 [[example]]
 name = "threads"

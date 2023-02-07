@@ -31,8 +31,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `AccountSyncOptions, AliasSyncOptions, NftSyncOptions`;
 - `SyncOptions::{account, alias, nft}` fields;
 - `{TransactionOptions, TransactionOptionsDto}::burn`;
-- `Memory` storage adapter;
+- `Memory` and `Wasm` storage adapters;
 - `ParticipationEventWithNodes`;
+- Support for target `wasm32-unknown-unknown`;
 
 ### Changed
 
@@ -54,7 +55,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Response::{ParticipationEvents, ParticipationEvents}` contain `ParticipationEventWithNodes` instead of `(ParticipationEvent, Vec<Node>)`;
 - Remove `Error` suffix on some `Error` variants;
 - Exposed `FilterOptions` so it can be imported from `account::FilterOptions`;
+- Only expose `MessageHandler` methods `SetStrongholdPassword`, `SetStrongholdPasswordClearInterval` and `StoreMnemonic` when `feature = "stronghold"` is enabled; 
 - `Message::{GetAccount, VerifyMnemonic, SetClientOptions, SetStrongholdPassword, SetStrongholdPasswordClearInterval, StoreMnemonic, EmitTestEvent, Bech32ToHex, ClearListeners}` to named fields for better error messages;
+- Made `AccountManager::stop_background_syncing()` async to await until syncing actually stopped;
+- `OutputData::input_signing_data` returns `Result<Option<InputSigningData>>` instead of `Result<InputSigningData>>`;
 
 ### Removed
 
@@ -62,6 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `IncomingTransactionDataDto` type;
 - `SyncOptions::sync_aliases_and_nfts`;
 - `{TransactionOptions, TransactionOptionsDto}::allow_burning`;
+- Background task spawning to retry a transaction;
 
 ### Fixed
 

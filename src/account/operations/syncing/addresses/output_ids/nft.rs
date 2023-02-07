@@ -1,8 +1,10 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+#[cfg(not(target_family = "wasm"))]
 use std::collections::HashSet;
 
+#[cfg(not(target_family = "wasm"))]
 use futures::FutureExt;
 use iota_client::{block::output::OutputId, node_api::indexer::query_parameters::QueryParameter};
 
@@ -11,60 +13,87 @@ use crate::account::handle::AccountHandle;
 impl AccountHandle {
     /// Returns output ids of nft outputs that have the address in any unlock condition
     pub(crate) async fn get_nft_output_ids_with_any_unlock_condition(
-        self,
+        &self,
         bech32_address: &str,
     ) -> crate::Result<Vec<OutputId>> {
-        let client = self.client();
-        let tasks = vec![
-            async move {
-                let bech32_address_ = bech32_address.to_string();
-                let client = client.clone();
-                tokio::spawn(async move {
-                    // Get nft outputs where the address is in the address unlock condition
-                    client
-                        .nft_output_ids(vec![QueryParameter::Address(bech32_address_)])
-                        .await
-                        .map_err(From::from)
-                })
-                .await
-            }
-            .boxed(),
-            async move {
-                let bech32_address_ = bech32_address.to_string();
-                let client = client.clone();
-                tokio::spawn(async move {
-                    // Get outputs where the address is in the storage deposit return unlock condition
-                    client
-                        .nft_output_ids(vec![QueryParameter::StorageDepositReturnAddress(bech32_address_)])
-                        .await
-                        .map_err(From::from)
-                })
-                .await
-            }
-            .boxed(),
-            async move {
-                let bech32_address_ = bech32_address.to_string();
-                let client = client.clone();
-                tokio::spawn(async move {
-                    // Get outputs where the address is in the expiration unlock condition
-                    client
-                        .nft_output_ids(vec![QueryParameter::ExpirationReturnAddress(bech32_address_)])
-                        .await
-                        .map_err(From::from)
-                })
-                .await
-            }
-            .boxed(),
-        ];
-
-        // Get all results
-        let mut output_ids = HashSet::new();
-        let results: Vec<crate::Result<Vec<OutputId>>> = futures::future::try_join_all(tasks).await?;
-        for res in results {
-            let found_output_ids = res?;
-            output_ids.extend(found_output_ids.into_iter());
+        #[cfg(target_family = "wasm")]
+        {
+            let mut output_ids = vec![];
+            output_ids.extend(
+                self.client()
+                    .nft_output_ids(vec![QueryParameter::Address(bech32_address.to_string())])
+                    .await?,
+            );
+            output_ids.extend(
+                self.client()
+                    .nft_output_ids(vec![QueryParameter::StorageDepositReturnAddress(
+                        bech32_address.to_string(),
+                    )])
+                    .await?,
+            );
+            output_ids.extend(
+                self.client()
+                    .nft_output_ids(vec![QueryParameter::ExpirationReturnAddress(
+                        bech32_address.to_string(),
+                    )])
+                    .await?,
+            );
+            Ok(output_ids)
         }
+        #[cfg(not(target_family = "wasm"))]
+        {
+            let client = self.client();
+            let tasks = vec![
+                async move {
+                    let bech32_address_ = bech32_address.to_string();
+                    let client = client.clone();
+                    tokio::spawn(async move {
+                        // Get nft outputs where the address is in the address unlock condition
+                        client
+                            .nft_output_ids(vec![QueryParameter::Address(bech32_address_)])
+                            .await
+                            .map_err(From::from)
+                    })
+                    .await
+                }
+                .boxed(),
+                async move {
+                    let bech32_address_ = bech32_address.to_string();
+                    let client = client.clone();
+                    tokio::spawn(async move {
+                        // Get outputs where the address is in the storage deposit return unlock condition
+                        client
+                            .nft_output_ids(vec![QueryParameter::StorageDepositReturnAddress(bech32_address_)])
+                            .await
+                            .map_err(From::from)
+                    })
+                    .await
+                }
+                .boxed(),
+                async move {
+                    let bech32_address_ = bech32_address.to_string();
+                    let client = client.clone();
+                    tokio::spawn(async move {
+                        // Get outputs where the address is in the expiration unlock condition
+                        client
+                            .nft_output_ids(vec![QueryParameter::ExpirationReturnAddress(bech32_address_)])
+                            .await
+                            .map_err(From::from)
+                    })
+                    .await
+                }
+                .boxed(),
+            ];
 
-        Ok(output_ids.into_iter().collect())
+            // Get all results
+            let mut output_ids = HashSet::new();
+            let results: Vec<crate::Result<Vec<OutputId>>> = futures::future::try_join_all(tasks).await?;
+            for res in results {
+                let found_output_ids = res?;
+                output_ids.extend(found_output_ids.into_iter());
+            }
+
+            Ok(output_ids.into_iter().collect())
+        }
     }
 }

@@ -87,7 +87,7 @@ pub struct MintTokenTransaction {
 }
 
 /// Dto for MintTokenTransaction
-#[derive(Debug, Serialize)]
+#[derive(Debug, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MintTokenTransactionDto {
     pub token_id: TokenId,

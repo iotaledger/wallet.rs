@@ -27,7 +27,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     account::{handle::AccountHandle, OutputData},
-    Result,
+    task, Result,
 };
 
 /// An object containing an account's entire participation overview.
@@ -90,7 +90,7 @@ impl AccountHandle {
                 };
 
                 tasks.push(async move {
-                    tokio::spawn(async move { (event_client.output_status(&output_data.output_id).await, output_data) })
+                    task::spawn(async move { (event_client.output_status(&output_data.output_id).await, output_data) })
                         .await
                 });
             }

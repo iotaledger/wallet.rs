@@ -22,14 +22,19 @@ pub(crate) enum ManagerStorage {
     Rocksdb,
     /// Storage backed by a Map in memory.
     Memory,
+    /// Wasm storage.
+    #[cfg(target_family = "wasm")]
+    Wasm,
 }
 
 impl Default for ManagerStorage {
     fn default() -> Self {
         #[cfg(feature = "rocksdb")]
         return Self::Rocksdb;
-        #[cfg(not(feature = "rocksdb"))]
-        ManagerStorage::Memory
+        #[cfg(target_family = "wasm")]
+        return Self::Wasm;
+        #[cfg(not(any(feature = "rocksdb", target_family = "wasm")))]
+        Self::Memory
     }
 }
 

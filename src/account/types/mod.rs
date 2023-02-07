@@ -63,7 +63,7 @@ impl OutputData {
         current_time: u32,
         bech32_hrp: &str,
         alias_state_transition: bool,
-    ) -> crate::Result<InputSigningData> {
+    ) -> crate::Result<Option<InputSigningData>> {
         let (unlock_address, _unlocked_alias_or_nft_address) =
             self.output
                 .required_and_unlocked_address(current_time, &self.output_id, alias_state_transition)?;
@@ -84,21 +84,19 @@ impl OutputData {
                     address.key_index,
                 ]))
             } else {
-                return Err(crate::Error::CustomInput(
-                    "unlock address not found in account addresses".to_string(),
-                ));
+                return Ok(None);
             }
         } else {
             // Alias and NFT addresses have no chain
             None
         };
 
-        Ok(InputSigningData {
+        Ok(Some(InputSigningData {
             output: self.output.clone(),
             output_metadata: OutputMetadata::try_from(&self.metadata)?,
             chain,
             bech32_address: unlock_address.to_bech32(bech32_hrp),
-        })
+        }))
     }
 }
 
