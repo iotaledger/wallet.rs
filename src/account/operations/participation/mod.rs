@@ -15,11 +15,11 @@ pub mod voting_power;
 use std::collections::{hash_map::Entry, HashMap};
 
 use iota_client::{
-    block::output::{unlock_condition::UnlockCondition, Output, OutputId},
-    node_api::participation::{
+    api_types::plugins::participation::{
         responses::TrackedParticipation,
-        types::{participation::Participations, ParticipationEventData, ParticipationEventId, PARTICIPATION_TAG},
+        types::{ParticipationEventData, ParticipationEventId, Participations, PARTICIPATION_TAG},
     },
+    block::output::{unlock_condition::UnlockCondition, Output, OutputId},
     node_manager::node::Node,
     Client,
 };
@@ -97,17 +97,21 @@ impl AccountHandle {
 
             let results = futures::future::try_join_all(tasks).await?;
             for (result, output_data) in results {
-                if let Ok(status) = result {
-                    for (event_id, participation) in status.participations {
-                        match participations.entry(event_id) {
-                            Entry::Vacant(entry) => {
-                                entry.insert(HashMap::from([(output_data.output_id, participation)]));
-                            }
-                            Entry::Occupied(mut entry) => {
-                                entry.get_mut().insert(output_data.output_id, participation);
+                match result {
+                    Ok(status) => {
+                        for (event_id, participation) in status.participations {
+                            match participations.entry(event_id) {
+                                Entry::Vacant(entry) => {
+                                    entry.insert(HashMap::from([(output_data.output_id, participation)]));
+                                }
+                                Entry::Occupied(mut entry) => {
+                                    entry.get_mut().insert(output_data.output_id, participation);
+                                }
                             }
                         }
                     }
+                    Err(iota_client::Error::NotFound(_)) => {}
+                    Err(e) => return Err(crate::Error::Client(e.into())),
                 }
             }
         }

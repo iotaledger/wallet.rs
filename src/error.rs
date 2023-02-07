@@ -87,6 +87,11 @@ pub enum Error {
     #[cfg(feature = "participation")]
     #[error("voting error {0}")]
     Voting(String),
+    /// Participation error
+    #[cfg(feature = "participation")]
+    #[error("participation error {0}")]
+    #[serde(serialize_with = "display_string")]
+    Participation(#[from] iota_client::api_types::plugins::participation::error::Error),
     /// No outputs available for consolidating
     #[error(
         "nothing to consolidate: available outputs: {available_outputs}, consolidation threshold: {consolidation_threshold}"

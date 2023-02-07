@@ -14,7 +14,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use iota_client::{
     api::{verify_semantic, PreparedTransactionData, SignedTransactionData},
-    api_types::response::OutputWithMetadataResponse,
+    api_types::core::response::OutputWithMetadataResponse,
     block::{
         output::{
             dto::{OutputDto, OutputMetadataDto},

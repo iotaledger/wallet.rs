@@ -5,7 +5,7 @@ use std::{str::FromStr, time::Instant};
 
 use crypto::keys::slip10::Chain;
 use iota_client::{
-    api_types::response::OutputWithMetadataResponse,
+    api_types::core::response::OutputWithMetadataResponse,
     block::{
         input::Input,
         output::{dto::OutputDto, Output, OutputId},

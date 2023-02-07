@@ -18,7 +18,7 @@ use serde::Serialize;
 #[cfg(feature = "participation")]
 use {
     crate::account::operations::participation::{AccountParticipationOverview, ParticipationEventWithNodes},
-    iota_client::node_api::participation::types::{ParticipationEventId, ParticipationEventStatus},
+    iota_client::api_types::plugins::participation::types::{ParticipationEventId, ParticipationEventStatus},
     std::collections::HashMap,
 };
 

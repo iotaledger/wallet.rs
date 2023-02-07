@@ -11,12 +11,12 @@ use std::str::FromStr;
 
 use crypto::keys::slip10::Chain;
 use iota_client::{
-    api_types::response::OutputWithMetadataResponse,
+    api_types::core::response::OutputWithMetadataResponse,
     block::{
         address::{dto::AddressDto, Address},
         output::{
             dto::{OutputDto, OutputMetadataDto},
-            Output, OutputId, OutputMetadata,
+            AliasTransition, Output, OutputId, OutputMetadata,
         },
         payload::transaction::{dto::TransactionPayloadDto, TransactionId, TransactionPayload},
         BlockId,
@@ -62,11 +62,11 @@ impl OutputData {
         account: &Account,
         current_time: u32,
         bech32_hrp: &str,
-        alias_state_transition: bool,
+        alias_transition: Option<AliasTransition>,
     ) -> crate::Result<Option<InputSigningData>> {
         let (unlock_address, _unlocked_alias_or_nft_address) =
             self.output
-                .required_and_unlocked_address(current_time, &self.output_id, alias_state_transition)?;
+                .required_and_unlocked_address(current_time, &self.output_id, alias_transition)?;
 
         let chain = if unlock_address == self.address {
             self.chain.clone()

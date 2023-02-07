@@ -5,7 +5,7 @@ use iota_client::{
     api::input_selection::Burn,
     block::{
         address::{Address, NftAddress},
-        output::{unlock_condition::UnlockCondition, BasicOutputBuilder, NftId, Output, OutputId},
+        output::{unlock_condition::UnlockCondition, AliasTransition, BasicOutputBuilder, NftId, Output, OutputId},
     },
 };
 
@@ -35,7 +35,7 @@ impl AccountHandle {
                 &[Address::Nft(NftAddress::new(nft_id))],
                 &output_data,
                 current_time,
-                true,
+                Some(AliasTransition::State),
             )? {
                 owned_outputs.push(output_data);
             }

@@ -16,7 +16,7 @@ use iota_client::{
 };
 #[cfg(feature = "participation")]
 use iota_client::{
-    node_api::participation::types::{ParticipationEventId, ParticipationEventType},
+    api_types::plugins::participation::types::{ParticipationEventId, ParticipationEventType},
     node_manager::node::Node,
 };
 use serde::{Deserialize, Serialize};

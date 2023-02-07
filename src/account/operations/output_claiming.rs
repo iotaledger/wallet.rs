@@ -67,7 +67,7 @@ impl AccountHandle {
                                     output,
                                     local_time,
                                     // Not relevant without alias addresses
-                                    true,
+                                    None,
                                 )?
                             {
                                 match outputs_to_claim {
@@ -105,7 +105,7 @@ impl AccountHandle {
                                     output,
                                     local_time,
                                     // Not relevant without alias addresses
-                                    true,
+                                    None,
                                 )?
                             {
                                 match outputs_to_claim {

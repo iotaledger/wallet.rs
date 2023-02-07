@@ -1,7 +1,7 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::block::address::Address;
+use iota_client::block::{address::Address, output::AliasTransition};
 
 use crate::account::types::{AddressWithUnspentOutputs, OutputData};
 
@@ -13,7 +13,7 @@ pub(crate) fn can_output_be_unlocked_now(
     alias_and_nft_addresses: &[Address],
     output_data: &OutputData,
     current_time: u32,
-    alias_state_transition: bool,
+    alias_transition: Option<AliasTransition>,
 ) -> crate::Result<bool> {
     if let Some(unlock_conditions) = output_data.output.unlock_conditions() {
         if unlock_conditions.is_time_locked(current_time) {
@@ -21,11 +21,10 @@ pub(crate) fn can_output_be_unlocked_now(
         }
     }
 
-    let (required_unlock_address, _unlocked_alias_or_nft_address) = output_data.output.required_and_unlocked_address(
-        current_time,
-        &output_data.output_id,
-        alias_state_transition,
-    )?;
+    let (required_unlock_address, _unlocked_alias_or_nft_address) =
+        output_data
+            .output
+            .required_and_unlocked_address(current_time, &output_data.output_id, alias_transition)?;
 
     Ok(account_addresses
         .iter()
