@@ -1,5 +1,14 @@
 # Changelog
 
+## \[2.0.3-rc.20]
+
+- Make `AccountManager.destroy()` async;
+  Await in `AccountManager.stopBackgroundSync()` until syncing actually stopped;
+  Don't spawn a background task anymore to retry a transaction;
+  - [d6a03dde](https://github.com/iotaledger/wallet.rs/commit/d6a03ddea72539fa85dab39a849630ed40f185a3) Make it possible to cleanly destroy and recreate an AccountManager ([#1810](https://github.com/iotaledger/wallet.rs/pull/1810)) on 2023-02-06
+- Fix mistyped `GetParticipationEventIds` enum variant.
+  - [22b5b3c1](https://github.com/iotaledger/wallet.rs/commit/22b5b3c177a42d0dc4620b3f33ec8a2f45085a1f) fix: participation function bridge ([#1792](https://github.com/iotaledger/wallet.rs/pull/1792)) on 2023-02-01
+
 ## \[2.0.3-rc.19]
 
 - Don't filter out custom/mandatory inputs.
