@@ -1066,3 +1066,17 @@ impl WalletMessageHandler {
         Ok(Response::Accounts(accounts))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{convert_async_panics, Response};
+    #[tokio::test]
+    async fn panic_to_response() {
+        match convert_async_panics(|| async { panic!("rekt") }).await.unwrap() {
+            Response::Panic(msg) => {
+                assert!(msg.contains("rekt"));
+            }
+            response_type => panic!("Unexpected response type: {response_type:?}"),
+        };
+    }
+}

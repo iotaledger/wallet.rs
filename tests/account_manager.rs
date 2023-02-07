@@ -193,7 +193,7 @@ async fn account_manager_address_generation() -> Result<()> {
         let mut secret_manager = StrongholdSecretManager::builder()
             .password("some_hopefully_secure_password")
             .build(PathBuf::from(
-                "test-storage/account_creation_stronghold/test.stronghold",
+                "test-storage/account_manager_address_generation/test.stronghold",
             ))?;
         secret_manager
             .store_mnemonic(common::DEFAULT_MNEMONIC.to_string())
