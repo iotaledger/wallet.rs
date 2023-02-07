@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use iota_client::{
-    api_types::dto::LedgerInclusionStateDto,
+    api_types::core::dto::LedgerInclusionStateDto,
     block::{
         payload::{transaction::TransactionId, Payload},
         Block, BlockId,

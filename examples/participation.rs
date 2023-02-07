@@ -7,7 +7,8 @@ use std::{env, str::FromStr};
 
 use dotenv::dotenv;
 use iota_client::{
-    node_api::participation::types::ParticipationEventId, node_manager::node::Node, request_funds_from_faucet, Url,
+    api_types::plugins::participation::types::ParticipationEventId, node_manager::node::Node,
+    request_funds_from_faucet, Url,
 };
 use iota_wallet::{
     account_manager::AccountManager,

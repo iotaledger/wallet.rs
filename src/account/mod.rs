@@ -22,7 +22,7 @@ use std::{
 
 use getset::{Getters, Setters};
 use iota_client::{
-    api_types::response::OutputWithMetadataResponse,
+    api_types::core::response::OutputWithMetadataResponse,
     block::{
         output::{FoundryId, FoundryOutput, OutputId},
         payload::{

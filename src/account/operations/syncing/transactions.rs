@@ -7,7 +7,7 @@ use std::{
 };
 
 use iota_client::{
-    api_types::dto::LedgerInclusionStateDto,
+    api_types::core::dto::LedgerInclusionStateDto,
     block::{input::Input, output::OutputId, payload::transaction::TransactionEssence, BlockId},
     Error as ClientError,
 };

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use iota_client::{
+    api_types::plugins::participation::types::{Participations, PARTICIPATION_TAG},
     block::{
         output::{
             feature::{MetadataFeature, TagFeature},
@@ -10,7 +11,6 @@ use iota_client::{
         },
         payload::TaggedDataPayload,
     },
-    node_api::participation::types::{participation::Participations, PARTICIPATION_TAG},
 };
 
 use crate::{

@@ -4,7 +4,9 @@
 use std::collections::HashMap;
 
 use iota_client::{
-    node_api::participation::types::{ParticipationEventId, ParticipationEventStatus, ParticipationEventType},
+    api_types::plugins::participation::types::{
+        ParticipationEventId, ParticipationEventStatus, ParticipationEventType,
+    },
     node_manager::node::Node,
     Client,
 };

@@ -4,7 +4,7 @@
 use getset::Getters;
 use iota_client::{
     api::PreparedTransactionDataDto,
-    api_types::response::OutputWithMetadataResponse,
+    api_types::core::response::OutputWithMetadataResponse,
     block::payload::transaction::{dto::TransactionPayloadDto, TransactionId},
 };
 use serde::{Deserialize, Serialize};

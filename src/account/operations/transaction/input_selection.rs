@@ -8,7 +8,7 @@ use iota_client::{
     block::{
         address::Address,
         input::INPUT_COUNT_MAX,
-        output::{Output, OutputId},
+        output::{AliasTransition, Output, OutputId},
     },
     secret::types::InputSigningData,
 };
@@ -255,7 +255,7 @@ fn filter_inputs(
         }
 
         // Defaults to state transition if it is not explicitly a governance transition or a burn.
-        let alias_state_transition = alias_state_transition(output_data, outputs, burn)?.unwrap_or(true);
+        let alias_state_transition = alias_state_transition(output_data, outputs, burn)?;
 
         if let Some(available_input) =
             output_data.input_signing_data(account, current_time, bech32_hrp, alias_state_transition)?
@@ -272,7 +272,7 @@ pub(crate) fn alias_state_transition(
     output_data: &OutputData,
     outputs: &[Output],
     burn: Option<&Burn>,
-) -> crate::Result<Option<bool>> {
+) -> crate::Result<Option<AliasTransition>> {
     Ok(if let Output::Alias(alias_input) = &output_data.output {
         let alias_id = alias_input.alias_id_non_null(&output_data.output_id);
         // Check if alias exists in the outputs and get the required transition type
@@ -282,9 +282,9 @@ pub(crate) fn alias_state_transition(
                 if let Output::Alias(alias_output) = o {
                     if *alias_output.alias_id() == alias_id {
                         if alias_output.state_index() == alias_input.state_index() {
-                            Some(Some(false))
+                            Some(Some(AliasTransition::Governance))
                         } else {
-                            Some(Some(true))
+                            Some(Some(AliasTransition::State))
                         }
                     } else {
                         None
@@ -294,7 +294,15 @@ pub(crate) fn alias_state_transition(
                 }
                 // if not find in the outputs, the alias gets burned which is a governance transaction
             })
-            .unwrap_or_else(|| burn.map(|burn| !burn.aliases().contains(&alias_id)))
+            .unwrap_or_else(|| {
+                burn.and_then(|burn| {
+                    if burn.aliases().contains(&alias_id) {
+                        Some(AliasTransition::Governance)
+                    } else {
+                        None
+                    }
+                })
+            })
     } else {
         None
     })

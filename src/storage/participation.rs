@@ -3,7 +3,7 @@
 
 use std::collections::HashMap;
 
-use iota_client::node_api::participation::types::ParticipationEventId;
+use iota_client::api_types::plugins::participation::types::ParticipationEventId;
 
 use super::manager::StorageManager;
 use crate::{

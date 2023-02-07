@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Memory` and `Wasm` storage adapters;
 - `ParticipationEventWithNodes`;
 - Support for target `wasm32-unknown-unknown`;
+- `Error::Participation`;
 
 ### Changed
 
@@ -59,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Message::{GetAccount, VerifyMnemonic, SetClientOptions, SetStrongholdPassword, SetStrongholdPasswordClearInterval, StoreMnemonic, EmitTestEvent, Bech32ToHex, ClearListeners}` to named fields for better error messages;
 - Made `AccountManager::stop_background_syncing()` async to await until syncing actually stopped;
 - `OutputData::input_signing_data` returns `Result<Option<InputSigningData>>` instead of `Result<InputSigningData>>`;
+- `OutputData::input_signing_data` accepts `Option<AliasTransition>` instead of `bool`;
 
 ### Removed
 
@@ -72,6 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Stop endlessly requesting inaccessible incoming transactions;
 - Update addresses when a client config with a different HRP is passed;
+- Return client errors from `Account::get_participation_overview()`;
 
 ## 1.0.0-rc.4 - 2022-12-23
 

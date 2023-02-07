@@ -18,7 +18,7 @@ use crate::account::{
 use crate::{
     account::types::OutputDataDto,
     events::types::{NewOutputEvent, SpentOutputEvent, TransactionInclusionEvent, WalletEvent},
-    iota_client::api_types::response::OutputWithMetadataResponse,
+    iota_client::api_types::core::response::OutputWithMetadataResponse,
     iota_client::block::payload::transaction::dto::TransactionPayloadDto,
 };
 
