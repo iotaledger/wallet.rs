@@ -63,10 +63,9 @@ async fn message_interface_validate_mnemonic() -> Result<()> {
             .await
             .expect("No send message response");
 
-            match response {
-                Response::Ok(()) => {}
-                response_type => panic!("Unexpected response type: {response_type:?}"),
-            }
+            let Response::Ok(_) = response else {
+                panic!("Unexpected response type: {response:?}");
+            };
         }
         response_type => panic!("Unexpected response type: {response_type:?}"),
     }
@@ -195,7 +194,7 @@ async fn message_interface_events() -> Result<()> {
 
             let _response = send_message(&wallet_handle, transaction).await.unwrap();
 
-            tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+            tokio::time::sleep(std::time::Duration::from_secs(20)).await;
         }
         _ => panic!("unexpected response {response:?}"),
     }
@@ -409,6 +408,74 @@ async fn address_conversion_methods() -> Result<()> {
     match response {
         Response::Bech32Address(bech32) => {
             assert_eq!(bech32, bech32_address);
+        }
+        response_type => panic!("Unexpected response type: {response_type:?}"),
+    }
+
+    common::tear_down(storage_path)
+}
+
+#[cfg(feature = "message_interface")]
+#[tokio::test]
+async fn message_interface_address_generation() -> Result<()> {
+    let storage_path = "test-storage/message_interface_address_generation";
+    common::setup(storage_path)?;
+
+    let secret_manager = r#"{"Mnemonic":"acoustic trophy damage hint search taste love bicycle foster cradle brown govern endless depend situate athlete pudding blame question genius transfer van random vast"}"#;
+    let client_options = r#"{"nodes":["http://localhost:14265"]}"#;
+
+    let options = ManagerOptions {
+        #[cfg(feature = "storage")]
+        storage_path: Some(storage_path.to_string()),
+        client_options: Some(ClientBuilder::new().from_json(client_options).unwrap()),
+        coin_type: Some(SHIMMER_COIN_TYPE),
+        secret_manager: Some(serde_json::from_str(secret_manager).unwrap()),
+    };
+
+    let wallet_handle = create_message_handler(Some(options)).await.unwrap();
+
+    let response = send_message(
+        &wallet_handle,
+        Message::GenerateAddress {
+            account_index: 0,
+            internal: false,
+            address_index: 0,
+            options: None,
+            bech32_hrp: Some("rms".to_string()),
+        },
+    )
+    .await
+    .expect("No send message response");
+
+    match response {
+        Response::Bech32Address(address) => {
+            assert_eq!(
+                address,
+                "rms1qzev36lk0gzld0k28fd2fauz26qqzh4hd4cwymlqlv96x7phjxcw6v3ea5a"
+            );
+        }
+        response_type => panic!("Unexpected response type: {response_type:?}"),
+    }
+
+    let response = send_message(
+        &wallet_handle,
+        Message::GenerateAddress {
+            account_index: 10,
+            internal: true,
+            address_index: 10,
+            options: None,
+            bech32_hrp: Some("rms".to_string()),
+        },
+    )
+    .await
+    .expect("No send message response");
+
+    match response {
+        Response::Bech32Address(address) => {
+            assert_eq!(
+                address,
+                "rms1qr239vcjzxxdyre8jsek8wrdves9hnnk6mguplvs43cwftt4svaszsvy98h"
+            );
         }
         response_type => panic!("Unexpected response type: {response_type:?}"),
     }
