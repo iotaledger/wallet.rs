@@ -208,8 +208,7 @@ impl AccountManager {
         self.background_syncing_status.store(2, Ordering::Relaxed);
         // wait until it stopped
         while self.background_syncing_status.load(Ordering::Relaxed) != 0 {
-            log::debug!("[stop_background_syncing]: waiting for the background syncing to stop");
-            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
         }
         Ok(())
     }
