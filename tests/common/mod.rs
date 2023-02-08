@@ -36,16 +36,16 @@ pub(crate) async fn make_manager(
         MnemonicSecretManager::try_from_mnemonic(mnemonic.unwrap_or(&Client::generate_mnemonic().unwrap()))?;
 
     #[allow(unused_mut)]
-    let mut manager_builder = AccountManager::builder()
+    let mut account_manager_builder = AccountManager::builder()
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)
         .with_coin_type(SHIMMER_COIN_TYPE);
     #[cfg(feature = "storage")]
     {
-        manager_builder = manager_builder.with_storage_path(storage_path);
+        account_manager_builder = account_manager_builder.with_storage_path(storage_path);
     }
 
-    manager_builder.finish().await
+    account_manager_builder.finish().await
 }
 
 /// Create `amount` new accounts, request funds from the faucet and sync the accounts afterwards until the faucet output
