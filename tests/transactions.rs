@@ -3,11 +3,9 @@
 
 mod common;
 
-#[cfg(feature = "storage")]
 use iota_wallet::{account::TransactionOptions, AddressAndNftId, AddressWithAmount, NftOptions, Result};
 
 #[ignore]
-#[cfg(feature = "storage")]
 #[tokio::test]
 async fn send_amount() -> Result<()> {
     let storage_path = "test-storage/send_amount";
@@ -40,7 +38,6 @@ async fn send_amount() -> Result<()> {
 }
 
 #[ignore]
-#[cfg(feature = "storage")]
 #[tokio::test]
 async fn send_amount_127_outputs() -> Result<()> {
     let storage_path = "test-storage/send_amount_127_outputs";
@@ -77,7 +74,6 @@ async fn send_amount_127_outputs() -> Result<()> {
 }
 
 #[ignore]
-#[cfg(feature = "storage")]
 #[tokio::test]
 async fn send_amount_custom_input() -> Result<()> {
     let storage_path = "test-storage/send_amount_custom_input";
@@ -132,7 +128,6 @@ async fn send_amount_custom_input() -> Result<()> {
 }
 
 #[ignore]
-#[cfg(feature = "storage")]
 #[tokio::test]
 async fn send_nft() -> Result<()> {
     let storage_path = "test-storage/send_nft";

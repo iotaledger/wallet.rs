@@ -3,11 +3,9 @@
 
 mod common;
 
-#[cfg(feature = "storage")]
 use iota_wallet::{account::SyncOptions, NativeTokenOptions, Result, U256};
 
 #[ignore]
-#[cfg(feature = "storage")]
 #[tokio::test]
 async fn mint_and_increase_native_token_supply() -> Result<()> {
     let storage_path = "test-storage/mint_and_increase_native_token_supply";
@@ -71,7 +69,6 @@ async fn mint_and_increase_native_token_supply() -> Result<()> {
 }
 
 #[ignore]
-#[cfg(feature = "storage")]
 #[tokio::test]
 async fn native_token_foundry_metadata() -> Result<()> {
     let storage_path = "test-storage/native_token_foundry_metadata";

@@ -6,11 +6,11 @@ mod common;
 #[cfg(feature = "stronghold")]
 use std::path::PathBuf;
 
+use iota_client::constants::IOTA_COIN_TYPE;
 #[cfg(feature = "storage")]
 use iota_client::node_manager::node::{Node, NodeDto, Url};
 #[cfg(feature = "stronghold")]
-use iota_client::{constants::IOTA_COIN_TYPE, secret::stronghold::StrongholdSecretManager};
-#[cfg(feature = "storage")]
+use iota_client::secret::stronghold::StrongholdSecretManager;
 use iota_wallet::{
     account_manager::AccountManager,
     secret::{mnemonic::MnemonicSecretManager, SecretManager},
@@ -114,7 +114,6 @@ async fn changed_coin_type() -> Result<()> {
     common::tear_down(storage_path)
 }
 
-#[cfg(feature = "storage")]
 #[tokio::test]
 async fn shimmer_coin_type() -> Result<()> {
     let storage_path = "test-storage/shimmer_coin_type";
@@ -133,7 +132,6 @@ async fn shimmer_coin_type() -> Result<()> {
     common::tear_down(storage_path)
 }
 
-#[cfg(feature = "storage")]
 #[tokio::test]
 async fn iota_coin_type() -> Result<()> {
     let storage_path = "test-storage/iota_coin_type";
@@ -142,15 +140,19 @@ async fn iota_coin_type() -> Result<()> {
     let client_options = ClientOptions::new().with_node(common::NODE_LOCAL)?;
     let secret_manager = MnemonicSecretManager::try_from_mnemonic(common::DEFAULT_MNEMONIC)?;
 
-    let manager = AccountManager::builder()
+    #[allow(unused_mut)]
+    let mut account_manager_builder = AccountManager::builder()
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)
-        .with_coin_type(IOTA_COIN_TYPE)
-        .with_storage_path(storage_path)
-        .finish()
-        .await?;
+        .with_coin_type(IOTA_COIN_TYPE);
 
-    let account = manager.create_account().finish().await?;
+    #[cfg(feature = "storage")]
+    {
+        account_manager_builder = account_manager_builder.with_storage_path(storage_path);
+    }
+    let account_manager = account_manager_builder.finish().await?;
+
+    let account = account_manager.create_account().finish().await?;
 
     // Creating a new account with providing a coin type will use the iota coin type with shimmer testnet bech32 hrp
     assert_eq!(
@@ -162,7 +164,6 @@ async fn iota_coin_type() -> Result<()> {
     common::tear_down(storage_path)
 }
 
-#[cfg(feature = "storage")]
 #[tokio::test]
 async fn account_manager_address_generation() -> Result<()> {
     let storage_path = "test-storage/account_manager_address_generation";
@@ -170,13 +171,18 @@ async fn account_manager_address_generation() -> Result<()> {
 
     let client_options = ClientOptions::new().with_node(common::NODE_LOCAL)?;
     let secret_manager = MnemonicSecretManager::try_from_mnemonic(common::DEFAULT_MNEMONIC)?;
-    let account_manager = AccountManager::builder()
+
+    #[allow(unused_mut)]
+    let mut account_manager_builder = AccountManager::builder()
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)
-        .with_coin_type(IOTA_COIN_TYPE)
-        .with_storage_path(storage_path)
-        .finish()
-        .await?;
+        .with_coin_type(IOTA_COIN_TYPE);
+
+    #[cfg(feature = "storage")]
+    {
+        account_manager_builder = account_manager_builder.with_storage_path(storage_path);
+    }
+    let account_manager = account_manager_builder.finish().await?;
 
     let address = account_manager.generate_address(0, false, 0, None).await?;
 
@@ -200,13 +206,16 @@ async fn account_manager_address_generation() -> Result<()> {
             .await?;
 
         let client_options = ClientOptions::new().with_node(common::NODE_LOCAL)?;
-        let account_manager = AccountManager::builder()
+        #[allow(unused_mut)]
+        let mut account_manager_builder = AccountManager::builder()
             .with_secret_manager(SecretManager::Stronghold(secret_manager))
             .with_client_options(client_options)
-            .with_coin_type(IOTA_COIN_TYPE)
-            .with_storage_path(storage_path)
-            .finish()
-            .await?;
+            .with_coin_type(IOTA_COIN_TYPE);
+        #[cfg(feature = "storage")]
+        {
+            account_manager_builder = account_manager_builder.with_storage_path(storage_path);
+        }
+        let account_manager = account_manager_builder.finish().await?;
 
         let address = account_manager.generate_address(0, false, 0, None).await?;
 

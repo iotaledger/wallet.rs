@@ -3,14 +3,12 @@
 
 mod constants;
 
-use iota_client::request_funds_from_faucet;
-#[cfg(feature = "storage")]
-use iota_client::{constants::SHIMMER_COIN_TYPE, Client};
-use iota_wallet::{account::AccountHandle, account_manager::AccountManager, Result};
-#[cfg(feature = "storage")]
+use iota_client::{constants::SHIMMER_COIN_TYPE, request_funds_from_faucet, Client};
 use iota_wallet::{
+    account::AccountHandle,
+    account_manager::AccountManager,
     secret::{mnemonic::MnemonicSecretManager, SecretManager},
-    ClientOptions,
+    ClientOptions, Result,
 };
 
 pub use self::constants::*;
@@ -27,8 +25,7 @@ pub use self::constants::*;
 /// Returns:
 ///
 /// An AccountManager
-#[cfg(feature = "storage")]
-#[allow(dead_code)]
+#[allow(dead_code, unused_variables)]
 pub(crate) async fn make_manager(
     storage_path: &str,
     mnemonic: Option<&str>,
@@ -38,13 +35,17 @@ pub(crate) async fn make_manager(
     let secret_manager =
         MnemonicSecretManager::try_from_mnemonic(mnemonic.unwrap_or(&Client::generate_mnemonic().unwrap()))?;
 
-    AccountManager::builder()
+    #[allow(unused_mut)]
+    let mut manager_builder = AccountManager::builder()
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)
-        .with_coin_type(SHIMMER_COIN_TYPE)
-        .with_storage_path(storage_path)
-        .finish()
-        .await
+        .with_coin_type(SHIMMER_COIN_TYPE);
+    #[cfg(feature = "storage")]
+    {
+        manager_builder = manager_builder.with_storage_path(storage_path);
+    }
+
+    manager_builder.finish().await
 }
 
 /// Create `amount` new accounts, request funds from the faucet and sync the accounts afterwards until the faucet output

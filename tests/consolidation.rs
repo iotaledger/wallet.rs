@@ -3,11 +3,9 @@
 
 mod common;
 
-#[cfg(feature = "storage")]
 use iota_wallet::{AddressWithAmount, Result};
 
 #[ignore]
-#[cfg(feature = "storage")]
 #[tokio::test]
 async fn consolidation() -> Result<()> {
     let storage_path = "test-storage/consolidation";
