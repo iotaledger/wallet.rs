@@ -26,7 +26,6 @@ use iota_client::{
     request_funds_from_faucet, utils, Client, NodeInfoWrapper,
 };
 use primitive_types::U256;
-use tokio::sync::mpsc::UnboundedSender;
 use zeroize::Zeroize;
 
 #[cfg(feature = "events")]
@@ -107,8 +106,8 @@ impl WalletMessageHandler {
         self.account_manager.listen(events, handler).await;
     }
 
-    /// Handles a message.
-    pub async fn handle(&self, message: Message, response_tx: UnboundedSender<Response>) {
+    /// Send a message.
+    pub async fn send_message(&self, message: Message) -> Response {
         log::debug!("Message: {:?}", message);
 
         let response: Result<Response> = match message {
@@ -348,7 +347,7 @@ impl WalletMessageHandler {
 
         log::debug!("Response: {:?}", response);
 
-        let _ = response_tx.send(response);
+        response
     }
 
     #[cfg(feature = "stronghold")]

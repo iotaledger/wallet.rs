@@ -23,7 +23,7 @@ use iota_client::{
 use iota_wallet::events::types::WalletEvent;
 #[cfg(feature = "message_interface")]
 use iota_wallet::{
-    message_interface::{create_message_handler, send_message, AccountMethod, ManagerOptions, Message, Response},
+    message_interface::{create_message_handler, AccountMethod, ManagerOptions, Message, Response},
     Result,
 };
 
@@ -48,20 +48,15 @@ async fn message_interface_validate_mnemonic() -> Result<()> {
     };
 
     let wallet_handle = create_message_handler(Some(options)).await.unwrap();
-    let response = send_message(&wallet_handle, Message::GenerateMnemonic)
-        .await
-        .expect("No send message response");
+    let response = wallet_handle.send_message(Message::GenerateMnemonic).await;
 
     match response {
         Response::GeneratedMnemonic(mnemonic) => {
-            let response = send_message(
-                &wallet_handle,
-                Message::VerifyMnemonic {
+            let response = wallet_handle
+                .send_message(Message::VerifyMnemonic {
                     mnemonic: mnemonic.to_string(),
-                },
-            )
-            .await
-            .expect("No send message response");
+                })
+                .await;
 
             let Response::Ok(_) = response else {
                 panic!("Unexpected response type: {response:?}");
@@ -111,15 +106,12 @@ async fn message_interface_create_account() -> Result<()> {
     let wallet_handle = create_message_handler(Some(options)).await.unwrap();
 
     // create an account
-    let response = send_message(
-        &wallet_handle,
-        Message::CreateAccount {
+    let response = wallet_handle
+        .send_message(Message::CreateAccount {
             alias: None,
             bech32_hrp: None,
-        },
-    )
-    .await
-    .expect("No send message response");
+        })
+        .await;
 
     match response {
         Response::Account(account) => {
@@ -170,15 +162,12 @@ async fn message_interface_events() -> Result<()> {
         .await;
 
     // create an account
-    let response = send_message(
-        &wallet_handle,
-        Message::CreateAccount {
+    let response = wallet_handle
+        .send_message(Message::CreateAccount {
             alias: Some("alias".to_string()),
             bech32_hrp: None,
-        },
-    )
-    .await
-    .unwrap();
+        })
+        .await;
 
     match response {
         Response::Account(account) => {
@@ -193,7 +182,7 @@ async fn message_interface_events() -> Result<()> {
                 },
             };
 
-            let _response = send_message(&wallet_handle, transaction).await.unwrap();
+            let _response = wallet_handle.send_message(transaction).await;
 
             tokio::time::sleep(std::time::Duration::from_secs(20)).await;
         }
@@ -206,7 +195,7 @@ async fn message_interface_events() -> Result<()> {
         method: AccountMethod::SyncAccount { options: None },
     };
 
-    let _response = send_message(&wallet_handle, sync_method).await.unwrap();
+    let _response = wallet_handle.send_message(sync_method).await;
 
     // send transaction
     let outputs = vec![OutputDto::from(
@@ -226,7 +215,7 @@ async fn message_interface_events() -> Result<()> {
         method: AccountMethod::SendOutputs { outputs, options: None },
     };
 
-    let response = send_message(&wallet_handle, transaction).await.unwrap();
+    let response = wallet_handle.send_message(transaction).await;
 
     let Response::SentTransaction(_)= response else {
         panic!("unexpected response {response:?}");
@@ -263,14 +252,11 @@ async fn message_interface_emit_event() -> Result<()> {
         .await;
 
     for count in 1..11 {
-        let response = send_message(
-            &wallet_handle,
-            Message::EmitTestEvent {
+        let response = wallet_handle
+            .send_message(Message::EmitTestEvent {
                 event: WalletEvent::ConsolidationRequired,
-            },
-        )
-        .await
-        .expect("No send message response");
+            })
+            .await;
         match response {
             Response::Ok(()) => {
                 assert_eq!(count, event_counter.load(Ordering::SeqCst))
@@ -280,15 +266,14 @@ async fn message_interface_emit_event() -> Result<()> {
         dbg!(&count);
     }
 
-    send_message(&wallet_handle, Message::ClearListeners { event_types: vec![] }).await;
-    send_message(
-        &wallet_handle,
-        Message::EmitTestEvent {
+    wallet_handle
+        .send_message(Message::ClearListeners { event_types: vec![] })
+        .await;
+    wallet_handle
+        .send_message(Message::EmitTestEvent {
             event: WalletEvent::ConsolidationRequired,
-        },
-    )
-    .await
-    .expect("No send message response");
+        })
+        .await;
 
     // Event should not have fired, so we are still on 10 calls
     assert_eq!(10, event_counter.load(Ordering::SeqCst));
@@ -325,27 +310,22 @@ async fn message_interface_stronghold() -> Result<()> {
     let wallet_handle = create_message_handler(Some(options)).await.unwrap();
 
     // Set password and store mnemonic
-    let _ = send_message(
-        &wallet_handle,
-        Message::SetStrongholdPassword {
+    let _ = wallet_handle
+        .send_message(Message::SetStrongholdPassword {
             password: "some_hopefully_secure_password".to_string(),
-        },
-    )
-    .await;
+        })
+        .await;
     let mnemonic = "acoustic trophy damage hint search taste love bicycle foster cradle brown govern endless depend situate athlete pudding blame question genius transfer van random vast".to_string();
-    let _ = send_message(&wallet_handle, Message::StoreMnemonic { mnemonic }).await;
+    let _ = wallet_handle.send_message(Message::StoreMnemonic { mnemonic }).await;
 
     // create an account, if password or storing mnemonic failed, it would fail here, because it couldn't generate
     // an address
-    let response = send_message(
-        &wallet_handle,
-        Message::CreateAccount {
+    let response = wallet_handle
+        .send_message(Message::CreateAccount {
             alias: None,
             bech32_hrp: None,
-        },
-    )
-    .await
-    .expect("No send message response");
+        })
+        .await;
 
     match response {
         Response::Account(account) => {
@@ -380,14 +360,11 @@ async fn address_conversion_methods() -> Result<()> {
     let bech32_address = "rms1qqk4svqpc89lxx89w7vksv9jgjjm2vwnrhad2j3cds9ev4cu434wjapdsxs";
     let hex_address = "0x2d583001c1cbf318e577996830b244a5b531d31dfad54a386c0b96571cac6ae9";
 
-    let response = send_message(
-        &wallet_handle,
-        Message::Bech32ToHex {
+    let response = wallet_handle
+        .send_message(Message::Bech32ToHex {
             bech32_address: bech32_address.into(),
-        },
-    )
-    .await
-    .expect("No send message response");
+        })
+        .await;
 
     match response {
         Response::HexAddress(hex) => {
@@ -396,15 +373,12 @@ async fn address_conversion_methods() -> Result<()> {
         response_type => panic!("Unexpected response type: {response_type:?}"),
     }
 
-    let response = send_message(
-        &wallet_handle,
-        Message::HexToBech32 {
+    let response = wallet_handle
+        .send_message(Message::HexToBech32 {
             hex: hex_address.into(),
             bech32_hrp: None,
-        },
-    )
-    .await
-    .expect("No send message response");
+        })
+        .await;
 
     match response {
         Response::Bech32Address(bech32) => {
@@ -435,18 +409,15 @@ async fn message_interface_address_generation() -> Result<()> {
 
     let wallet_handle = create_message_handler(Some(options)).await.unwrap();
 
-    let response = send_message(
-        &wallet_handle,
-        Message::GenerateAddress {
+    let response = wallet_handle
+        .send_message(Message::GenerateAddress {
             account_index: 0,
             internal: false,
             address_index: 0,
             options: None,
             bech32_hrp: Some("rms".to_string()),
-        },
-    )
-    .await
-    .expect("No send message response");
+        })
+        .await;
 
     match response {
         Response::Bech32Address(address) => {
@@ -458,18 +429,15 @@ async fn message_interface_address_generation() -> Result<()> {
         response_type => panic!("Unexpected response type: {response_type:?}"),
     }
 
-    let response = send_message(
-        &wallet_handle,
-        Message::GenerateAddress {
+    let response = wallet_handle
+        .send_message(Message::GenerateAddress {
             account_index: 10,
             internal: true,
             address_index: 10,
             options: None,
             bech32_hrp: Some("rms".to_string()),
-        },
-    )
-    .await
-    .expect("No send message response");
+        })
+        .await;
 
     match response {
         Response::Bech32Address(address) => {

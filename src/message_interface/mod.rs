@@ -10,7 +10,6 @@ mod response;
 use fern_logger::{logger_init, LoggerConfig, LoggerOutputConfigBuilder};
 use iota_client::secret::{SecretManager, SecretManagerDto};
 use serde::{Deserialize, Serialize, Serializer};
-use tokio::sync::mpsc::unbounded_channel;
 
 pub use self::{
     account_method::AccountMethod,
@@ -95,10 +94,4 @@ pub async fn create_message_handler(options: Option<ManagerOptions>) -> crate::R
     };
 
     Ok(WalletMessageHandler::with_manager(manager))
-}
-
-pub async fn send_message(handle: &WalletMessageHandler, message: Message) -> Option<Response> {
-    let (message_tx, mut message_rx) = unbounded_channel();
-    handle.handle(message, message_tx).await;
-    message_rx.recv().await
 }
