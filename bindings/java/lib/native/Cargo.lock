@@ -1111,7 +1111,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "2.0.1-rc.5"
-source = "git+https://github.com/iotaledger/iota.rs?rev=767eb0e3d2e3ac7a4653a736b5ca20f8ff0b3dd1#767eb0e3d2e3ac7a4653a736b5ca20f8ff0b3dd1"
+source = "git+https://github.com/iotaledger/iota.rs?rev=59cf0dd10ced608aab55913bbc261c3765e618f2#59cf0dd10ced608aab55913bbc261c3765e618f2"
 dependencies = [
  "async-trait",
  "backtrace",
@@ -1191,7 +1191,7 @@ dependencies = [
 [[package]]
 name = "iota-pow"
 version = "1.0.0-rc.2"
-source = "git+https://github.com/iotaledger/iota.rs?rev=767eb0e3d2e3ac7a4653a736b5ca20f8ff0b3dd1#767eb0e3d2e3ac7a4653a736b5ca20f8ff0b3dd1"
+source = "git+https://github.com/iotaledger/iota.rs?rev=59cf0dd10ced608aab55913bbc261c3765e618f2#59cf0dd10ced608aab55913bbc261c3765e618f2"
 dependencies = [
  "instant",
  "iota-crypto",
@@ -1202,12 +1202,13 @@ dependencies = [
 [[package]]
 name = "iota-types"
 version = "1.0.0-rc.4"
-source = "git+https://github.com/iotaledger/iota.rs?rev=767eb0e3d2e3ac7a4653a736b5ca20f8ff0b3dd1#767eb0e3d2e3ac7a4653a736b5ca20f8ff0b3dd1"
+source = "git+https://github.com/iotaledger/iota.rs?rev=59cf0dd10ced608aab55913bbc261c3765e618f2#59cf0dd10ced608aab55913bbc261c3765e618f2"
 dependencies = [
  "bech32 0.9.1",
  "bitflags",
  "bytemuck",
  "derive_more",
+ "getset",
  "hashbrown 0.13.2",
  "hex",
  "iota-crypto",
@@ -1219,6 +1220,7 @@ dependencies = [
  "serde",
  "serde-big-array",
  "serde_json",
+ "serde_repr",
  "thiserror",
 ]
 
@@ -2027,6 +2029,17 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
+]
+
+[[package]]
+name = "serde_repr"
+version = "0.1.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9a5ec9fa74a20ebbe5d9ac23dac1fc96ba0ecfe9f50f2843b52e537b10fbcb4e"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

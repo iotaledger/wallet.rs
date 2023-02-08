@@ -5,9 +5,7 @@ use std::{convert::TryFrom, sync::Mutex};
 
 use iota_wallet::{
     events::types::{Event, WalletEventType},
-    message_interface::{
-        create_message_handler, init_logger, send_message, ManagerOptions, Message, WalletMessageHandler,
-    },
+    message_interface::{create_message_handler, init_logger, ManagerOptions, Message, WalletMessageHandler},
 };
 use jni::{
     objects::{GlobalRef, JClass, JObject, JStaticMethodID, JString, JValue},
@@ -147,11 +145,9 @@ pub extern "system" fn Java_org_iota_api_NativeApi_sendMessage(
         Ok(message_handler_store) => {
             match message_handler_store.as_ref() {
                 Some(message_handler) => {
-                    match crate::block_on(send_message(message_handler, message)) {
-                        // We assume response is valid json from our own client
-                        Some(res) => return make_jni_string(&env, serde_json::to_string(&res).unwrap()),
-                        None => throw_nullpointer(&env, "No send message response"),
-                    }
+                    let res = crate::block_on(message_handler.send_message(message));
+                    // We assume response is valid json from our own client
+                    return make_jni_string(&env, serde_json::to_string(&res).unwrap());
                 }
                 _ => throw_nullpointer(&env, "Wallet not initialised."),
             }

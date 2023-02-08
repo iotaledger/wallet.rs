@@ -49,24 +49,19 @@ impl MessageHandler {
     async fn send_message(&self, serialized_message: String) -> (String, bool) {
         match serde_json::from_str::<Message>(&serialized_message) {
             Ok(message) => {
-                let response =
-                    iota_wallet::message_interface::send_message(&self.wallet_message_handler, message).await;
-                if let Some(res) = response {
-                    let mut is_err = matches!(res, Response::Error(_) | Response::Panic(_));
+                let res = self.wallet_message_handler.send_message(message).await;
+                let mut is_err = matches!(res, Response::Error(_) | Response::Panic(_));
 
-                    let msg = match serde_json::to_string(&res) {
-                        Ok(msg) => msg,
-                        Err(e) => {
-                            is_err = true;
-                            serde_json::to_string(&Response::Error(e.into()))
-                                .expect("the response is generated manually, so unwrap is safe.")
-                        }
-                    };
+                let msg = match serde_json::to_string(&res) {
+                    Ok(msg) => msg,
+                    Err(e) => {
+                        is_err = true;
+                        serde_json::to_string(&Response::Error(e.into()))
+                            .expect("the response is generated manually, so unwrap is safe.")
+                    }
+                };
 
-                    (msg, is_err)
-                } else {
-                    ("No send message response".to_string(), true)
-                }
+                (msg, is_err)
             }
             Err(e) => {
                 log::debug!("{:?}", e);

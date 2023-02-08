@@ -144,13 +144,9 @@ pub unsafe extern "C" fn iota_send_message(
 
     runtime().spawn(async move {
         let callback_context = callback_context;
-        let response = message_interface::send_message(handle, message).await;
-        if let None = response {
-            let error = CString::new("No send message response").unwrap();
-            return callback(std::ptr::null(), error.as_ptr(), callback_context.data);
-        }
+        let response = handle.send_message(message).await;
 
-        let response = serde_json::to_string(&response.unwrap()).unwrap();
+        let response = serde_json::to_string(&response).unwrap();
         let response = CString::new(response).unwrap();
         callback(response.as_ptr(), std::ptr::null(), callback_context.data);
     });

@@ -66,16 +66,9 @@ pub fn send_message(handle: &WalletMessageHandler, message: String) -> Result<St
             panic!("Wrong message! {e:?}");
         }
     };
-    let response = crate::block_on(async {
-        ::iota_wallet::message_interface::send_message(&handle.wallet_message_handler, message).await
-    });
+    let response = crate::block_on(async { handle.wallet_message_handler.send_message(message).await });
 
-    match response {
-        Some(message) => Ok(serde_json::to_string(&message)?),
-        None => {
-            panic!("No send message response");
-        }
-    }
+    Ok(serde_json::to_string(&response)?)
 }
 
 #[pyfunction]

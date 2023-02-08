@@ -62,6 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `OutputData::input_signing_data` returns `Result<Option<InputSigningData>>` instead of `Result<InputSigningData>>`;
 - `OutputData::input_signing_data` accepts `Option<AliasTransition>` instead of `bool`;
 - Made all fields of `ManagerOptions` pub;
+- Renamed `WalletMessageHandler::handle()` to `WalletMessageHandler::send_message()`, removed the `response_tx` parameter and returned the `Response`;
 
 ### Removed
 
@@ -70,6 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `SyncOptions::sync_aliases_and_nfts`;
 - `{TransactionOptions, TransactionOptionsDto}::allow_burning`;
 - Background task spawning to retry a transaction;
+- `message_interface::send_message()`;
 
 ### Fixed
 
