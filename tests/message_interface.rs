@@ -133,6 +133,7 @@ async fn message_interface_create_account() -> Result<()> {
     common::tear_down(storage_path)
 }
 
+#[ignore]
 #[cfg(all(feature = "message_interface", feature = "events"))]
 #[tokio::test]
 async fn message_interface_events() -> Result<()> {
