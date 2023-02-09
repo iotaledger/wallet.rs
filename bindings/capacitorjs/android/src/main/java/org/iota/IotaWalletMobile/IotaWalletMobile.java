@@ -92,7 +92,10 @@ public class IotaWalletMobile extends Plugin {
                     .withCoinType(coinType)
             );
             JSObject ret = new JSObject();
-            ret.put("messageHandler", 1);
+            // 1 signals the id of the messageHandler returned by the rust side. 
+            // This is irrelevant for the Java side, but required on the Swift and JS side
+            Integer messageHandlerPointer = 1;
+            ret.put("messageHandler", messageHandlerPointer);
             call.resolve(ret);
         } catch (Exception e) {
             e.printStackTrace();
