@@ -3,9 +3,8 @@ name: Test coverage
 on:
   push:
     branches:
-      - main
-      - dev
       - develop
+      - production
 
 concurrency: 
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
