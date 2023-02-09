@@ -106,7 +106,7 @@ public class IotaWalletMobile extends Plugin {
     public void sendMessage(final PluginCall call) {
         try {
             if (!call.getData().has("message")) {
-                call.reject("message are required");
+                call.reject("message is required");
             }
             String message = call.getString("message");
             if (message == null) {
