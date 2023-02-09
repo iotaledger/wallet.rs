@@ -282,10 +282,7 @@ impl<'de> Deserialize<'de> for AccountIdentifier {
 // When the identifier is a string.
 impl From<&str> for AccountIdentifier {
     fn from(value: &str) -> Self {
-        match u32::from_str(value) {
-            Ok(index) => Self::Index(index),
-            Err(_) => Self::Alias(value.to_string()),
-        }
+        u32::from_str(value).map_or_else(|_| Self::Alias(value.to_string()), Self::Index)
     }
 }
 

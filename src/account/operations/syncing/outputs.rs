@@ -43,12 +43,10 @@ impl AccountHandle {
             let transaction_id = TransactionId::from_str(&output_response.metadata.transaction_id)?;
             // check if we know the transaction that created this output and if we created it (if we store incoming
             // transactions separated, then this check wouldn't be required)
-            let remainder = {
-                match account.transactions.get(&transaction_id) {
-                    Some(tx) => !tx.incoming,
-                    None => false,
-                }
-            };
+            let remainder = account
+                .transactions
+                .get(&transaction_id)
+                .map_or(false, |tx| !tx.incoming);
 
             // 44 is for BIP 44 (HD wallets) and 4218 is the registered index for IOTA https://github.com/satoshilabs/slips/blob/master/slip-0044.md
             let chain = Chain::from_u32_hardened(vec![
