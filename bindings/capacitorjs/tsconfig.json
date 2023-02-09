@@ -20,13 +20,6 @@
   "files": [
     "src/index.ts",
     "src/definitions.ts",
-    // "src/lib/index.ts",
-    // "src/lib/bindings.ts",
-    // "src/lib/AccountManager.ts",
-    // "src/lib/Account.ts",
-    // "src/lib/MessageHandler.ts",
-    // "src/types/index.ts"
   ],
-  "include": ["src/*", "src/lib/**/*", "src/types/**/*"],
-  // "include": ["src/types"],
+  "include": ["src/*", "src/lib/**/*", "src/types/**/*"]
 }
