@@ -43,7 +43,7 @@ impl Storage {
         })
     }
 
-    async fn set<T: Serialize>(&mut self, key: &str, record: T) -> crate::Result<()> {
+    async fn set<T: Serialize + Send>(&mut self, key: &str, record: T) -> crate::Result<()> {
         let record = serde_json::to_string(&record)?;
         self.inner
             .set(

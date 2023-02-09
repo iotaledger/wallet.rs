@@ -71,14 +71,27 @@ fn convert_panics<F: FnOnce() -> Result<Response>>(f: F) -> Result<Response> {
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
+async fn convert_async_panics<F>(f: impl FnOnce() -> F + Send) -> Result<Response>
+where
+    F: Future<Output = Result<Response>> + Send,
+{
+    AssertUnwindSafe(f())
+        .catch_unwind()
+        .await
+        .unwrap_or_else(|panic| Ok(panic_to_response_message(panic)))
+}
+
+#[cfg(target_family = "wasm")]
+#[allow(clippy::future_not_send)]
 async fn convert_async_panics<F>(f: impl FnOnce() -> F) -> Result<Response>
 where
     F: Future<Output = Result<Response>>,
 {
-    match AssertUnwindSafe(f()).catch_unwind().await {
-        Ok(result) => result,
-        Err(panic) => Ok(panic_to_response_message(panic)),
-    }
+    AssertUnwindSafe(f())
+        .catch_unwind()
+        .await
+        .unwrap_or_else(|panic| Ok(panic_to_response_message(panic)))
 }
 
 /// The Wallet message handler.
