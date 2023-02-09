@@ -196,11 +196,11 @@ fn is_valid_participation_output(output: &Output) -> bool {
         let [UnlockCondition::Address(_)] = basic_output.unlock_conditions().as_ref() else {
             return false;
         };
-        if let Some(tag) = basic_output.features().tag() {
-            tag.tag() == PARTICIPATION_TAG.as_bytes()
-        } else {
-            false
-        }
+
+        basic_output
+            .features()
+            .tag()
+            .map_or(false, |tag| tag.tag() == PARTICIPATION_TAG.as_bytes())
     } else {
         false
     }

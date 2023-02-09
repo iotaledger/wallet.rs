@@ -1,6 +1,8 @@
 // Copyright 2023 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+#![allow(clippy::redundant_pub_crate)]
+
 mod constants;
 
 use iota_client::request_funds_from_faucet;

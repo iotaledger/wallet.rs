@@ -50,13 +50,16 @@ use crate::{
 };
 
 fn panic_to_response_message(panic: Box<dyn Any>) -> Response {
-    let msg = if let Some(message) = panic.downcast_ref::<String>() {
-        format!("Internal error: {message}")
-    } else if let Some(message) = panic.downcast_ref::<&str>() {
-        format!("Internal error: {message}")
-    } else {
-        "Internal error".to_string()
-    };
+    let msg = panic.downcast_ref::<String>().map_or_else(
+        || {
+            panic.downcast_ref::<&str>().map_or_else(
+                || "Internal error".to_string(),
+                |message| format!("Internal error: {message}"),
+            )
+        },
+        |message| format!("Internal error: {message}"),
+    );
+
     let current_backtrace = Backtrace::new();
     Response::Panic(format!("{msg}\n\n{current_backtrace:?}"))
 }
@@ -68,14 +71,27 @@ fn convert_panics<F: FnOnce() -> Result<Response>>(f: F) -> Result<Response> {
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
+async fn convert_async_panics<F>(f: impl FnOnce() -> F + Send) -> Result<Response>
+where
+    F: Future<Output = Result<Response>> + Send,
+{
+    AssertUnwindSafe(f())
+        .catch_unwind()
+        .await
+        .unwrap_or_else(|panic| Ok(panic_to_response_message(panic)))
+}
+
+#[cfg(target_family = "wasm")]
+#[allow(clippy::future_not_send)]
 async fn convert_async_panics<F>(f: impl FnOnce() -> F) -> Result<Response>
 where
     F: Future<Output = Result<Response>>,
 {
-    match AssertUnwindSafe(f()).catch_unwind().await {
-        Ok(result) => result,
-        Err(panic) => Ok(panic_to_response_message(panic)),
-    }
+    AssertUnwindSafe(f())
+        .catch_unwind()
+        .await
+        .unwrap_or_else(|panic| Ok(panic_to_response_message(panic)))
 }
 
 /// The Wallet message handler.
@@ -581,13 +597,16 @@ impl WalletMessageHandler {
             }
             AccountMethod::GetIncomingTransactionData { transaction_id } => {
                 let transaction = account_handle.get_incoming_transaction_data(&transaction_id).await;
-                match transaction {
-                    Some(transaction) => Ok(Response::IncomingTransactionData(Some(Box::new((
-                        transaction_id,
-                        TransactionDto::from(&transaction),
-                    ))))),
-                    None => Ok(Response::IncomingTransactionData(None)),
-                }
+
+                transaction.map_or_else(
+                    || Ok(Response::IncomingTransactionData(None)),
+                    |transaction| {
+                        Ok(Response::IncomingTransactionData(Some(Box::new((
+                            transaction_id,
+                            TransactionDto::from(&transaction),
+                        )))))
+                    },
+                )
             }
             AccountMethod::Addresses => {
                 let addresses = account_handle.addresses().await?;

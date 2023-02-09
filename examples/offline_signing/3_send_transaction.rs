@@ -39,7 +39,10 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-async fn read_signed_transaction_from_file<P: AsRef<Path>>(client: &Client, path: P) -> Result<SignedTransactionData> {
+async fn read_signed_transaction_from_file<P: AsRef<Path> + Send>(
+    client: &Client,
+    path: P,
+) -> Result<SignedTransactionData> {
     let mut file = File::open(&path)?;
     let mut json = String::new();
     file.read_to_string(&mut json)?;
