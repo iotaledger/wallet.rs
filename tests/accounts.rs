@@ -3,15 +3,14 @@
 
 mod common;
 
+use iota_wallet::Result;
 #[cfg(feature = "stronghold")]
 use {
-    iota_client::constants::SHIMMER_COIN_TYPE,
-    iota_client::secret::stronghold::StrongholdSecretManager,
-    iota_wallet::{account_manager::AccountManager, secret::SecretManager, ClientOptions, Result},
+    iota_client::{constants::SHIMMER_COIN_TYPE, secret::stronghold::StrongholdSecretManager},
+    iota_wallet::{account_manager::AccountManager, secret::SecretManager, ClientOptions},
     std::path::PathBuf,
 };
 
-#[cfg(feature = "storage")]
 #[tokio::test]
 async fn account_ordering() -> Result<()> {
     let storage_path = "test-storage/account_ordering";
@@ -93,14 +92,12 @@ async fn remove_latest_account() -> Result<()> {
     assert_eq!(accounts.len(), 1);
     assert_eq!(*accounts.get(0).unwrap().read().await.index(), recreated_account_index);
 
-    std::fs::remove_dir_all("test-storage/remove_latest_account").unwrap_or(());
     #[cfg(debug_assertions)]
     manager.verify_integrity().await?;
 
     common::tear_down(storage_path)
 }
 
-#[cfg(feature = "storage")]
 #[tokio::test]
 async fn account_alias_already_exists() -> Result<()> {
     let storage_path = "test-storage/account_alias_already_exists";
@@ -149,7 +146,6 @@ async fn account_alias_already_exists() -> Result<()> {
     common::tear_down(storage_path)
 }
 
-#[cfg(feature = "storage")]
 #[tokio::test]
 async fn account_rename_alias() -> Result<()> {
     let storage_path = "test-storage/account_rename_alias";
@@ -172,7 +168,6 @@ async fn account_rename_alias() -> Result<()> {
     common::tear_down(storage_path)
 }
 
-#[cfg(feature = "storage")]
 #[tokio::test]
 async fn account_first_address_exists() -> Result<()> {
     let storage_path = "test-storage/account_first_address_exists";
@@ -212,15 +207,18 @@ async fn account_creation_stronghold() -> Result<()> {
     stronghold_secret_manager.store_mnemonic(mnemonic.to_string()).await?;
     let secret_manager = SecretManager::Stronghold(stronghold_secret_manager);
 
-    let manager = AccountManager::builder()
+    #[allow(unused_mut)]
+    let mut account_manager_builder = AccountManager::builder()
         .with_secret_manager(secret_manager)
         .with_client_options(client_options)
-        .with_coin_type(SHIMMER_COIN_TYPE)
-        .with_storage_path(storage_path)
-        .finish()
-        .await?;
+        .with_coin_type(SHIMMER_COIN_TYPE);
+    #[cfg(feature = "storage")]
+    {
+        account_manager_builder = account_manager_builder.with_storage_path(storage_path);
+    }
+    let account_manager = account_manager_builder.finish().await?;
 
-    let _account = manager.create_account().finish().await?;
+    let _account = account_manager.create_account().finish().await?;
 
     common::tear_down(storage_path)
 }

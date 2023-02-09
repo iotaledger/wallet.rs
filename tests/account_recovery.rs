@@ -5,19 +5,15 @@
 
 mod common;
 
-#[cfg(feature = "storage")]
 use std::time::Duration;
 
-#[cfg(feature = "storage")]
 use iota_client::{constants::SHIMMER_COIN_TYPE, Client};
-#[cfg(feature = "storage")]
 use iota_wallet::{
     secret::{mnemonic::MnemonicSecretManager, SecretManager},
     Result,
 };
 
 #[ignore]
-#[cfg(feature = "storage")]
 #[tokio::test]
 async fn account_recovery_empty() -> Result<()> {
     let storage_path = "test-storage/account_recovery_empty";
@@ -32,7 +28,6 @@ async fn account_recovery_empty() -> Result<()> {
 }
 
 #[ignore]
-#[cfg(feature = "storage")]
 #[tokio::test]
 async fn account_recovery_existing_accounts() -> Result<()> {
     let storage_path = "test-storage/account_recovery_existing_accounts";
@@ -56,7 +51,6 @@ async fn account_recovery_existing_accounts() -> Result<()> {
 }
 
 #[ignore]
-#[cfg(feature = "storage")]
 #[tokio::test]
 async fn account_recovery_with_balance_and_empty_addresses() -> Result<()> {
     let storage_path = "test-storage/account_recovery_with_balance_and_empty_addresses";

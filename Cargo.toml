@@ -71,7 +71,7 @@ required-features = [ "stronghold" ]
 [[example]]
 name = "0_generate_addresses"
 path = "examples/offline_signing/0_generate_addresses.rs"
-required-features = [ "stronghold" ]
+required-features = [ "storage", "stronghold" ]
 
 [[example]]
 name = "1_prepare_transaction"

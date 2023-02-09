@@ -3,13 +3,10 @@
 
 mod common;
 
-#[cfg(feature = "storage")]
 use iota_client::block::output::{NftId, OutputId};
-#[cfg(feature = "storage")]
 use iota_wallet::{account::AccountHandle, NativeTokenOptions, NftOptions, Result, U256};
 
 #[ignore]
-#[cfg(feature = "storage")]
 #[tokio::test]
 async fn mint_and_burn_nft() -> Result<()> {
     let storage_path = "test-storage/mint_and_burn_outputs";
@@ -53,7 +50,6 @@ async fn mint_and_burn_nft() -> Result<()> {
 }
 
 #[ignore]
-#[cfg(feature = "storage")]
 #[tokio::test]
 async fn mint_and_decrease_native_token_supply() -> Result<()> {
     let storage_path = "test-storage/mint_and_decrease_native_token_supply";
@@ -137,7 +133,6 @@ async fn mint_and_decrease_native_token_supply() -> Result<()> {
     common::tear_down(storage_path)
 }
 
-#[cfg(feature = "storage")]
 async fn destroy_foundry(account: &AccountHandle) -> Result<()> {
     let balance = account.sync(None).await?;
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
@@ -161,7 +156,6 @@ async fn destroy_foundry(account: &AccountHandle) -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "storage")]
 async fn destroy_alias(account: &AccountHandle) -> Result<()> {
     let balance = account.sync(None).await.unwrap();
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
@@ -185,7 +179,6 @@ async fn destroy_alias(account: &AccountHandle) -> Result<()> {
 }
 
 #[ignore]
-#[cfg(feature = "storage")]
 #[tokio::test]
 async fn mint_and_burn_native_tokens() -> Result<()> {
     let storage_path = "test-storage/mint_and_burn_native_tokens";

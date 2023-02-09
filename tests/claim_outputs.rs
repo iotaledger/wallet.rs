@@ -3,18 +3,15 @@
 
 mod common;
 
-#[cfg(feature = "storage")]
 use iota_client::block::output::{
     unlock_condition::{AddressUnlockCondition, ExpirationUnlockCondition},
     NftId, NftOutputBuilder, UnlockCondition,
 };
-#[cfg(feature = "storage")]
 use iota_wallet::{
     account::OutputsToClaim, AddressNativeTokens, AddressWithMicroAmount, NativeTokenOptions, Result, U256,
 };
 
 #[ignore]
-#[cfg(feature = "storage")]
 #[tokio::test]
 async fn claim_2_basic_outputs() -> Result<()> {
     let storage_path = "test-storage/claim_2_basic_outputs";
@@ -76,7 +73,6 @@ async fn claim_2_basic_outputs() -> Result<()> {
 }
 
 #[ignore]
-#[cfg(feature = "storage")]
 #[tokio::test]
 async fn claim_2_native_tokens() -> Result<()> {
     let storage_path = "test-storage/claim_2_native_tokens";
@@ -184,7 +180,6 @@ async fn claim_2_native_tokens() -> Result<()> {
 }
 
 #[ignore]
-#[cfg(feature = "storage")]
 #[tokio::test]
 async fn claim_2_nft_outputs() -> Result<()> {
     let storage_path = "test-storage/claim_2_nft_outputs";
