@@ -147,24 +147,25 @@ impl AccountHandle {
                             if output_can_be_unlocked_now_and_in_future {
                                 // If output has a StorageDepositReturnUnlockCondition, the amount of it should be
                                 // subtracted, because this part needs to be sent back
-                                let amount = if let Some(sdr) = output_data
+                                let amount = output_data
                                     .output
                                     .unlock_conditions()
                                     .and_then(|u| u.storage_deposit_return())
-                                {
-                                    if account_addresses
-                                        .iter()
-                                        .any(|a| a.address.inner == *sdr.return_address())
-                                    {
-                                        // sending to ourself, we get the full amount
-                                        output_data.output.amount()
-                                    } else {
-                                        // Sending to someone else
-                                        output_data.output.amount() - sdr.amount()
-                                    }
-                                } else {
-                                    output_data.output.amount()
-                                };
+                                    .map_or_else(
+                                        || output_data.output.amount(),
+                                        |sdr| {
+                                            if account_addresses
+                                                .iter()
+                                                .any(|a| a.address.inner == *sdr.return_address())
+                                            {
+                                                // sending to ourself, we get the full amount
+                                                output_data.output.amount()
+                                            } else {
+                                                // Sending to someone else
+                                                output_data.output.amount() - sdr.amount()
+                                            }
+                                        },
+                                    );
 
                                 // add nft_id for nft outputs
                                 if let Output::Nft(output) = &output_data.output {
