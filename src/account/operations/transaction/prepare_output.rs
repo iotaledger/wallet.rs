@@ -109,7 +109,7 @@ impl AccountHandle {
                 let storage_deposit = options.storage_deposit.unwrap_or_default();
                 // Gift return strategy doesn't need a change, since the amount is already the minimum storage
                 // deposit
-                if let ReturnStrategy::Return = storage_deposit.return_strategy.unwrap_or_default() {
+                if storage_deposit.return_strategy.unwrap_or_default() == ReturnStrategy::Return {
                     let remainder_address = self.get_remainder_address(transaction_options).await?;
 
                     // Calculate the minimum storage deposit to be returned
@@ -136,7 +136,7 @@ impl AccountHandle {
                 // it.
                 if storage_deposit.use_excess_if_low.unwrap_or_default() {
                     let balance = self.balance().await?;
-                    if let Ordering::Greater = balance.base_coin.available.cmp(&first_output.amount()) {
+                    if balance.base_coin.available.cmp(&first_output.amount()) == Ordering::Greater {
                         let balance_minus_output = balance.base_coin.available - first_output.amount();
                         // Calculate the amount for a basic output
                         let minimum_required_storage_deposit =
@@ -276,7 +276,7 @@ impl AccountHandle {
                 let storage_deposit = options.storage_deposit.unwrap_or_default();
                 // Gift return strategy doesn't need a change, since the amount is already the minimum storage
                 // deposit
-                if let ReturnStrategy::Return = storage_deposit.return_strategy.unwrap_or_default() {
+                if storage_deposit.return_strategy.unwrap_or_default() == ReturnStrategy::Return {
                     let remainder_address = self.get_remainder_address(transaction_options).await?;
 
                     // Calculate the amount to be returned
@@ -303,7 +303,7 @@ impl AccountHandle {
                 // it.
                 if storage_deposit.use_excess_if_low.unwrap_or_default() {
                     let balance = self.balance().await?;
-                    if let Ordering::Greater = balance.base_coin.available.cmp(&first_output.amount()) {
+                    if balance.base_coin.available.cmp(&first_output.amount()) == Ordering::Greater {
                         let balance_minus_output = balance.base_coin.available - first_output.amount();
                         // Calculate the amount for a basic output
                         let minimum_required_storage_deposit =
@@ -390,7 +390,7 @@ pub struct OutputOptions {
     pub storage_deposit: Option<StorageDeposit>,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Assets {
     #[serde(rename = "nativeToken")]
     pub native_tokens: Option<Vec<NativeToken>>,
@@ -398,7 +398,7 @@ pub struct Assets {
     pub nft_id: Option<NftId>,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Features {
     pub tag: Option<String>,
     pub metadata: Option<String>,
@@ -406,7 +406,7 @@ pub struct Features {
     pub sender: Option<String>,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Unlocks {
     #[serde(rename = "expirationUnixTime")]
     pub expiration_unix_time: Option<u32>,

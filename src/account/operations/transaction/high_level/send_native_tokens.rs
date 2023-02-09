@@ -109,10 +109,11 @@ impl AccountHandle {
                 token_supply,
             )?;
 
-            let expiration_time = match address_with_amount.expiration {
-                Some(expiration_time) => local_time + expiration_time,
-                None => local_time + DEFAULT_EXPIRATION_TIME,
-            };
+            let expiration_time = address_with_amount
+                .expiration
+                .map_or(local_time + DEFAULT_EXPIRATION_TIME, |expiration_time| {
+                    local_time + expiration_time
+                });
 
             outputs.push(
                 BasicOutputBuilder::new_with_amount(storage_deposit_amount)?

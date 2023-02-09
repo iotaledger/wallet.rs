@@ -25,7 +25,6 @@ const ADDRESS_FILE_NAME: &str = "examples/offline_signing/addresses.json";
 const PREPARED_TRANSACTION_FILE_NAME: &str = "examples/offline_signing/prepared_transaction.json";
 
 #[tokio::main]
-
 async fn main() -> Result<()> {
     // This example uses dotenv, which is not safe for use in production
     dotenv().ok();

@@ -3,6 +3,8 @@
 
 //! The IOTA Wallet Library
 
+#![allow(clippy::redundant_pub_crate)]
+
 /// [`AccountHandle`]: crate::account::handle::AccountHandle
 /// The account module. Interaction with an Account happens via an [`AccountHandle`].
 pub mod account;
