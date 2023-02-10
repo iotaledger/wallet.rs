@@ -7,11 +7,9 @@ pub mod options;
 pub(crate) mod outputs;
 pub(crate) mod transactions;
 
-use std::{
-    collections::{HashMap, HashSet},
-    time::{Instant, SystemTime, UNIX_EPOCH},
-};
+use std::collections::{HashMap, HashSet};
 
+use instant::{Instant, SystemTime};
 use iota_client::block::{
     address::{Address, AliasAddress, NftAddress},
     output::{dto::OutputMetadataDto, FoundryId, Output, OutputId},
@@ -35,7 +33,7 @@ impl AccountHandle {
 
         // Prevent syncing the account multiple times simultaneously
         let time_now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
+            .duration_since(SystemTime::UNIX_EPOCH)
             .expect("time went backwards")
             .as_millis();
         let mut last_synced = self.last_synced.lock().await;
@@ -116,7 +114,7 @@ impl AccountHandle {
         let account_balance = self.balance().await?;
         // Update last_synced mutex
         let time_now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
+            .duration_since(SystemTime::UNIX_EPOCH)
             .expect("time went backwards")
             .as_millis();
         *last_synced = time_now;

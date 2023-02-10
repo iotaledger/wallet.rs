@@ -27,16 +27,13 @@ async function run() {
     console.log('Account created:', account);
     account.setAlias('new alias');
 
-    const savedAccount = await manager.getAccount('new alias');
-    console.log(savedAccount);
+    const balance = await account.sync();
+    console.log(balance);
 
-    account.getNodeInfo().then((value) => {
+    manager.getNodeInfo().then((value) => {
         console.log(value);
     });
+
 }
 
-describe('Wallet methods', () => {
-    it('account', async () => {
-        run();
-    });
-})
+run();

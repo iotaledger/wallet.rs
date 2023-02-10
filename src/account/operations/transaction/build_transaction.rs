@@ -1,8 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::time::Instant;
-
+use instant::Instant;
 use iota_client::{
     api::{
         input_selection::Selected, transaction::validate_regular_transaction_essence_length, PreparedTransactionData,
