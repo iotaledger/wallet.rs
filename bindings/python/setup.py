@@ -25,7 +25,7 @@ setup(
     version="1.0.0.rc.1",
     classifiers=[
         "License :: SPDX-License-Identifier ::  Apache-2.0",
-        "Development Status :: 1.0.0.rc.1",
+        "Development Status :: 1.0.0-rc.1",
         "Intended Audience :: Developers",
         "Programming Language :: Python",
         "Programming Language :: Rust",
