@@ -195,6 +195,10 @@ jobs:
         run: npm ci --build-from-source
         working-directory: bindings/nodejs
 
+      - name: Run npm test
+        run: npm test
+        working-directory: bindings/nodejs
+
   swift-bindings:
     runs-on: ${{ matrix.os }}
     strategy:
