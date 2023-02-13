@@ -30,9 +30,7 @@ impl Storage {
     }
 
     async fn get(&self, key: &str) -> crate::Result<Option<String>> {
-        let record = self.inner.get(key).await?;
-
-        match record {
+        match self.inner.get(key).await? {
             Some(record) => {
                 if let Some(key) = &self.encryption_key {
                     if serde_json::from_str::<Vec<u8>>(&record).is_ok() {
