@@ -46,7 +46,7 @@ impl Storage {
                     Ok(Some(record))
                 }
             }
-            None => return Ok(None),
+            None => Ok(None),
         }
     }
 

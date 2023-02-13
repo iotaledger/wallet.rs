@@ -44,7 +44,7 @@ impl StorageAdapter for RocksdbStorageAdapter {
             .lock()
             .await
             .get(key.as_bytes())
-            .map_err(|e| storage_err(e))?
+            .map_err(storage_err)?
             .map(|r| String::from_utf8_lossy(&r).to_string()))
     }
 

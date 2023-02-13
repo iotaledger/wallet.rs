@@ -132,8 +132,8 @@ impl StorageManager {
             if let Some(data) = self.storage.get(SECRET_MANAGER_KEY).await? {
                 log::debug!("get_secret_manager {data}");
                 let secret_manager_dto: SecretManagerDto = serde_json::from_str(&data)?;
-                // Only secret_managers that aren't SecretManagerDto::Mnemonic can be restored, because there the Seed can't
-                // be serialized, so we can't create the SecretManager again
+                // Only secret_managers that aren't SecretManagerDto::Mnemonic can be restored, because there the Seed
+                // can't be serialized, so we can't create the SecretManager again
                 match secret_manager_dto {
                     SecretManagerDto::Mnemonic(_) => {}
                     _ => {
@@ -149,15 +149,24 @@ impl StorageManager {
     }
 
     pub async fn get_accounts(&mut self) -> crate::Result<Vec<Account>> {
-        if self.account_indexes.is_empty() {
-            if let Some(record) = self.storage.get(ACCOUNTS_INDEXATION_KEY).await? {
+        if let Some(record) = self.storage.get(ACCOUNTS_INDEXATION_KEY).await? {
+            if self.account_indexes.is_empty() {
                 self.account_indexes = serde_json::from_str(&record)?;
             }
+        } else {
+            // TODO empty vec or None ? Probably None ?
+            return Ok(Vec::new());
         }
 
         let mut accounts = Vec::new();
         for account_index in self.account_indexes.clone() {
-            accounts.push(self.get(&format!("{ACCOUNT_INDEXATION_KEY}{account_index}")).await?);
+            // PANIC: we assume that ACCOUNTS_INDEXATION_KEY and the different indexes are set together and
+            // ACCOUNTS_INDEXATION_KEY has already been checked
+            accounts.push(
+                self.get(&format!("{ACCOUNT_INDEXATION_KEY}{account_index}"))
+                    .await?
+                    .unwrap(),
+            );
         }
 
         parse_accounts(&accounts, &self.storage.encryption_key)
