@@ -38,12 +38,14 @@ impl StorageAdapter for RocksdbStorageAdapter {
     }
 
     /// Gets the record associated with the given key from the storage.
-    async fn get(&self, key: &str) -> crate::Result<String> {
-        match self.db.lock().await.get(key.as_bytes()) {
-            Ok(Some(r)) => Ok(String::from_utf8_lossy(&r).to_string()),
-            Ok(None) => Err(crate::Error::RecordNotFound(key.to_string())),
-            Err(e) => Err(storage_err(e)),
-        }
+    async fn get(&self, key: &str) -> crate::Result<Option<String>> {
+        Ok(self
+            .db
+            .lock()
+            .await
+            .get(key.as_bytes())
+            .map_err(storage_err)?
+            .map(|r| String::from_utf8_lossy(&r).to_string()))
     }
 
     /// Saves or updates a record on the storage.

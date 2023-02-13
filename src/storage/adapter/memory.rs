@@ -3,7 +3,7 @@
 
 use std::collections::HashMap;
 
-use super::{storage_err, StorageAdapter};
+use super::StorageAdapter;
 
 /// The storage id.
 pub const STORAGE_ID: &str = "Memory";
@@ -19,8 +19,8 @@ impl StorageAdapter for Memory {
     }
 
     /// Gets the record associated with the given key from the storage.
-    async fn get(&self, key: &str) -> crate::Result<String> {
-        self.0.get(key).ok_or_else(|| storage_err(key)).cloned()
+    async fn get(&self, key: &str) -> crate::Result<Option<String>> {
+        Ok(self.0.get(key).cloned())
     }
 
     /// Saves or updates a record on the storage.

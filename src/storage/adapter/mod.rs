@@ -8,6 +8,7 @@ pub mod rocksdb;
 
 use std::collections::HashMap;
 
+#[cfg(not(target_family = "wasm"))]
 fn storage_err<E: ToString>(error: E) -> crate::Error {
     crate::Error::Storage(error.to_string())
 }
@@ -21,7 +22,7 @@ pub trait StorageAdapter: std::fmt::Debug {
     }
 
     /// Gets the record associated with the given key from the storage.
-    async fn get(&self, key: &str) -> crate::Result<String>;
+    async fn get(&self, key: &str) -> crate::Result<Option<String>>;
 
     /// Saves or updates a record on the storage.
     async fn set(&mut self, key: &str, record: String) -> crate::Result<()>;

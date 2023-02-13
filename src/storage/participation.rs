@@ -21,11 +21,10 @@ impl StorageManager {
         let mut events: HashMap<ParticipationEventId, ParticipationEventWithNodes> = match self
             .storage
             .get(&format!("{PARTICIPATION_EVENTS}{account_index}"))
-            .await
+            .await?
         {
-            Ok(events) => serde_json::from_str(&events)?,
-            Err(crate::Error::RecordNotFound(_)) => HashMap::new(),
-            Err(err) => return Err(err),
+            Some(events) => serde_json::from_str(&events)?,
+            None => HashMap::new(),
         };
 
         events.insert(event_with_nodes.id, event_with_nodes);
@@ -47,11 +46,10 @@ impl StorageManager {
         let mut events: HashMap<ParticipationEventId, ParticipationEventWithNodes> = match self
             .storage
             .get(&format!("{PARTICIPATION_EVENTS}{account_index}"))
-            .await
+            .await?
         {
-            Ok(events) => serde_json::from_str(&events)?,
-            Err(crate::Error::RecordNotFound(_)) => return Ok(()),
-            Err(err) => return Err(err),
+            Some(events) => serde_json::from_str(&events)?,
+            None => return Ok(()),
         };
 
         events.remove(id);
@@ -72,11 +70,10 @@ impl StorageManager {
         match self
             .storage
             .get(&format!("{PARTICIPATION_EVENTS}{account_index}"))
-            .await
+            .await?
         {
-            Ok(events) => Ok(serde_json::from_str(&events)?),
-            Err(crate::Error::RecordNotFound(_)) => Ok(HashMap::new()),
-            Err(err) => Err(err),
+            Some(events) => Ok(serde_json::from_str(&events)?),
+            None => Ok(HashMap::new()),
         }
     }
 }
