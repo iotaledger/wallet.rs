@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security -->
 
+## 1.0.0-rc.6 - 2023-XX-XX
+
+### Changed
+
+- `StorageAdapter::get` return type changed from `Result<String>`, to `Result<Option<String>>`;
+
 ## 1.0.0-rc.5 - 2023-02-09
 
 ### Added
