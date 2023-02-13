@@ -22,10 +22,9 @@ def get_py_version_cfgs():
 
 setup(
     name="iota_wallet",
-    version="0.2.0",
+    version="1.0.0-rc.1",
     classifiers=[
         "License :: SPDX-License-Identifier ::  Apache-2.0",
-        "Development Status :: 0.1.0 - Alpha",
         "Intended Audience :: Developers",
         "Programming Language :: Python",
         "Programming Language :: Rust",
