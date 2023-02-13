@@ -154,14 +154,13 @@ impl StorageManager {
                 self.account_indexes = serde_json::from_str(&record)?;
             }
         } else {
-            // TODO empty vec or None ? Probably None ?
             return Ok(Vec::new());
         }
 
         let mut accounts = Vec::new();
         for account_index in self.account_indexes.clone() {
             // PANIC: we assume that ACCOUNTS_INDEXATION_KEY and the different indexes are set together and
-            // ACCOUNTS_INDEXATION_KEY has already been checked
+            // ACCOUNTS_INDEXATION_KEY has already been checked.
             accounts.push(
                 self.get(&format!("{ACCOUNT_INDEXATION_KEY}{account_index}"))
                     .await?
