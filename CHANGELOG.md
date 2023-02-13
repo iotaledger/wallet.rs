@@ -23,7 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `StorageAdapter::get` return type changed from `Result<String>`, to `Result<Option<String>>`;
+- `StorageAdapter::get` return type changed to `Result<Option<String>>`;
+- `StorageManager::get_account_manager_data` return type changed to `Result<Option<AccountManagerBuilder>>`;
 
 ## 1.0.0-rc.5 - 2023-02-09
 

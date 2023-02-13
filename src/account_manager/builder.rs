@@ -133,11 +133,7 @@ impl AccountManagerBuilder {
         .await?;
 
         #[cfg(feature = "storage")]
-        let read_manager_builder = match storage_manager.lock().await.get_account_manager_data().await {
-            Ok(x) => Some(x),
-            Err(crate::Error::RecordNotFound(_)) => None,
-            Err(e) => return Err(e),
-        };
+        let read_manager_builder = storage_manager.lock().await.get_account_manager_data().await?;
         #[cfg(not(feature = "storage"))]
         let read_manager_builder: Option<AccountManagerBuilder> = None;
 

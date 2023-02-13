@@ -123,30 +123,34 @@ impl StorageManager {
         Ok(())
     }
 
-    pub async fn get_account_manager_data(&self) -> crate::Result<AccountManagerBuilder> {
+    pub async fn get_account_manager_data(&self) -> crate::Result<Option<AccountManagerBuilder>> {
         log::debug!("get_account_manager_data");
-        let data = self.storage.get(ACCOUNT_MANAGER_INDEXATION_KEY).await?;
-        log::debug!("get_account_manager_data {data:?}");
-        let mut builder: AccountManagerBuilder = serde_json::from_str(&data)?;
-        if let Ok(Some(data)) = self.storage.get(SECRET_MANAGER_KEY).await {
-            log::debug!("get_secret_manager {data}");
-            let secret_manager_dto: SecretManagerDto = serde_json::from_str(&data)?;
-            // Only secret_managers that aren't SecretManagerDto::Mnemonic can be restored, because there the Seed can't
-            // be serialized, so we can't create the SecretManager again
-            match secret_manager_dto {
-                SecretManagerDto::Mnemonic(_) => {}
-                _ => {
-                    let secret_manager = SecretManager::try_from(&secret_manager_dto)?;
-                    builder.secret_manager = Some(Arc::new(RwLock::new(secret_manager)));
+        if let Some(data) = self.storage.get(ACCOUNT_MANAGER_INDEXATION_KEY).await? {
+            log::debug!("get_account_manager_data {data:?}");
+            let mut builder: AccountManagerBuilder = serde_json::from_str(&data)?;
+
+            if let Some(data) = self.storage.get(SECRET_MANAGER_KEY).await? {
+                log::debug!("get_secret_manager {data}");
+                let secret_manager_dto: SecretManagerDto = serde_json::from_str(&data)?;
+                // Only secret_managers that aren't SecretManagerDto::Mnemonic can be restored, because there the Seed can't
+                // be serialized, so we can't create the SecretManager again
+                match secret_manager_dto {
+                    SecretManagerDto::Mnemonic(_) => {}
+                    _ => {
+                        let secret_manager = SecretManager::try_from(&secret_manager_dto)?;
+                        builder.secret_manager = Some(Arc::new(RwLock::new(secret_manager)));
+                    }
                 }
             }
+            Ok(Some(builder))
+        } else {
+            Ok(None)
         }
-        Ok(builder)
     }
 
     pub async fn get_accounts(&mut self) -> crate::Result<Vec<Account>> {
         if self.account_indexes.is_empty() {
-            if let Ok(Some(record)) = self.storage.get(ACCOUNTS_INDEXATION_KEY).await {
+            if let Some(record) = self.storage.get(ACCOUNTS_INDEXATION_KEY).await? {
                 self.account_indexes = serde_json::from_str(&record)?;
             }
         }
