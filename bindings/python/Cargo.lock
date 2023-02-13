@@ -727,9 +727,9 @@ checksum = "bfb8371b6fb2aeb2d280374607aeabfc99d95c72edfe51692e42d3d7f0d08531"
 
 [[package]]
 name = "futures-macro"
-version = "0.3.25"
+version = "0.3.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bdfb8ce053d86b91919aad980c220b1fb8401a9394410e1c289ed7e66b61835d"
+checksum = "95a73af87da33b5acf53acfebdc339fe592ecf5357ac7c0a7734ab9d8c876a70"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1226,6 +1226,18 @@ dependencies = [
 
 [[package]]
 name = "iota-wallet"
+version = "1.0.0-rc.1"
+dependencies = [
+ "futures",
+ "iota-wallet 1.0.0-rc.5",
+ "once_cell",
+ "pyo3",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
+name = "iota-wallet"
 version = "1.0.0-rc.5"
 dependencies = [
  "async-trait",
@@ -1247,18 +1259,6 @@ dependencies = [
  "thiserror",
  "tokio",
  "zeroize",
-]
-
-[[package]]
-name = "iota-wallet-python"
-version = "0.2.0"
-dependencies = [
- "futures",
- "iota-wallet",
- "once_cell",
- "pyo3",
- "serde_json",
- "tokio",
 ]
 
 [[package]]
