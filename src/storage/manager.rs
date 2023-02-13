@@ -50,7 +50,7 @@ pub(crate) async fn new_storage_manager(
         encryption_key,
     };
     // Get the db version or set it
-    let db_schema_version = storage.get(DATABASE_SCHEMA_VERSION_KEY).await.ok();
+    let db_schema_version = storage.get(DATABASE_SCHEMA_VERSION_KEY).await?;
     if let Some(db_schema_version) = db_schema_version {
         let db_schema_version = u8::from_str(&db_schema_version)
             .map_err(|_| crate::Error::Storage("invalid db_schema_version".to_string()))?;
@@ -65,9 +65,9 @@ pub(crate) async fn new_storage_manager(
             .await?;
     };
 
-    let account_indexes = match storage.get(ACCOUNTS_INDEXATION_KEY).await {
-        Ok(account_indexes) => serde_json::from_str(&account_indexes)?,
-        Err(_) => Vec::new(),
+    let account_indexes = match storage.get(ACCOUNTS_INDEXATION_KEY).await? {
+        Some(account_indexes) => serde_json::from_str(&account_indexes)?,
+        None => Vec::new(),
     };
     let storage_manager = StorageManager {
         storage,
@@ -95,7 +95,7 @@ impl StorageManager {
         self.storage.encryption_key.is_some()
     }
 
-    pub async fn get(&self, key: &str) -> crate::Result<String> {
+    pub async fn get(&self, key: &str) -> crate::Result<Option<String>> {
         self.storage.get(key).await
     }
 
@@ -126,9 +126,9 @@ impl StorageManager {
     pub async fn get_account_manager_data(&self) -> crate::Result<AccountManagerBuilder> {
         log::debug!("get_account_manager_data");
         let data = self.storage.get(ACCOUNT_MANAGER_INDEXATION_KEY).await?;
-        log::debug!("get_account_manager_data {data}");
+        log::debug!("get_account_manager_data {data:?}");
         let mut builder: AccountManagerBuilder = serde_json::from_str(&data)?;
-        if let Ok(data) = self.storage.get(SECRET_MANAGER_KEY).await {
+        if let Ok(Some(data)) = self.storage.get(SECRET_MANAGER_KEY).await {
             log::debug!("get_secret_manager {data}");
             let secret_manager_dto: SecretManagerDto = serde_json::from_str(&data)?;
             // Only secret_managers that aren't SecretManagerDto::Mnemonic can be restored, because there the Seed can't
@@ -146,7 +146,7 @@ impl StorageManager {
 
     pub async fn get_accounts(&mut self) -> crate::Result<Vec<Account>> {
         if self.account_indexes.is_empty() {
-            if let Ok(record) = self.storage.get(ACCOUNTS_INDEXATION_KEY).await {
+            if let Ok(Some(record)) = self.storage.get(ACCOUNTS_INDEXATION_KEY).await {
                 self.account_indexes = serde_json::from_str(&record)?;
             }
         }
@@ -155,6 +155,7 @@ impl StorageManager {
         for account_index in self.account_indexes.clone() {
             accounts.push(self.get(&format!("{ACCOUNT_INDEXATION_KEY}{account_index}")).await?);
         }
+
         parse_accounts(&accounts, &self.storage.encryption_key)
     }
 
