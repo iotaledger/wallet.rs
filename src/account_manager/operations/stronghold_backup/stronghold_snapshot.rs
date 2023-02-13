@@ -3,7 +3,7 @@
 
 use std::sync::atomic::Ordering;
 
-use iota_client::{db::DatabaseProvider, secret::SecretManagerDto, stronghold::StrongholdAdapter};
+use iota_client::{secret::SecretManagerDto, storage::StorageProvider, stronghold::StrongholdAdapter};
 
 use crate::{account::Account, account_manager::AccountManager, ClientOptions};
 
