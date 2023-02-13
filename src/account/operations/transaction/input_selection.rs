@@ -220,7 +220,7 @@ impl AccountHandle {
 #[allow(clippy::too_many_arguments)]
 fn filter_inputs(
     account: &Account,
-    available_outputs: Values<OutputId, OutputData>,
+    available_outputs: Values<'_, OutputId, OutputData>,
     current_time: u32,
     bech32_hrp: &str,
     outputs: &[Output],

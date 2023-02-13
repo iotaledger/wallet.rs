@@ -92,7 +92,7 @@ impl Default for EventEmitter {
 }
 
 impl Debug for EventEmitter {
-    fn fmt(&self, f: &mut Formatter) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(
             f,
             "event_types_with_handlers: {:?}",

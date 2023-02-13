@@ -3,7 +3,13 @@
 
 //! The IOTA Wallet Library
 
-#![allow(clippy::redundant_pub_crate)]
+#![cfg_attr(doc_cfg, feature(doc_cfg))]
+#![deny(clippy::nursery, rust_2018_idioms, warnings)]
+#![allow(
+    clippy::redundant_pub_crate,
+    clippy::module_name_repetitions,
+    clippy::missing_const_for_fn
+)]
 
 /// [`AccountHandle`]: crate::account::handle::AccountHandle
 /// The account module. Interaction with an Account happens via an [`AccountHandle`].
