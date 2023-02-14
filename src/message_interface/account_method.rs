@@ -182,7 +182,7 @@ pub enum AccountMethod {
         #[serde(rename = "outputId")]
         output_id: OutputId,
     },
-    /// Get the [`Output`](crate::account::types::Output) that minted a native token by its TokenId
+    /// Get the [`Output`](crate::iota_client::block::output::Output) that minted a native token by its TokenId
     /// Expected response: [`Output`](crate::message_interface::Response::Output)
     GetFoundryOutput {
         #[serde(rename = "tokenId")]
@@ -282,19 +282,19 @@ pub enum AccountMethod {
     /// Expected response: [`Balance`](crate::message_interface::Response::Balance)
     GetBalance,
     /// Prepare an output.
-    /// Expected response: [`OutputDto`](crate::message_interface::Response::OutputDto)
+    /// Expected response: [`Output`](crate::message_interface::Response::Output)
     PrepareOutput {
         options: OutputOptionsDto,
         transaction_options: Option<TransactionOptionsDto>,
     },
     /// Prepare transaction.
-    /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::PreparedTransactionData)
+    /// Expected response: [`PreparedTransaction`](crate::message_interface::Response::PreparedTransaction)
     PrepareTransaction {
         outputs: Vec<OutputDto>,
         options: Option<TransactionOptionsDto>,
     },
     /// Prepare send amount.
-    /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::PreparedTransactionData)
+    /// Expected response: [`PreparedTransaction`](crate::message_interface::Response::PreparedTransaction)
     PrepareSendAmount {
         #[serde(rename = "addressesWithAmount")]
         addresses_with_amount: Vec<AddressWithAmountDto>,
@@ -358,7 +358,7 @@ pub enum AccountMethod {
         options: Option<TransactionOptionsDto>,
     },
     /// Sign a prepared transaction.
-    /// Expected response: [`TransactionPayload`](crate::message_interface::Response::TransactionPayload)
+    /// Expected response: [`SignedTransactionData`](crate::message_interface::Response::SignedTransactionData)
     SignTransactionEssence {
         #[serde(rename = "preparedTransactionData")]
         prepared_transaction_data: PreparedTransactionDataDto,
@@ -378,6 +378,7 @@ pub enum AccountMethod {
     /// Vote for a participation event.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     #[cfg(feature = "participation")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
     Vote {
         #[serde(rename = "eventId")]
         event_id: Option<ParticipationEventId>,
@@ -386,6 +387,7 @@ pub enum AccountMethod {
     /// Stop participating for an event.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     #[cfg(feature = "participation")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
     StopParticipating {
         #[serde(rename = "eventId")]
         event_id: ParticipationEventId,
@@ -393,11 +395,13 @@ pub enum AccountMethod {
     /// Get the account's total voting power (voting or NOT voting).
     /// Expected response: [`VotingPower`](crate::message_interface::Response::VotingPower)
     #[cfg(feature = "participation")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
     GetVotingPower,
     /// Calculates a participation overview for an account.
     /// Expected response:
     /// [`AccountParticipationOverview`](crate::message_interface::Response::AccountParticipationOverview)
     #[cfg(feature = "participation")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
     GetParticipationOverview,
     /// Designates a given amount of tokens towards an account's "voting power" by creating a
     /// special output, which is really a basic one with some metadata.
@@ -405,17 +409,20 @@ pub enum AccountMethod {
     /// calling `Vote` without parameters will revote. Expected response:
     /// [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     #[cfg(feature = "participation")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
     IncreaseVotingPower { amount: String },
     /// Reduces an account's "voting power" by a given amount.
     /// This will stop voting, but the voting data isn't lost and calling `Vote` without parameters will revote.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     #[cfg(feature = "participation")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
     DecreaseVotingPower { amount: String },
     /// Stores participation information locally and returns the event.
     ///
     /// This will NOT store the node url and auth inside the client options.
     /// Expected response: [`ParticipationEvent`](crate::message_interface::Response::ParticipationEvent)
     #[cfg(feature = "participation")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
     RegisterParticipationEvent {
         #[serde(rename = "eventId")]
         event_id: ParticipationEventId,
@@ -424,30 +431,35 @@ pub enum AccountMethod {
     /// Removes a previously registered participation event from local storage.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "participation")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
     DeregisterParticipationEvent {
         #[serde(rename = "eventId")]
         event_id: ParticipationEventId,
     },
     /// Expected response: [`ParticipationEvent`](crate::message_interface::Response::ParticipationEvent)
     #[cfg(feature = "participation")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
     GetParticipationEvent {
         #[serde(rename = "eventId")]
         event_id: ParticipationEventId,
     },
     /// Expected response: [`ParticipationEventIds`](crate::message_interface::Response::ParticipationEventIds)
     #[cfg(feature = "participation")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
     GetParticipationEventIds {
         #[serde(rename = "eventType")]
         event_type: Option<ParticipationEventType>,
     },
     /// Expected response: [`ParticipationEventStatus`](crate::message_interface::Response::ParticipationEventStatus)
     #[cfg(feature = "participation")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
     GetParticipationEventStatus {
         #[serde(rename = "eventId")]
         event_id: ParticipationEventId,
     },
     /// Expected response: [`ParticipationEvents`](crate::message_interface::Response::ParticipationEvents)
     #[cfg(feature = "participation")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
     GetParticipationEvents,
     /// Expected response: [`Faucet`](crate::message_interface::Response::Faucet)
     RequestFundsFromFaucet { url: String, address: String },

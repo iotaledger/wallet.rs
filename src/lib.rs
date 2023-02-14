@@ -3,7 +3,7 @@
 
 //! The IOTA Wallet Library
 
-#![cfg_attr(doc_cfg, feature(doc_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![deny(clippy::nursery, rust_2018_idioms, warnings)]
 #![allow(
     clippy::redundant_pub_crate,
@@ -19,6 +19,7 @@ pub mod account_manager;
 /// The message passing interface for the library. A different way to call the wallet functions, useful for bindings to
 /// other languages.
 #[cfg(feature = "message_interface")]
+#[cfg_attr(docsrs, doc(cfg(feature = "message_interface")))]
 pub mod message_interface;
 
 /// The ClientOptions to build the iota_client for interactions with the IOTA Tangle.
@@ -26,12 +27,13 @@ pub use iota_client::ClientBuilder as ClientOptions;
 
 /// The error module.
 pub mod error;
-#[cfg(feature = "events")]
 /// The event module.
+#[cfg(feature = "events")]
+#[cfg_attr(docsrs, doc(cfg(feature = "events")))]
 pub mod events;
-
-#[cfg(feature = "storage")]
 /// The storage module.
+#[cfg(feature = "storage")]
+#[cfg_attr(docsrs, doc(cfg(feature = "storage")))]
 pub mod storage;
 /// The module for spawning tasks on a thread
 pub(crate) mod task;

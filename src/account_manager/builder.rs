@@ -35,6 +35,7 @@ pub struct AccountManagerBuilder {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg(feature = "storage")]
+#[cfg_attr(docsrs, doc(cfg(feature = "storage")))]
 pub struct StorageOptions {
     pub(crate) storage_path: PathBuf,
     pub(crate) storage_file_name: Option<String>,
@@ -88,8 +89,9 @@ impl AccountManagerBuilder {
         self
     }
 
-    #[cfg(feature = "storage")]
     /// Set the storage path to be used.
+    #[cfg(feature = "storage")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "storage")))]
     pub fn with_storage_path(mut self, path: &str) -> Self {
         self.storage_options = Some(StorageOptions {
             storage_path: path.into(),

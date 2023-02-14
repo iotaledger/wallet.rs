@@ -57,7 +57,9 @@ pub struct AccountBalanceDto {
     /// Foundries
     pub foundries: Vec<FoundryId>,
     /// Outputs with multiple unlock conditions and if they can currently be spent or not. If there is a
-    /// [`TimelockUnlockCondition`] or [`ExpirationUnlockCondition`] this can change at any time
+    /// [`TimelockUnlockCondition`](iota_client::block::output::unlock_condition::TimelockUnlockCondition) or
+    /// [`ExpirationUnlockCondition`](iota_client::block::output::unlock_condition::ExpirationUnlockCondition) this can
+    /// change at any time
     #[serde(rename = "potentiallyLockedOutputs")]
     pub potentially_locked_outputs: HashMap<OutputId, bool>,
 }

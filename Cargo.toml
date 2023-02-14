@@ -11,6 +11,11 @@ license = "Apache-2.0"
 keywords = [ "iota", "wallet", "transaction" ]
 categories = [ "cryptography::cryptocurrencies" ]
 
+[package.metadata.docs.rs]
+# To build locally: `RUSTDOCFLAGS="--cfg docsrs" cargo +nightly doc --all-features --no-deps --open`
+all-features = true
+rustdoc-args = [ "--cfg", "docsrs" ]
+
 [dependencies]
 async-trait = { version = "0.1.64", default-features = false }
 backtrace = { version = "0.3.67", default-features = false, features = [ "std" ] }
@@ -232,6 +237,3 @@ path = "examples/wallet.rs"
 [package.metadata.cargo-udeps.ignore]
 normal = ["backtrace"]
 
-[package.metadata.docs.rs]
-all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
