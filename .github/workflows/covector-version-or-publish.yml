@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - develop
+      - production
 
 jobs:
   version-or-publish:
@@ -141,13 +142,13 @@ jobs:
 
       - name: Install dependencies
         run: npm install typescript && npm ci
-        working-directory: bindings/nodejs
+        working-directory: wallet/bindings/nodejs
       
       - name: Build Node.js prebuild
         run: npm run prebuild
-        working-directory: bindings/nodejs
+        working-directory: wallet/bindings/nodejs
       
       - name: Upload prebuild to GitHub release
         run: npx prebuild --upload-all ${{ secrets.GITHUB_TOKEN }} --tag-prefix nodejs-binding-v
-        working-directory: bindings/nodejs
+        working-directory: wallet/bindings/nodejs
   
