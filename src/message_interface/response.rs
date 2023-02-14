@@ -64,8 +64,7 @@ pub enum Response {
     /// [`MinimumRequiredStorageDeposit`](crate::message_interface::AccountMethod::MinimumRequiredStorageDeposit)
     MinimumRequiredStorageDeposit(String),
     /// Response for
-    /// [`GetOutputsWithAdditionalUnlockConditions`](crate::message_interface::AccountMethod::
-    /// GetOutputsWithAdditionalUnlockConditions)
+    /// [`GetOutputsWithAdditionalUnlockConditions`](crate::message_interface::AccountMethod::GetOutputsWithAdditionalUnlockConditions)
     OutputIds(Vec<OutputId>),
     /// Response for [`GetOutput`](crate::message_interface::AccountMethod::GetOutput)
     OutputData(Option<Box<OutputDataDto>>),
@@ -85,7 +84,8 @@ pub enum Response {
     /// [`PendingTransactions`](crate::message_interface::AccountMethod::PendingTransactions)
     Transactions(Vec<TransactionDto>),
     /// Response for
-    /// [`SignTransaction`](crate::message_interface::AccountMethod::SignTransaction)
+    /// [`SignTransactionEssence`](crate::message_interface::AccountMethod::SignTransactionEssence)
+    /// [`SubmitAndStoreTransaction`](crate::message_interface::AccountMethod::SubmitAndStoreTransaction)
     SignedTransactionData(SignedTransactionDataDto),
     /// GenerateAddress response.
     /// Response for [`GenerateAddresses`](crate::message_interface::AccountMethod::GenerateAddresses)
@@ -137,23 +137,23 @@ pub enum Response {
     /// Response for [`GetNodeInfo`](crate::message_interface::Message::GetNodeInfo)
     NodeInfo(NodeInfoWrapper),
     /// Response for
-    /// [`GetParticipationEvent`](crate::message_interface::GetParticipationEvent)
-    /// [`RegisterParticipationEvent`](crate::message_interface::RegisterParticipationEvent)
+    /// [`GetParticipationEvent`](crate::message_interface::AccountMethod::GetParticipationEvent)
+    /// [`RegisterParticipationEvent`](crate::message_interface::AccountMethod::RegisterParticipationEvent)
     #[cfg(feature = "participation")]
     #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
     ParticipationEvent(Option<ParticipationEventWithNodes>),
     /// Response for
-    /// [`GetParticipationEventIds`](crate::message_interface::GetParticipationEventIds)
+    /// [`GetParticipationEventIds`](crate::message_interface::AccountMethod::GetParticipationEventIds)
     #[cfg(feature = "participation")]
     #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
     ParticipationEventIds(Vec<ParticipationEventId>),
     /// Response for
-    /// [`GetParticipationEventStatus`](crate::message_interface::GetParticipationEventStatus)
+    /// [`GetParticipationEventStatus`](crate::message_interface::AccountMethod::GetParticipationEventStatus)
     #[cfg(feature = "participation")]
     #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
     ParticipationEventStatus(ParticipationEventStatus),
     /// Response for
-    /// [`GetParticipationEvents`](crate::message_interface::GetParticipationEvents)
+    /// [`GetParticipationEvents`](crate::message_interface::AccountMethod::GetParticipationEvents)
     #[cfg(feature = "participation")]
     #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
     ParticipationEvents(HashMap<ParticipationEventId, ParticipationEventWithNodes>),
@@ -177,13 +177,12 @@ pub enum Response {
     /// Response for
     /// [`Backup`](crate::message_interface::Message::Backup),
     /// [`ClearStrongholdPassword`](crate::message_interface::Message::ClearStrongholdPassword),
-    /// [`DeregisterParticipationEvent`](crate::message_interface::Message::DeregisterParticipationEvent),
+    /// [`DeregisterParticipationEvent`](crate::message_interface::AccountMethod::DeregisterParticipationEvent),
     /// [`RestoreBackup`](crate::message_interface::Message::RestoreBackup),
     /// [`VerifyMnemonic`](crate::message_interface::Message::VerifyMnemonic),
     /// [`SetClientOptions`](crate::message_interface::Message::SetClientOptions),
     /// [`SetStrongholdPassword`](crate::message_interface::Message::SetStrongholdPassword),
-    /// [`SetStrongholdPasswordClearInterval`](crate::message_interface::Message::
-    /// SetStrongholdPasswordClearInterval),
+    /// [`SetStrongholdPasswordClearInterval`](crate::message_interface::Message::SetStrongholdPasswordClearInterval),
     /// [`StoreMnemonic`](crate::message_interface::Message::StoreMnemonic),
     /// [`StartBackgroundSync`](crate::message_interface::Message::StartBackgroundSync),
     /// [`StopBackgroundSync`](crate::message_interface::Message::StopBackgroundSync),

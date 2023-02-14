@@ -182,7 +182,7 @@ pub enum AccountMethod {
         #[serde(rename = "outputId")]
         output_id: OutputId,
     },
-    /// Get the [`Output`](crate::account::types::Output) that minted a native token by its TokenId
+    /// Get the [`Output`](crate::iota_client::block::output::Output) that minted a native token by its TokenId
     /// Expected response: [`Output`](crate::message_interface::Response::Output)
     GetFoundryOutput {
         #[serde(rename = "tokenId")]
@@ -282,19 +282,19 @@ pub enum AccountMethod {
     /// Expected response: [`Balance`](crate::message_interface::Response::Balance)
     GetBalance,
     /// Prepare an output.
-    /// Expected response: [`OutputDto`](crate::message_interface::Response::OutputDto)
+    /// Expected response: [`Output`](crate::message_interface::Response::Output)
     PrepareOutput {
         options: OutputOptionsDto,
         transaction_options: Option<TransactionOptionsDto>,
     },
     /// Prepare transaction.
-    /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::PreparedTransactionData)
+    /// Expected response: [`PreparedTransaction`](crate::message_interface::Response::PreparedTransaction)
     PrepareTransaction {
         outputs: Vec<OutputDto>,
         options: Option<TransactionOptionsDto>,
     },
     /// Prepare send amount.
-    /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::PreparedTransactionData)
+    /// Expected response: [`PreparedTransaction`](crate::message_interface::Response::PreparedTransaction)
     PrepareSendAmount {
         #[serde(rename = "addressesWithAmount")]
         addresses_with_amount: Vec<AddressWithAmountDto>,
@@ -358,7 +358,7 @@ pub enum AccountMethod {
         options: Option<TransactionOptionsDto>,
     },
     /// Sign a prepared transaction.
-    /// Expected response: [`TransactionPayload`](crate::message_interface::Response::TransactionPayload)
+    /// Expected response: [`SignedTransactionData`](crate::message_interface::Response::SignedTransactionData)
     SignTransactionEssence {
         #[serde(rename = "preparedTransactionData")]
         prepared_transaction_data: PreparedTransactionDataDto,
