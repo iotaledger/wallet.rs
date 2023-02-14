@@ -10,7 +10,8 @@ mod prepare_transaction;
 mod sign_transaction;
 pub(crate) mod submit_transaction;
 
-use instant::SystemTime;
+use std::time::{SystemTime, UNIX_EPOCH};
+
 use iota_client::{
     api::{verify_semantic, PreparedTransactionData, SignedTransactionData},
     api_types::core::response::OutputWithMetadataResponse,
@@ -165,7 +166,7 @@ impl AccountHandle {
             block_id,
             network_id,
             timestamp: SystemTime::now()
-                .duration_since(SystemTime::UNIX_EPOCH)
+                .duration_since(UNIX_EPOCH)
                 .expect("time went backwards")
                 .as_millis(),
             inclusion_state: InclusionState::Pending,

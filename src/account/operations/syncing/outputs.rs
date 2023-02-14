@@ -1,10 +1,9 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::str::FromStr;
+use std::{str::FromStr, time::Instant};
 
 use crypto::keys::slip10::Chain;
-use instant::Instant;
 use iota_client::{
     api_types::core::response::OutputWithMetadataResponse,
     block::{

@@ -1,9 +1,11 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::str::FromStr;
+use std::{
+    str::FromStr,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
-use instant::SystemTime;
 use iota_client::{
     api_types::core::dto::LedgerInclusionStateDto,
     block::{input::Input, output::OutputId, payload::transaction::TransactionEssence, BlockId},
@@ -151,7 +153,7 @@ impl AccountHandle {
                                 )?;
                             } else {
                                 let time_now = SystemTime::now()
-                                    .duration_since(SystemTime::UNIX_EPOCH)
+                                    .duration_since(UNIX_EPOCH)
                                     .expect("time went backwards")
                                     .as_millis();
                                 // Reattach if older than 30 seconds
@@ -173,7 +175,7 @@ impl AccountHandle {
                             )?;
                         } else {
                             let time_now = SystemTime::now()
-                                .duration_since(SystemTime::UNIX_EPOCH)
+                                .duration_since(UNIX_EPOCH)
                                 .expect("time went backwards")
                                 .as_millis();
                             // Reattach if older than 30 seconds
