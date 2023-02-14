@@ -1,0 +1,230 @@
+[package]
+name = "iota-wallet"
+version = "1.0.0-rc.5"
+authors = [ "IOTA Stiftung" ]
+edition = "2021"
+description = "A stateful package for IOTA value transactions"
+documentation = "https://wiki.iota.org/wallet.rs/welcome"
+homepage = "https://www.iota.org/"
+repository = "https://github.com/iotaledger/wallet.rs"
+license = "Apache-2.0"
+keywords = [ "iota", "wallet", "transaction" ]
+categories = [ "cryptography::cryptocurrencies" ]
+
+[package.metadata.docs.rs]
+# To build locally: `RUSTDOCFLAGS="--cfg docsrs" cargo +nightly doc --all-features --no-deps --open`
+all-features = true
+rustdoc-args = [ "--cfg", "docsrs" ]
+
+[dependencies]
+async-trait = { version = "0.1.64", default-features = false }
+backtrace = { version = "0.3.67", default-features = false, features = [ "std" ] }
+fern-logger = { version = "0.5.0", default-features = false }
+futures = { version = "0.3.26", default-features = false }
+getset = { version = "0.1.2", default-features = false }
+# iota-client = { version = "2.0.1-rc.6", default-features = false, features = [ "message_interface", "tls" ] }
+iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "8667530f5362c436c29053a622496843e998ca36", default-features = false, features = [ "message_interface", "tls" ] }
+iota-crypto = { version = "0.15.3", default-features = false, features = [ "std", "chacha", "blake2b", "ed25519", "random", "slip10", "bip39", "bip39-en" ] }
+log = { version = "0.4.17", default-features = false }
+packable = { version = "0.7.0", default-features = false, features = [ "serde", "primitive-types" ] }
+prefix-hex = { version = "0.5.0", default-features = false, features = [ "std" ] }
+primitive-types = { version = "0.12.1", default-features = false }
+rocksdb = { version = "0.20.1", default-features = false, features = [ "lz4" ], optional = true }
+serde = { version = "1.0.152", default-features = false, features = [ "derive" ] }
+serde_json = { version = "1.0.92", default-features = false }
+thiserror = { version = "1.0.38", default-features = false }
+tokio = { version = "1.25.0", default-features = false, features = [ "sync", "rt", "time" ] }
+zeroize = { version = "1.5.7", default-features = false, features = [ "zeroize_derive" ] }
+
+[target.'cfg(target_family = "wasm")'.dependencies]
+gloo-storage = { version = "0.2.2", default-features = false }
+gloo-timers = { version = "0.2.6", default-features = false, features = [ "futures" ] }
+
+[dev-dependencies]
+dotenv = { version = "0.15.0", default-features = false }
+
+[features]
+# only default for now, should later be replaced by stronghold since stronghold is more secure
+default = [ "storage", "rocksdb", "stronghold" ]
+ledger_nano = [ "iota-client/ledger_nano" ]
+stronghold = [ "iota-client/stronghold" ]
+storage = []
+message_interface = []
+events = []
+participation = [ "iota-client/participation", "storage" ]
+
+[[example]]
+name = "mint_issuer_nft"
+path = "examples/nft_collection/00_mint_issuer_nft.rs"
+required-features = [ "storage", "stronghold" ]
+
+[[example]]
+name = "mint_collection_nft"
+path = "examples/nft_collection/01_mint_collection_nft.rs"
+required-features = [ "stronghold" ]
+
+[[example]]
+name = "0_generate_addresses"
+path = "examples/offline_signing/0_generate_addresses.rs"
+required-features = [ "storage", "stronghold" ]
+
+[[example]]
+name = "1_prepare_transaction"
+path = "examples/offline_signing/1_prepare_transaction.rs"
+required-features = [ "storage" ]
+
+[[example]]
+name = "2_sign_transaction"
+path = "examples/offline_signing/2_sign_transaction.rs"
+required-features = [ "stronghold" ]
+
+[[example]]
+name = "3_send_transaction"
+path = "examples/offline_signing/3_send_transaction.rs"
+required-features = [ "storage" ]
+
+[[example]]
+name = "create_wallet"
+path = "examples/01_create_wallet.rs"
+required-features = [ "storage", "stronghold" ]
+
+[[example]]
+name = "generate_address"
+path = "examples/02_generate_address.rs"
+required-features = [ "stronghold" ]
+
+[[example]]
+name = "get_funds"
+path = "examples/03_get_funds.rs"
+
+[[example]]
+name = "get_balance"
+path = "examples/04_get_balance.rs"
+
+[[example]]
+name = "transaction"
+path = "examples/05_transaction.rs"
+required-features = [ "stronghold" ]
+
+[[example]]
+name = "send_micro_transaction"
+path = "examples/06_send_micro_transaction.rs"
+required-features = [ "stronghold" ]
+
+[[example]]
+name = "send_native_tokens"
+path = "examples/07_send_native_tokens.rs"
+required-features = [ "stronghold" ]
+
+[[example]]
+name = "send_nft"
+path = "examples/08_send_nft.rs"
+required-features = [ "stronghold" ]
+
+[[example]]
+name = "mint_native_token"
+path = "examples/09_mint_native_token.rs"
+required-features = [ "stronghold" ]
+
+[[example]]
+name = "mint_nft"
+path = "examples/10_mint_nft.rs"
+required-features = [ "stronghold" ]
+
+[[example]]
+name = "decrease_native_token_supply"
+path = "examples/11_decrease_native_token_supply.rs"
+required-features = [ "stronghold" ]
+
+[[example]]
+name = "increase_native_token_supply"
+path = "examples/12_increase_native_token_supply.rs"
+required-features = [ "stronghold" ]
+
+[[example]]
+name = "burn_native_token"
+path = "examples/13_burn_native_token.rs"
+required-features = [ "stronghold" ]
+
+[[example]]
+name = "burn_nft"
+path = "examples/14_burn_nft.rs"
+required-features = [ "stronghold" ]
+
+[[example]]
+name = "destroy_foundry"
+path = "examples/15_destroy_foundry.rs"
+required-features = [ "stronghold" ]
+
+[[example]]
+name = "destroy_alias"
+path = "examples/16_destroy_alias.rs"
+required-features = [ "stronghold" ]
+
+[[example]]
+name = "accounts"
+path = "examples/accounts.rs"
+
+[[example]]
+name = "background_syncing"
+path = "examples/background_syncing.rs"
+
+[[example]]
+name = "events"
+path = "examples/events.rs"
+required-features = [ "events" ]
+
+[[example]]
+name = "ledger_nano"
+path = "examples/ledger_nano.rs"
+required-features = [ "ledger_nano" ]
+
+[[example]]
+name = "participation"
+path = "examples/participation.rs"
+required-features = [ "participation" ]
+
+[[example]]
+name = "logger"
+path = "examples/logger.rs"
+
+[[example]]
+name = "output_consolidation"
+path = "examples/output_consolidation.rs"
+required-features = [ "stronghold" ]
+
+[[example]]
+name = "ping"
+path = "examples/ping.rs"
+required-features = [ "storage" ]
+
+[[example]]
+name = "pong"
+path = "examples/pong.rs"
+required-features = [ "storage" ]
+
+[[example]]
+name = "recover_accounts"
+path = "examples/recover_accounts.rs"
+
+[[example]]
+name = "split_funds"
+path = "examples/split_funds.rs"
+
+[[example]]
+name = "storage"
+path = "examples/storage.rs"
+required-features = [ "storage" ]
+
+[[example]]
+name = "threads"
+path = "examples/threads.rs"
+
+[[example]]
+name = "wallet"
+path = "examples/wallet.rs"
+
+# udeps returns a false positive for this, so we add it here
+[package.metadata.cargo-udeps.ignore]
+normal = ["backtrace"]
+
