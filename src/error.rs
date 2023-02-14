@@ -85,10 +85,12 @@ pub enum Error {
     // TODO more precise error
     /// Voting error
     #[cfg(feature = "participation")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
     #[error("voting error {0}")]
     Voting(String),
     /// Participation error
     #[cfg(feature = "participation")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
     #[error("participation error {0}")]
     #[serde(serialize_with = "display_string")]
     Participation(#[from] iota_client::api_types::plugins::participation::error::Error),

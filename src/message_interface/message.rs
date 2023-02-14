@@ -54,6 +54,7 @@ pub enum Message {
     /// Backup storage. Password must be the current one, when Stronghold is used as SecretManager.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     Backup {
         /// The backup destination.
         destination: PathBuf,
@@ -63,6 +64,7 @@ pub enum Message {
     /// Change the Stronghold password to another one and also re-encrypt the values in the loaded snapshot with it.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     ChangeStrongholdPassword {
         #[serde(rename = "currentPassword")]
         current_password: String,
@@ -72,11 +74,13 @@ pub enum Message {
     /// Clears the Stronghold password from memory.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     ClearStrongholdPassword,
     /// Checks if the Stronghold password is available.
     /// Expected response:
     /// [`StrongholdPasswordIsAvailable`](crate::message_interface::Response::StrongholdPasswordIsAvailable)
     #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     IsStrongholdPasswordAvailable,
     /// Find accounts with unspent outputs
     /// Expected response: [`Accounts`](crate::message_interface::Response::Accounts)
@@ -102,6 +106,7 @@ pub enum Message {
     /// mnemonic was stored, it will be gone.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     RestoreBackup {
         /// The path to the backed up Stronghold.
         source: PathBuf,
@@ -143,6 +148,7 @@ pub enum Message {
     /// Get the ledger nano status
     /// Expected response: [`LedgerNanoStatus`](crate::message_interface::Response::LedgerNanoStatus)
     #[cfg(feature = "ledger_nano")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "ledger_nano")))]
     GetLedgerNanoStatus,
     /// Get the node information
     /// Expected response: [`NodeInfo`](crate::message_interface::Response::NodeInfo)
@@ -155,10 +161,12 @@ pub enum Message {
     /// Set the stronghold password.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     SetStrongholdPassword { password: String },
     /// Set the stronghold password clear interval.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     SetStrongholdPasswordClearInterval {
         #[serde(rename = "intervalInMilliseconds")]
         interval_in_milliseconds: Option<u64>,
@@ -166,6 +174,7 @@ pub enum Message {
     /// Store a mnemonic into the Stronghold vault.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "stronghold")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     StoreMnemonic { mnemonic: String },
     /// Start background syncing.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
@@ -182,6 +191,7 @@ pub enum Message {
     /// Emits an event for testing if the event system is working
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "events")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "events")))]
     EmitTestEvent { event: WalletEvent },
     /// Transforms a bech32 encoded address to hex
     /// Expected response: [`HexAddress`](crate::message_interface::Response::HexAddress)
@@ -201,6 +211,7 @@ pub enum Message {
     // Remove all listeners of this type. Empty vec clears all listeners
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "events")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "events")))]
     ClearListeners {
         #[serde(rename = "eventTypes")]
         event_types: Vec<WalletEventType>,

@@ -23,6 +23,7 @@ pub struct Event {
 pub enum WalletEvent {
     ConsolidationRequired,
     #[cfg(feature = "ledger_nano")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "ledger_nano")))]
     LedgerAddressGeneration(AddressData),
     NewOutput(Box<NewOutputEvent>),
     SpentOutput(Box<SpentOutputEvent>),
@@ -34,6 +35,7 @@ pub enum WalletEvent {
 pub enum WalletEventType {
     ConsolidationRequired,
     #[cfg(feature = "ledger_nano")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "ledger_nano")))]
     LedgerAddressGeneration,
     NewOutput,
     SpentOutput,

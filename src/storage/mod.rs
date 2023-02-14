@@ -9,6 +9,7 @@ pub mod constants;
 pub mod manager;
 /// Storage functions related to participation.
 #[cfg(feature = "participation")]
+#[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
 mod participation;
 
 use std::collections::HashMap;

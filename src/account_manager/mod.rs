@@ -213,8 +213,9 @@ impl AccountManager {
         Ok(())
     }
 
-    #[cfg(feature = "events")]
     /// Listen to wallet events, empty vec will listen to all events
+    #[cfg(feature = "events")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "events")))]
     pub async fn listen<F>(&self, events: Vec<WalletEventType>, handler: F)
     where
         F: Fn(&Event) + 'static + Clone + Send + Sync,
@@ -223,8 +224,9 @@ impl AccountManager {
         emitter.on(events, handler);
     }
 
-    #[cfg(feature = "events")]
     /// Remove wallet event listeners, empty vec will remove all listeners
+    #[cfg(feature = "events")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "events")))]
     pub async fn clear_listeners(&self, events: Vec<WalletEventType>) {
         let mut emitter = self.event_emitter.lock().await;
         emitter.clear(events);
@@ -243,8 +245,9 @@ impl AccountManager {
         Ok(())
     }
 
-    #[cfg(feature = "events")]
     /// Helper function to test events. Emits a provided event with account index 0.
+    #[cfg(feature = "events")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "events")))]
     pub async fn emit_test_event(&self, event: crate::events::types::WalletEvent) -> crate::Result<()> {
         self.event_emitter.lock().await.emit(0, event);
         Ok(())

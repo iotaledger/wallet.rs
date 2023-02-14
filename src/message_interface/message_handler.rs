@@ -113,8 +113,9 @@ impl WalletMessageHandler {
         Self { account_manager }
     }
 
-    #[cfg(feature = "events")]
     /// Listen to wallet events, empty vec will listen to all events
+    #[cfg(feature = "events")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "events")))]
     pub async fn listen<F>(&self, events: Vec<WalletEventType>, handler: F)
     where
         F: Fn(&Event) + 'static + Clone + Send + Sync,

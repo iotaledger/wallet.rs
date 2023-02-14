@@ -97,6 +97,7 @@ pub enum Response {
     /// Response for
     /// [`GetLedgerNanoStatus`](crate::message_interface::Message::GetLedgerNanoStatus),
     #[cfg(feature = "ledger_nano")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "ledger_nano")))]
     LedgerNanoStatus(LedgerNanoStatus),
     /// Response for
     /// [`GetIncomingTransactionData`](crate::message_interface::AccountMethod::GetIncomingTransactionData),
@@ -139,26 +140,32 @@ pub enum Response {
     /// [`GetParticipationEvent`](crate::message_interface::GetParticipationEvent)
     /// [`RegisterParticipationEvent`](crate::message_interface::RegisterParticipationEvent)
     #[cfg(feature = "participation")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
     ParticipationEvent(Option<ParticipationEventWithNodes>),
     /// Response for
     /// [`GetParticipationEventIds`](crate::message_interface::GetParticipationEventIds)
     #[cfg(feature = "participation")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
     ParticipationEventIds(Vec<ParticipationEventId>),
     /// Response for
     /// [`GetParticipationEventStatus`](crate::message_interface::GetParticipationEventStatus)
     #[cfg(feature = "participation")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
     ParticipationEventStatus(ParticipationEventStatus),
     /// Response for
     /// [`GetParticipationEvents`](crate::message_interface::GetParticipationEvents)
     #[cfg(feature = "participation")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
     ParticipationEvents(HashMap<ParticipationEventId, ParticipationEventWithNodes>),
     /// Response for
     /// [`GetVotingPower`](crate::message_interface::AccountMethod::GetVotingPower)
     #[cfg(feature = "participation")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
     VotingPower(String),
     /// Response for
     /// [`GetParticipationOverview`](crate::message_interface::AccountMethod::GetParticipationOverview)
     #[cfg(feature = "participation")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
     AccountParticipationOverview(AccountParticipationOverview),
     /// Response for [`Bech32ToHex`](crate::message_interface::Message::Bech32ToHex)
     HexAddress(String),

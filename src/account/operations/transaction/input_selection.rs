@@ -18,6 +18,7 @@ use crate::account::{
 };
 #[cfg(feature = "events")]
 use crate::events::types::{TransactionProgressEvent, WalletEvent};
+
 impl AccountHandle {
     /// Selects inputs for a transaction and locks them in the account, so they don't get used again
     pub(crate) async fn select_inputs(

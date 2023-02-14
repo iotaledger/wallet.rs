@@ -234,9 +234,9 @@ impl AccountHandle {
         Ok(transactions)
     }
 
-    #[cfg(feature = "storage")]
     /// Save the account to the database, accepts the updated_account as option so we don't need to drop it before
     /// saving
+    #[cfg(feature = "storage")]
     pub(crate) async fn save(&self, updated_account: Option<&Account>) -> Result<()> {
         log::debug!("[save] saving account to database");
         match updated_account {
