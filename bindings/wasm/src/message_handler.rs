@@ -1,25 +1,21 @@
 // Copyright 2023 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::sync::Arc;
-use std::rc::Rc;
+use std::{rc::Rc, cell::RefCell};
 
 use iota_wallet::{
-    events::types::{Event, WalletEventType},
     message_interface::{
         create_message_handler, init_logger as init_logger_rust, ManagerOptions, Message, Response,
         WalletMessageHandler,
     },
 };
 
-use tokio::sync::mpsc::unbounded_channel;
-use wasm_bindgen::{prelude::wasm_bindgen, JsCast, JsValue};
-use wasm_bindgen_futures::future_to_promise;
+use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
 /// The Client message handler.
 #[wasm_bindgen(js_name = MessageHandler)]
 pub struct MessageHandler {
-    handler: Rc<WalletMessageHandler>,
+    handler: Rc<RefCell<Option<WalletMessageHandler>>>,
 }
 
 /// Creates a message handler with the given client options.
@@ -36,13 +32,13 @@ pub fn message_handler_new(options: String) -> Result<MessageHandler, JsValue> {
         .expect("error initializing account manager");
 
     Ok(MessageHandler {
-        handler: Rc::new(wallet_message_handler),
+        handler: Rc::new(RefCell::new(Some(wallet_message_handler))),
     })
 }
 
 #[wasm_bindgen]
 pub async fn destroy(message_handler: &MessageHandler) -> Result<(), JsValue> {
-    //Rc::into_raw(message_handler.handler);
+    *message_handler.handler.borrow_mut() = None;
     Ok(())
 }
 
@@ -58,10 +54,10 @@ pub async fn init_logger(config: String) -> Result<(), JsValue> {
 #[wasm_bindgen(js_name = sendMessageAsync)]
 #[allow(non_snake_case)]
 pub async fn send_message_async(message: String, message_handler: &MessageHandler) -> Result<String, JsValue> {
-    let message_handler: Rc<WalletMessageHandler> = Rc::clone(&message_handler.handler);
+    let message_handler = message_handler.handler.borrow();
     let message: Message = serde_json::from_str(&message).map_err(|err| err.to_string())?;
 
-    let response = message_handler.send_message(message).await;
+    let response = message_handler.as_ref().unwrap().send_message(message).await;
     match response {
         Response::Error(e) => Err(e.to_string().into()),
         Response::Panic(p) => Err(p.into()),
@@ -75,23 +71,13 @@ use std::sync::{Arc, Mutex};
 
 /// 
 #[wasm_bindgen]
-pub async fn listen(message_handler: &MessageHandler, vec: js_sys::Array, callback: &js_sys::Function) -> Result<JsValue, JsValue> {
-    let mut event_types = vec![];
-    for i in 0..vec.length() {
-        let event_type = vec.get(i).as_string().unwrap();
-        let wallet_event_type =
-            WalletEventType::try_from(event_type.as_str()).or_else(|e| { return Err(e)})?;
-        event_types.push(wallet_event_type);
-    }
+pub async fn listen(
+    _message_handler: &MessageHandler,
+    _vec: js_sys::Array,
+    _callback: &js_sys::Function,
+) -> Result<JsValue, JsValue> {
 
-    message_handler
-        .handler
-        .listen(event_types, move |event_data| {
-            callback.call1(&JsValue::NULL, &JsValue::from( serde_json::to_string(&event_data).unwrap()));
-        })
-        .await;
-
-    Ok(JsValue::UNDEFINED)
+    return Err(JsValue::from_str("Wallet listen is not currently supported for WebAssembly"));
 }
 
 #[wasm_bindgen]
