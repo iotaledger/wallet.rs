@@ -18,7 +18,7 @@ publish = false
 crate-type = [ "cdylib" ]
 
 [dependencies]
-iota-wallet = { path = "../../", default-features = false, features = [ "mnemonic", "events", "storage", "message_interface", "participation"] }
+iota-wallet = { path = "../../", default-features = false, features = [ "events", "storage", "message_interface", "participation"] }
 
 console_error_panic_hook = { version = "0.1.7", default-features = false }
 js-sys = { version = "0.3.60", default-features = false, features = [] }

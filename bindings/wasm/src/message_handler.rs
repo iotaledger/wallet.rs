@@ -1,15 +1,11 @@
 // Copyright 2023 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{rc::Rc, cell::RefCell};
+use std::{cell::RefCell, rc::Rc};
 
-use iota_wallet::{
-    message_interface::{
-        create_message_handler, init_logger as init_logger_rust, ManagerOptions, Message, Response,
-        WalletMessageHandler,
-    },
+use iota_wallet::message_interface::{
+    create_message_handler, init_logger as init_logger_rust, ManagerOptions, Message, Response, WalletMessageHandler,
 };
-
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
 /// The Client message handler.
@@ -76,8 +72,9 @@ pub async fn listen(
     _vec: js_sys::Array,
     _callback: &js_sys::Function,
 ) -> Result<JsValue, JsValue> {
-
-    return Err(JsValue::from_str("Wallet listen is not currently supported for WebAssembly"));
+    Err(JsValue::from_str(
+        "Wallet listen is not currently supported for WebAssembly",
+    ))
 }
 
 #[wasm_bindgen]
