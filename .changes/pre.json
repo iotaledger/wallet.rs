@@ -44,6 +44,8 @@
     ".changes/retry-transaction-until-included.md",
     ".changes/revoting.md",
     ".changes/rocksdb-19.md",
+    ".changes/stop-background-sync.md",
+    ".changes/stop-background-syncing.md",
     ".changes/syncOptions.md",
     ".changes/syncing.md",
     ".changes/tagAndMetadataHex.md",

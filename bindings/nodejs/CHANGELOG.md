@@ -1,5 +1,12 @@
 # Changelog
 
+## \[2.0.3-rc.21]
+
+- Stop endlessly waiting in `AccountManager::stopBackgroundSync()` if background syncing wasn't started;
+  - [b70f2c22](https://github.com/iotaledger/wallet.rs/commit/b70f2c22b769de6b8ec0dc03a02ff95786d213fa) Fix stop_background_syncing if not started ([#1856](https://github.com/iotaledger/wallet.rs/pull/1856)) on 2023-02-15
+- Make stopBackgroundSync() faster.
+  - [2874da54](https://github.com/iotaledger/wallet.rs/commit/2874da54a63ce22b7c835410569cc24e0378020a) Stop stop_background_syncing faster ([#1817](https://github.com/iotaledger/wallet.rs/pull/1817)) on 2023-02-08
+
 ## \[2.0.3-rc.20]
 
 - Make `AccountManager.destroy()` async;
