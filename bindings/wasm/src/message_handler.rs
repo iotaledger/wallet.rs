@@ -63,8 +63,6 @@ pub async fn send_message_async(message: String, message_handler: &MessageHandle
     }
 }
 
-use std::sync::{Arc, Mutex};
-
 /// 
 #[wasm_bindgen]
 pub async fn listen(

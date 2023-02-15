@@ -46,13 +46,26 @@ After installing the library, you can create a `Client` instance and interface w
 ### Node.js Usage
 
 ```javascript
-const { Client } = require('@iota/wallet-wasm/node');
+const { AccountManager, CoinType } = require('@iota/wallet-wasm/node');
 
-const client = new Client({
-    nodes: ['https://api.testnet.shimmer.network'],
+const manager = new AccountManager({
+      storagePath: './my-database',
+      coinType: CoinType.Shimmer,
+      clientOptions: {
+          nodes: ['https://api.testnet.shimmer.network'],
+      },
+      secretManager: {
+          mnemonic: "my development mnemonic",
+      },
+  });
+
+const account = await manager.createAccount({
+    alias: 'Alice',
 });
 
-client.getInfo().then(console.log).catch(console.error);
+account.getNodeInfo().then((nodeInfo) => {
+  console.log(nodeInfo);
+});
 ```
 
 See the [Node.js examples](../nodejs/examples) for more demonstrations, the only change needed is to import `@iota/wallet-wasm/node` instead of `@iota/wallet`.
@@ -129,14 +142,27 @@ plugins: [
 ### Web Usage
 
 ```javascript
-import { init, Client } from "@iota/wallet-wasm/web";
+import init, { AccountManager, CoinType } from "@iota/wallet-wasm/web";
 
 init().then(() => {
-  const client = new Client({
-    nodes: ['https://api.testnet.shimmer.network'],
+  const manager = new AccountManager({
+        storagePath: './my-database',
+        coinType: CoinType.Shimmer,
+        clientOptions: {
+            nodes: ['https://api.testnet.shimmer.network'],
+        },
+        secretManager: {
+            mnemonic: "my development mnemonic",
+        },
+    });
+
+  const account = await manager.createAccount({
+      alias: 'Alice',
   });
 
-  client.getInfo().then(console.log).catch(console.error);
+  account.getNodeInfo().then((nodeInfo) => {
+    console.log(nodeInfo);
+  });
 }).catch(console.error);
 
 // Default path to load is "wallet_wasm_bg.wasm", 
