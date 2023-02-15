@@ -3,12 +3,8 @@
 
 use std::{cell::RefCell, rc::Rc};
 
-use iota_wallet::{
-    events::types::{Event, WalletEventType},
-    message_interface::{
-        create_message_handler, init_logger as init_logger_rust, ManagerOptions, Message, Response,
-        WalletMessageHandler,
-    },
+use iota_wallet::message_interface::{
+    create_message_handler, init_logger as init_logger_rust, ManagerOptions, Message, Response, WalletMessageHandler,
 };
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
@@ -53,9 +49,9 @@ pub async fn init_logger(config: String) -> Result<(), JsValue> {
 ///
 /// Returns an error if the response itself is an error or panic.
 #[wasm_bindgen(js_name = sendMessageAsync)]
-#[allow(non_snake_case)]
+#[allow(non_snake_case, clippy::await_holding_refcell_ref)]
 pub async fn send_message_async(message: String, message_handler: &MessageHandler) -> Result<String, JsValue> {
-    let message_handler = message_handler.handler.borrow();
+    let message_handler = message_handler.handler.borrow_mut();
     let message: Message = serde_json::from_str(&message).map_err(|err| err.to_string())?;
 
     let response = message_handler.as_ref().unwrap().send_message(message).await;
@@ -70,9 +66,9 @@ pub async fn send_message_async(message: String, message_handler: &MessageHandle
 ///
 #[wasm_bindgen]
 pub async fn listen(
-    message_handler: &MessageHandler,
-    vec: js_sys::Array,
-    callback: &js_sys::Function,
+    _message_handler: &MessageHandler,
+    _vec: js_sys::Array,
+    _callback: &js_sys::Function,
 ) -> Result<JsValue, JsValue> {
     Err(JsValue::from_str(
         "Wallet listen is not currently supported for WebAssembly",
