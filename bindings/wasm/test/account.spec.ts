@@ -28,12 +28,17 @@ async function run() {
     console.log('Account created:', account);
     account.setAlias('new alias');
 
+    const balance = await account.sync();
+    console.log(balance);
+
     const savedAccount = await manager.getAccount('new alias');
     console.log(savedAccount);
 
     account.getNodeInfo().then((value) => {
         console.log(value);
     });
+
+    throw "no";
 }
 
 describe('Wallet methods', () => {

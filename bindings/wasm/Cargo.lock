@@ -931,6 +931,7 @@ dependencies = [
  "getset",
  "gloo-storage",
  "gloo-timers",
+ "instant",
  "iota-client",
  "iota-crypto",
  "log",
@@ -941,6 +942,7 @@ dependencies = [
  "serde_json",
  "thiserror",
  "tokio",
+ "wasm-bindgen-futures",
  "zeroize",
 ]
 
