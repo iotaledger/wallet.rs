@@ -3,8 +3,12 @@
 
 use std::{cell::RefCell, rc::Rc};
 
-use iota_wallet::message_interface::{
-    create_message_handler, init_logger as init_logger_rust, ManagerOptions, Message, Response, WalletMessageHandler,
+use iota_wallet::{
+    events::types::{Event, WalletEventType},
+    message_interface::{
+        create_message_handler, init_logger as init_logger_rust, ManagerOptions, Message, Response,
+        WalletMessageHandler,
+    },
 };
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
@@ -20,10 +24,12 @@ pub struct MessageHandler {
 pub fn message_handler_new(options: String) -> Result<MessageHandler, JsValue> {
     let manager_options = match serde_json::from_str::<ManagerOptions>(&options) {
         Ok(options) => Some(options),
-        Err(e) => {return Err(e.to_string().into())},
+        Err(e) => return Err(e.to_string().into()),
     };
-    
-    let wallet_message_handler = tokio::runtime::Builder::new_current_thread().build().unwrap()
+
+    let wallet_message_handler = tokio::runtime::Builder::new_current_thread()
+        .build()
+        .unwrap()
         .block_on(async move { create_message_handler(manager_options).await })
         .expect("error initializing account manager");
 
@@ -43,7 +49,6 @@ pub async fn init_logger(config: String) -> Result<(), JsValue> {
     Ok(())
 }
 
-
 /// Handles a message, returns the response as a JSON-encoded string.
 ///
 /// Returns an error if the response itself is an error or panic.
@@ -57,26 +62,19 @@ pub async fn send_message_async(message: String, message_handler: &MessageHandle
     match response {
         Response::Error(e) => Err(e.to_string().into()),
         Response::Panic(p) => Err(p.into()),
-        _ => Ok(serde_json::to_string(&response).map_err(|err| {
-            JsValue::from_str(&format!("Client MessageHandler failed to serialize response: {err}"))
-        })?),
+        _ => Ok(serde_json::to_string(&response)
+            .map_err(|err| JsValue::from_str(&format!("Client MessageHandler failed to serialize response: {err}")))?),
     }
 }
 
-/// 
+///
 #[wasm_bindgen]
 pub async fn listen(
-    _message_handler: &MessageHandler,
-    _vec: js_sys::Array,
-    _callback: &js_sys::Function,
+    message_handler: &MessageHandler,
+    vec: js_sys::Array,
+    callback: &js_sys::Function,
 ) -> Result<JsValue, JsValue> {
     Err(JsValue::from_str(
         "Wallet listen is not currently supported for WebAssembly",
     ))
-}
-
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(typescript_type = "Promise<string>")]
-    pub type PromiseString;
 }
