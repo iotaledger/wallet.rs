@@ -38,7 +38,7 @@ async function run() {
         console.log(value);
     });
 
-    throw "no";
+    throw 'no';
 }
 
 describe('Wallet methods', () => {
