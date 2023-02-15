@@ -90,6 +90,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Stop endlessly requesting inaccessible incoming transactions;
 - Update addresses when a client config with a different HRP is passed;
 - Return client errors from `Account::get_participation_overview()`;
+- Stop endlessly waiting in `AccountManager::stop_background_syncing()` if background syncing wasn't started;
 
 ## 1.0.0-rc.4 - 2022-12-23
 
