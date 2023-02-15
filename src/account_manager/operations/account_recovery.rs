@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::time::Instant;
+use instant::Instant;
 
 use crate::{
     account::handle::AccountHandle,
