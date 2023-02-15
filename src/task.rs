@@ -13,10 +13,10 @@ where
 
 #[cfg(target_family = "wasm")]
 #[inline(always)]
-pub(crate) fn spawn<F>(future: F) -> tokio::task::JoinHandle<F::Output>
+pub(crate) async fn spawn<F>(future: F) -> crate::Result<F::Output>
 where
     F: futures::Future + 'static,
     F::Output: 'static,
 {
-    tokio::task::spawn_local(future)
+    Ok(future.await)
 }
