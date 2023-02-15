@@ -3,7 +3,7 @@ const fs = require('fs')
 const { lintAll } = require('./lints')
 const generatePackage = require('./utils/generatePackage');
 
-const rustPackageName = "wallett_wasm";
+const rustPackageName = "wallet_wasm";
 const wasmFilename = "wallet_wasm_bg.wasm";
 
 const RELEASE_FOLDER = path.join(__dirname, '../web/wasm/');

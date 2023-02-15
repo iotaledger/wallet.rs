@@ -9,4 +9,10 @@
 // @ts-ignore: path is set to match runtime transpiled js path when bundled.
 import { initLogger, sendMessageAsync, messageHandlerNew, listen, destroy } from '../wasm/wallet_wasm';
 
-export { initLogger as internalInitLogger, sendMessageAsync, messageHandlerNew, listen, destroy };
+export {
+    initLogger as internalInitLogger,
+    sendMessageAsync,
+    messageHandlerNew,
+    listen,
+    destroy,
+};

@@ -17,7 +17,8 @@ async function run() {
             nodes: ['https://api.testnet.shimmer.network'],
         },
         secretManager: {
-            mnemonic: "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
+            mnemonic:
+                'inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak',
         },
     });
 
@@ -33,7 +34,6 @@ async function run() {
     manager.getNodeInfo().then((value) => {
         console.log(value);
     });
-
 }
 
 run();

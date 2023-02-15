@@ -835,8 +835,8 @@ dependencies = [
 
 [[package]]
 name = "iota-client"
-version = "2.0.1-rc.5"
-source = "git+https://github.com/iotaledger/iota.rs?rev=59cf0dd10ced608aab55913bbc261c3765e618f2#59cf0dd10ced608aab55913bbc261c3765e618f2"
+version = "2.0.1-rc.6"
+source = "git+https://github.com/iotaledger/iota.rs?rev=8667530f5362c436c29053a622496843e998ca36#8667530f5362c436c29053a622496843e998ca36"
 dependencies = [
  "async-trait",
  "backtrace",
@@ -888,19 +888,18 @@ dependencies = [
 
 [[package]]
 name = "iota-pow"
-version = "1.0.0-rc.2"
-source = "git+https://github.com/iotaledger/iota.rs?rev=59cf0dd10ced608aab55913bbc261c3765e618f2#59cf0dd10ced608aab55913bbc261c3765e618f2"
+version = "1.0.0-rc.3"
+source = "git+https://github.com/iotaledger/iota.rs?rev=8667530f5362c436c29053a622496843e998ca36#8667530f5362c436c29053a622496843e998ca36"
 dependencies = [
  "instant",
  "iota-crypto",
  "num_cpus",
- "thiserror",
 ]
 
 [[package]]
 name = "iota-types"
-version = "1.0.0-rc.4"
-source = "git+https://github.com/iotaledger/iota.rs?rev=59cf0dd10ced608aab55913bbc261c3765e618f2#59cf0dd10ced608aab55913bbc261c3765e618f2"
+version = "1.0.0-rc.5"
+source = "git+https://github.com/iotaledger/iota.rs?rev=8667530f5362c436c29053a622496843e998ca36#8667530f5362c436c29053a622496843e998ca36"
 dependencies = [
  "bech32",
  "bitflags",
@@ -919,7 +918,6 @@ dependencies = [
  "serde-big-array",
  "serde_json",
  "serde_repr",
- "thiserror",
 ]
 
 [[package]]
@@ -933,7 +931,6 @@ dependencies = [
  "getset",
  "gloo-storage",
  "gloo-timers",
- "instant",
  "iota-client",
  "iota-crypto",
  "log",
