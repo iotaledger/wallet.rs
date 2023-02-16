@@ -33,10 +33,10 @@ async function run() {
         alias: 'Alice',
     });
 
-    expect(account.alias()).toBe('Alice');
+    expect(account.getMetadata().alias).toBe('Alice');
 
     account.setAlias('new alias');
-    expect(account.alias()).toBe('new alias');
+    expect(account.getMetadata().alias).toBe('new alias');
 
     const balance: AccountBalance = await account.sync();
     expect(balance.baseCoin.available).toBe('0');
