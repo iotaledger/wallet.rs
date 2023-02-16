@@ -53,7 +53,6 @@ jobs:
         with:
           toolchain: nightly
           target: wasm32-unknown-unknown
-          cache: true
           cache-root: bindings/wasm/
           cache-job-id: ${{ github.workflow }}-${{ github.job }}-${{ matrix.os }}-${{ matrix.node }}
           cache-hash: ${{ hashFiles('.github/workflows/examine-wasm-bindings.yml') }}
@@ -98,7 +97,6 @@ jobs:
           toolchain: beta
           target: wasm32-unknown-unknown
           components: clippy
-          cache: true
           cache-root: bindings/wasm/
           cache-job-id: ${{ github.workflow }}-${{ github.job }}
           cache-hash: ${{ hashFiles('.github/workflows/examine-wasm-bindings.yml') }}
@@ -139,7 +137,6 @@ jobs:
         with:
           toolchain: nightly
           target: wasm32-unknown-unknown
-          cache: true
           install: cargo-udeps
           cache-root: bindings/wasm/
           cache-job-id: ${{ github.workflow }}-${{ github.job }}
@@ -217,7 +214,6 @@ jobs:
           toolchain: nightly
           target: wasm32-unknown-unknown
           install: cargo-audit
-          cache: true
           cache-job-id: ${{ github.workflow }}-${{ github.job }}
           cache-hash: ${{ hashFiles('.github/workflows/examine-wasm-bindings.yml') }}
 
