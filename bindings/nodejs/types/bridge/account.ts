@@ -332,10 +332,6 @@ export type __SetAliasMethod__ = {
     };
 };
 
-export type __AliasMethod__ = {
-    name: 'alias';
-};
-
 export type __SignTransactionEssenceMethod__ = {
     name: 'signTransactionEssence';
     data: {

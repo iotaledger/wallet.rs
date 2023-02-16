@@ -1187,6 +1187,7 @@ dependencies = [
  "instant",
  "iota-crypto",
  "num_cpus",
+ "thiserror",
 ]
 
 [[package]]
@@ -1211,6 +1212,7 @@ dependencies = [
  "serde-big-array",
  "serde_json",
  "serde_repr",
+ "thiserror",
 ]
 
 [[package]]
@@ -1224,7 +1226,6 @@ dependencies = [
  "getset",
  "gloo-storage",
  "gloo-timers",
- "instant",
  "iota-client",
  "iota-crypto",
  "log",
@@ -1236,7 +1237,6 @@ dependencies = [
  "serde_json",
  "thiserror",
  "tokio",
- "wasm-bindgen-futures",
  "zeroize",
 ]
 
