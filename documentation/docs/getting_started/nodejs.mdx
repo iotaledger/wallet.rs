@@ -1,0 +1,162 @@
+---
+description: Getting started with the official IOTA Wallet Library Software Node.js binding.
+image: /img/logo/wallet_light.png
+keywords:
+- Node.js
+- dotenv
+- install
+- npm
+- yarn
+- security
+- getting started
+---
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+import create_account from '!!raw-loader!./../../../bindings/nodejs/examples/binding_examples/1-create-account.js';
+
+# Getting Started with Node.js
+
+:::note
+
+You can find a guide for exchanges and the most common use cases in the [Chrysalis documentation](https://wiki.iota.org/introduction/how_tos/exchange/), which is based on `wallet.rs` and `Node.js`.
+
+:::
+
+
+The [IOTA Wallet Node.js binding](https://www.npmjs.com/package/@iota/wallet) is published on [npmjs.com](https://www.npmjs.com/).
+
+ The [code examples](../examples/nodejs.mdx) use _dotenv_ for password management.
+
+## Requirements
+
+You can use the following links to install any of the requirements.
+
+| Requirement                                     | Version                                                                                                                                                                                  |
+|-------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [Node.js](https://nodejs.org/en/)               | [14.x](https://nodejs.org/download/release/latest-v14.x/), [16.x](https://nodejs.org/download/release/latest-v16.x/), or [18.x - LTS](https://nodejs.org/download/release/latest-v18.x/) |
+| Your package manager of choice                  | [npm](https://www.npmjs.com/) or [Yarn](https://yarnpkg.com/)                                                                                                                            |
+
+## Install the Library
+
+Since wallet.rs is also used to communicate with nodes in the [Shimmer network](https://wiki.iota.org/shimmer/learn/welcome/)
+that runs the [Stardust protocol](https://wiki.iota.org/shimmer/introduction/welcome/), if you plan to use the library
+in the [IOTA network](https://wiki.iota.org/learn/about-iota/an-introduction-to-iota/) with the
+[Chrysalis protocol](https://wiki.iota.org/introduction/welcome/), you will need to install the latest `1.x.x` version.
+
+<Tabs>
+<TabItem value="npm" label="npm" default>
+
+```bash
+npm i @iota/wallet@1.0.17
+```
+
+</TabItem>
+<TabItem value="yarn" label="Yarn">
+
+```bash
+yarn install @iota/wallet@1.0.17
+```
+
+</TabItem>
+</Tabs>
+
+## Build the Library
+
+If you prefer, you can build the library from source instead of [installing it](#install-the-library). **This process is
+more complex than simply installing the library.**
+
+### Clone the Repository
+
+The first thing you will need to build the library from source is:
+
+1. Clone the repository:
+
+```bash
+git clone git@github.com:iotaledger/wallet.rs.git
+```
+
+2. Move into the project's directory:
+
+```bash
+cd wallet.rs
+```
+
+3. Checkout the `production` branch, or any `1.x.x` [tag](https://github.com/iotaledger/wallet.rs/tags):
+
+```bash
+git checkout production
+```
+
+### Install the Library's Dependencies
+
+Once you have [cloned the repository](#clone-the-repository), you can proceed to install the library's dependencies:
+
+1. Move into the Node.js binding directory:
+
+```bash
+cd bindings/nodejs
+```
+
+2. Install the dependencies with your package manager of choice:
+
+
+<Tabs>
+<TabItem value="npm" label="npm" default>
+
+```bash
+npm i
+```
+
+</TabItem>
+<TabItem value="yarn" label="Yarn">
+
+```bash
+yarn
+```
+
+</TabItem>
+</Tabs>
+
+### Build the Library
+
+Once you have installed the library's dependencies, you can proceed to install the library. The [`install`](https://github.com/iotaledger/wallet.rs/blob/production/bindings/nodejs/package.json#L16)
+script will install any necessary dependencies and then proceed to build the library and create the necessary packages.
+
+<Tabs>
+<TabItem value="npm" label="npm" default>
+
+```bash
+npm run install
+```
+
+</TabItem>
+<TabItem value="yarn" label="Yarn">
+
+```bash
+yarn install
+```
+
+</TabItem>
+</Tabs>
+
+## Use the Library
+
+:::warning Safe password Storage
+
+In a production setup, do not store passwords in the host's environment variables or in the source code. For reference, see our [backup and security recommendations](https://chrysalis.docs.iota.org/guides/backup_security) for production setups.
+
+:::
+
+To use the library, you simply need to create an [`AccountManager`](../reference/nodejs.md#accountmanager) from
+the `@iota/wallet` package in your application as shown in the example on line 8 of the example below.
+
+:::tip More Examples
+
+You can find more examples using the `wallet.rs` library's node.js binding in the [examples section](../examples/nodejs.mdx).
+
+:::
+
+<CodeBlock className="language-javascript" metastring={"{8}"} showLineNumbers={true}>
+{create_account}
+</CodeBlock>
