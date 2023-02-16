@@ -1,14 +1,21 @@
 // Copyright 2023 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+import fs from 'fs';
+import {
+    Account,
+    AccountBalance,
+    AccountManager,
+    CoinType,
+    NodeInfoWrapper,
+} from '../node/lib';
+
 async function run() {
     try {
-        const fs = require('fs');
         fs.rmdirSync('./alice-database', { recursive: true });
     } catch (e) {
         // ignore it
     }
-    const { AccountManager, CoinType } = require('../node/lib');
 
     const manager = new AccountManager({
         storagePath: './alice-database',
@@ -22,23 +29,24 @@ async function run() {
         },
     });
 
-    const account = await manager.createAccount({
+    const account: Account = await manager.createAccount({
         alias: 'Alice',
     });
-    console.log('Account created:', account);
+
+    expect(account.alias()).toBe('Alice');
+
     account.setAlias('new alias');
+    expect(account.alias()).toBe('new alias');
 
-    const balance = await account.sync();
-    console.log(balance);
+    const balance: AccountBalance = await account.sync();
+    expect(balance.baseCoin.available).toBe('0');
 
-    const savedAccount = await manager.getAccount('new alias');
-    console.log(savedAccount);
+    const savedAccount: Account = await manager.getAccount('new alias');
+    expect(savedAccount).not.toBeNull();
 
-    account.getNodeInfo().then((value) => {
-        console.log(value);
+    manager.getNodeInfo().then((value: NodeInfoWrapper) => {
+        expect(value.url).toBe('https://api.testnet.shimmer.network');
     });
-
-    throw 'no';
 }
 
 describe('Wallet methods', () => {

@@ -1,14 +1,16 @@
 // Copyright 2023 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+import console from 'console';
+import fs from 'fs';
+import { AccountManager, CoinType } from '../node/lib';
+
 async function run() {
     try {
-        const fs = require('fs');
         fs.rmdirSync('./alice-database', { recursive: true });
     } catch (e) {
         // ignore it
     }
-    const { AccountManager, CoinType } = require('../node/lib');
 
     const manager = new AccountManager({
         storagePath: './alice-database',
