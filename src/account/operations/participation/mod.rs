@@ -51,6 +51,7 @@ pub struct ParticipationEventWithNodes {
 impl AccountHandle {
     /// Calculates the voting overview of an account.
     pub async fn get_participation_overview(&self) -> Result<AccountParticipationOverview> {
+        log::debug!("[get_participation_overview]");
         // TODO: Could use the address endpoint in the future when https://github.com/iotaledger/inx-participation/issues/50 is done.
 
         let outputs = self.outputs(None).await?;
@@ -63,55 +64,70 @@ impl AccountHandle {
             })
             .collect::<Vec<OutputData>>();
 
+        let mut events = HashMap::new();
+        for output_data in participation_outputs {
+            // PANIC: the filter already checks that the metadata exists.
+            let metadata = output_data.output.features().and_then(|f| f.metadata()).unwrap();
+
+            let event_ids = if let Ok(participations) = Participations::from_bytes(&mut metadata.data()) {
+                participations
+                    .participations
+                    .into_iter()
+                    .map(|p| p.event_id)
+                    .collect::<Vec<ParticipationEventId>>()
+            } else {
+                // No valid participation in this output, skip it.
+                continue;
+            };
+
+            for event_id in event_ids {
+                match events.entry(event_id) {
+                    Entry::Vacant(entry) => {
+                        entry.insert(vec![output_data.output_id]);
+                    }
+                    Entry::Occupied(mut entry) => {
+                        entry.get_mut().push(output_data.output_id);
+                    }
+                }
+            }
+        }
+
         let mut participations: HashMap<ParticipationEventId, HashMap<OutputId, TrackedParticipation>> = HashMap::new();
 
-        for output_data_chunk in participation_outputs.chunks(100).map(|x| x.to_vec()) {
-            let mut tasks = Vec::new();
-            for output_data in output_data_chunk {
-                // PANIC: the filter already checks that the metadata exists.
-                let metadata = output_data.output.features().and_then(|f| f.metadata()).unwrap();
-                // TODO don't really need to collect if we only need the first
-                let event_ids = if let Ok(participations) = Participations::from_bytes(&mut metadata.data()) {
-                    participations
-                        .participations
-                        .into_iter()
-                        .map(|p| p.event_id)
-                        .collect::<Vec<ParticipationEventId>>()
-                } else {
-                    // No valid participation in this output, skip it.
-                    continue;
-                };
+        for (event_id, output_ids) in events {
+            log::debug!(
+                "[get_participation_overview] requesting {} outputs for event {event_id}",
+                output_ids.len()
+            );
+            let event_client = self.get_client_for_event(&event_id).await?;
 
-                // TODO: which client to use if there are multiple events and one node isn't tracking all of them?
-                let event_client = if let Some(event_id) = event_ids.first() {
-                    self.get_client_for_event(event_id).await?
-                } else {
-                    self.client().clone()
-                };
+            for output_id_chunk in output_ids.chunks(100).map(|x| x.to_vec()) {
+                let mut tasks = Vec::new();
+                for output_id in output_id_chunk {
+                    let event_client = event_client.clone();
+                    tasks.push(async move {
+                        task::spawn(async move { (event_client.output_status(&output_id).await, output_id) }).await
+                    });
+                }
 
-                tasks.push(async move {
-                    task::spawn(async move { (event_client.output_status(&output_data.output_id).await, output_data) })
-                        .await
-                });
-            }
-
-            let results = futures::future::try_join_all(tasks).await?;
-            for (result, output_data) in results {
-                match result {
-                    Ok(status) => {
-                        for (event_id, participation) in status.participations {
-                            match participations.entry(event_id) {
-                                Entry::Vacant(entry) => {
-                                    entry.insert(HashMap::from([(output_data.output_id, participation)]));
-                                }
-                                Entry::Occupied(mut entry) => {
-                                    entry.get_mut().insert(output_data.output_id, participation);
+                let results = futures::future::try_join_all(tasks).await?;
+                for (result, output_id) in results {
+                    match result {
+                        Ok(status) => {
+                            for (event_id, participation) in status.participations {
+                                match participations.entry(event_id) {
+                                    Entry::Vacant(entry) => {
+                                        entry.insert(HashMap::from([(output_id, participation)]));
+                                    }
+                                    Entry::Occupied(mut entry) => {
+                                        entry.get_mut().insert(output_id, participation);
+                                    }
                                 }
                             }
                         }
+                        Err(iota_client::Error::NotFound(_)) => {}
+                        Err(e) => return Err(crate::Error::Client(e.into())),
                     }
-                    Err(iota_client::Error::NotFound(_)) => {}
-                    Err(e) => return Err(crate::Error::Client(e.into())),
                 }
             }
         }
