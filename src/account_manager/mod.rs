@@ -204,6 +204,10 @@ impl AccountManager {
     /// Stop the background syncing of the accounts
     pub async fn stop_background_syncing(&self) -> crate::Result<()> {
         log::debug!("[stop_background_syncing]");
+        // immediately return if not running
+        if self.background_syncing_status.load(Ordering::Relaxed) == 0 {
+            return Ok(());
+        }
         // send stop request
         self.background_syncing_status.store(2, Ordering::Relaxed);
         // wait until it stopped
