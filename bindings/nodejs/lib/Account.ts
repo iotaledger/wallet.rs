@@ -1025,6 +1025,10 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
+    /**
+     * Set the alias for the account
+     * @param alias The account alias to set.
+     */
     async setAlias(alias: string): Promise<void> {
         await this.messageHandler.callAccountMethod(this.meta.index, {
             name: 'setAlias',
@@ -1032,6 +1036,18 @@ export class Account {
                 alias,
             },
         });
+    }
+
+    /**
+     * Gets the account alias
+     * @returns The account alias.
+     */
+    async alias(): Promise<string> {
+        const response = await this.messageHandler.callAccountMethod(this.meta.index, {
+            name: 'alias',
+        });
+
+        return JSON.parse(response).payload;
     }
 
     /**

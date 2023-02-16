@@ -42,6 +42,7 @@ import type {
     __SendNftMethod__,
     __SendOutputsMethod__,
     __SetAliasMethod__,
+    __AliasMethod__,
     __SignTransactionEssenceMethod__,
     __SubmitAndStoreTransactionMethod__,
     __SyncAccountMethod__,
@@ -134,6 +135,7 @@ export type __AccountMethod__ =
     | __SendNftMethod__
     | __SendOutputsMethod__
     | __SetAliasMethod__
+    | __AliasMethod__
     | __SignTransactionEssenceMethod__
     | __SubmitAndStoreTransactionMethod__
     | __SyncAccountMethod__
