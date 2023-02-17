@@ -22,6 +22,7 @@ backtrace = { version = "0.3.67", default-features = false, features = [ "std" ]
 fern-logger = { version = "0.5.0", default-features = false }
 futures = { version = "0.3.26", default-features = false }
 getset = { version = "0.1.2", default-features = false }
+instant = { version = "0.1.12", default-features = false }
 # iota-client = { version = "2.0.1-rc.6", default-features = false, features = [ "message_interface", "tls" ] }
 iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "2c40ee8fb8cae408bdec494be69f7f58ed3606c8", default-features = false, features = [ "message_interface", "tls" ] }
 iota-crypto = { version = "0.15.3", default-features = false, features = [ "std", "chacha", "blake2b", "ed25519", "random", "slip10", "bip39", "bip39-en" ] }
@@ -39,6 +40,7 @@ zeroize = { version = "1.5.7", default-features = false, features = [ "zeroize_d
 [target.'cfg(target_family = "wasm")'.dependencies]
 gloo-storage = { version = "0.2.2", default-features = false }
 gloo-timers = { version = "0.2.6", default-features = false, features = [ "futures" ] }
+wasm-bindgen-futures = { version = "0.4.3", default-features = false }
 
 [dev-dependencies]
 dotenv = { version = "0.15.0", default-features = false }

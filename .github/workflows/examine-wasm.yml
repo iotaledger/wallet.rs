@@ -1,4 +1,4 @@
-name: Check wasm target
+name: Examine Wasm compatibility
 
 on:
   push:
@@ -7,6 +7,8 @@ on:
       - production
     paths:
       - ".github/workflows/examine-wasm.yml"
+      - ".github/actions/**"
+      # Watch the Rust core too
       - "**.rs"
       - "Cargo.toml"
       - "Cargo.lock"
@@ -15,7 +17,9 @@ on:
       - develop
       - production
     paths:
-      - ".github/workflows/wasm.yml"
+      - ".github/workflows/examine-wasm.yml"
+      - ".github/actions/**"
+      # Watch the Rust core too
       - "**.rs"
       - "Cargo.toml"
       - "Cargo.lock"
@@ -37,4 +41,4 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: check
-        args: --release --target=wasm32-unknown-unknown --manifest-path Cargo.toml --no-default-features --features storage,message_interface,events,participation
+        args: --release --target=wasm32-unknown-unknown --manifest-path Cargo.toml --no-default-features --features events,storage,message_interface,participation

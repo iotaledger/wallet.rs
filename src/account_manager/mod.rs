@@ -212,6 +212,9 @@ impl AccountManager {
         self.background_syncing_status.store(2, Ordering::Relaxed);
         // wait until it stopped
         while self.background_syncing_status.load(Ordering::Relaxed) != 0 {
+            #[cfg(target_family = "wasm")]
+            gloo_timers::future::TimeoutFuture::new(10).await;
+            #[cfg(not(target_family = "wasm"))]
             tokio::time::sleep(std::time::Duration::from_millis(10)).await;
         }
         Ok(())

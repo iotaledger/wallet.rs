@@ -5,10 +5,11 @@ mod alias_foundry;
 mod basic;
 mod nft;
 
-use std::{collections::HashSet, time::Instant};
+use std::collections::HashSet;
 
 #[cfg(not(target_family = "wasm"))]
 use futures::FutureExt;
+use instant::Instant;
 use iota_client::block::{address::Address, output::OutputId};
 
 use crate::account::{

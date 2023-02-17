@@ -1,8 +1,9 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{collections::HashSet, time::Instant};
+use std::collections::HashSet;
 
+use instant::Instant;
 use iota_client::{
     api::PreparedTransactionData,
     block::{
