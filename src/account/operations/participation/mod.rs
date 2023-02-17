@@ -68,28 +68,18 @@ impl AccountHandle {
         for output_data in participation_outputs {
             // PANIC: the filter already checks that the metadata exists.
             let metadata = output_data.output.features().and_then(|f| f.metadata()).unwrap();
-
-            let event_ids = if let Ok(participations) = Participations::from_bytes(&mut metadata.data()) {
-                participations
-                    .participations
-                    .into_iter()
-                    .map(|p| p.event_id)
-                    .collect::<Vec<ParticipationEventId>>()
-            } else {
-                // No valid participation in this output, skip it.
-                continue;
-            };
-
-            for event_id in event_ids {
-                match events.entry(event_id) {
-                    Entry::Vacant(entry) => {
-                        entry.insert(vec![output_data.output_id]);
-                    }
-                    Entry::Occupied(mut entry) => {
-                        entry.get_mut().push(output_data.output_id);
+            if let Ok(participations) = Participations::from_bytes(&mut metadata.data()) {
+                for participation in participations.participations {
+                    match events.entry(participation.event_id) {
+                        Entry::Vacant(entry) => {
+                            entry.insert(vec![output_data.output_id]);
+                        }
+                        Entry::Occupied(mut entry) => {
+                            entry.get_mut().push(output_data.output_id);
+                        }
                     }
                 }
-            }
+            };
         }
 
         let mut participations: HashMap<ParticipationEventId, HashMap<OutputId, TrackedParticipation>> = HashMap::new();
