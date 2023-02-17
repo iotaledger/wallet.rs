@@ -11,8 +11,11 @@ keywords:
 
 ---
 import WarningPasswordStorage from '../_admonitions/_warning_safe_password_storage.md'
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
-<WarningPasswordStorage/>
+The wallet.rs library is published on [crates.io](https://crates.io/crates/iota-wallet/versions). You can also download
+the source code from the [official GitHub repository](https://github.com/iotaledger/wallet.rs).
 
 ## Requirements
 
@@ -28,8 +31,8 @@ version [rustup update stable](https://github.com/rust-lang/rustup.rs#keeping-ru
 The library uses [_cmake_](https://cmake.org/documentation/) and [_openssl_](https://www.openssl.org/docs/). You may
 need install additional build tools on your system to run the build process successfully using Cargo.
 
-### Windows
-
+<Tabs>
+<TabItem value={'windows'} label={'Windows'}>
 You can install all needed prerequisites on Windows with [Chocolatey](https://community.chocolatey.org/packages?q=msys). If you have any of the tools already installed just remove them from the command
 
 Install Chocolatey with 
@@ -41,7 +44,8 @@ and install the needed packages with
 choco install visualstudio2022buildtools visualstudio2022-workload-vctools rust-ms msys2 llvm
 ```
 
-### macOS
+</TabItem>
+<TabItem value={'macOS'} label={'macOS'}>
 
 You can install _cmake_ and _openssl_ with [_Homebrew_](https://docs.brew.sh/) by running the following commands:
 
@@ -52,26 +56,40 @@ brew install openssl@1.1
 OPENSSL_ROOT_DIR=$(brew --prefix openssl@1.1)
 ```
 
-### Linux
+</TabItem>
+<TabItem value={'linux'} label={'Linux'}>
 
 You can install _cmake_ and _openssl_ with your distro's package manager or download from their websites. On Debian and
 Ubuntu you will also need the [_build-essential_](https://packages.debian.org/sid/build-essential) package.
 
-## Include the Library in Your `Cargo.toml`
+
+</TabItem>
+</Tabs>
+
+## Include the Library
 
 The only thing you need to do to start using the library is to add it as dependency in your `Cargo.toml` file:
 
 ```toml {2}
 [dependencies]
 iota-wallet = { git = "https://github.com/iotaledger/wallet.rs", branch = "develop" }
+```
+
+### Enable Asynchronous Functionality
+
+The library uses asynchronous functionality. You can enable it by adding the following line as a dependency:
+
+```toml
 tokio = "1.21.2"
 ```
 
 ## Use the Library
 
-In order to use the library, you need to create an _AccountManager_:
+In order to use the library, you need to create an `AccountManager`:
 
-```rust
+<WarningPasswordStorage/>
+
+```rust {4,31-36} showLineNumbers
 use std::path::PathBuf;
 
 use iota_wallet::{
@@ -100,7 +118,7 @@ async fn main() -> Result<()> {
         .await?;
 
     // Create the accounts_and_addresses manager with the secret_manager and client options
-    let client_options = ClientOptions::new().with_node("http://localhost:14265")?;
+    let client_options = ClientOptions::new().with_node("https://api.testnet.shimmer.network/")?;
 
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Stronghold(secret_manager))
