@@ -19,6 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security -->
 
-## 1.0.0-rc.1 - 2023-02-13
+## 1.0.0-rc.1 - 2023-02-17
 
 Initial release of the Python bindings.

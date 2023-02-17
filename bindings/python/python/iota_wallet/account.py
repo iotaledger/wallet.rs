@@ -350,6 +350,21 @@ class Account:
             'getBalance'
         )
 
+    def prepare_output(self, output_options, transaction_options=None):
+        """Prepare an output for sending
+           If the amount is below the minimum required storage deposit, by default the remaining amount will automatically
+           be added with a StorageDepositReturn UnlockCondition, when setting the ReturnStrategy to `gift`, the full
+           minimum required storage deposit will be sent to the recipient.
+           When the assets contain an nft_id, the data from the existing nft output will be used, just with the address
+           unlock conditions replaced
+        """
+        return self._call_account_method(
+            'prepareOutput', {
+                'options': output_options,
+                'transactionOptions': transaction_options
+            }
+        )
+
     def prepare_send_amount(self, addresses_with_amount, options=None):
         """Prepare send amount.
         """
@@ -438,7 +453,6 @@ class Account:
         return self._call_account_method(
             'setAlias', {
                 'alias': alias
-
             }
         )
 
@@ -448,7 +462,6 @@ class Account:
         return self._call_account_method(
             'signTransactionEssence', {
                 'preparedTransactionData': prepared_transaction_data
-
             }
         )
 
@@ -458,7 +471,6 @@ class Account:
         return self._call_account_method(
             'submitAndStoreTransaction', {
                 'signedTransactionData': signed_transaction_data
-
             }
         )
 
@@ -468,11 +480,9 @@ class Account:
         return self._call_account_method(
             'claimOutputs', {
                 'outputIdsToClaim': output_ids_to_claim
-
             }
         )
 
-    @ send_message_routine
     def send_outputs(self, outputs, options=None):
         """Send outputs in a transaction.
         """

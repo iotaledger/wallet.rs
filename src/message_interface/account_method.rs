@@ -285,6 +285,7 @@ pub enum AccountMethod {
     /// Expected response: [`Output`](crate::message_interface::Response::Output)
     PrepareOutput {
         options: OutputOptionsDto,
+        #[serde(rename = "transactionOptions")]
         transaction_options: Option<TransactionOptionsDto>,
     },
     /// Prepare transaction.
