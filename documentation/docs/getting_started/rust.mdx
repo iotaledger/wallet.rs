@@ -13,6 +13,8 @@ keywords:
 import WarningPasswordStorage from '../_admonitions/_warning_safe_password_storage.md'
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+import CodeSample from '!!raw-loader!../../../examples/01_create_wallet.rs';
 
 The wallet.rs library is published on [crates.io](https://crates.io/crates/iota-wallet/versions). You can also download
 the source code from the [official GitHub repository](https://github.com/iotaledger/wallet.rs).
@@ -89,59 +91,10 @@ In order to use the library, you need to create an `AccountManager`:
 
 <WarningPasswordStorage/>
 
-```rust {4,31-36} showLineNumbers
-use std::path::PathBuf;
 
-use iota_wallet::{
-    account_manager::AccountManager,
-    iota_client::constants::SHIMMER_COIN_TYPE,
-    secret::{stronghold::StrongholdSecretManager, SecretManager},
-    ClientOptions, Result,
-};
-
-#[tokio::main]
-async fn main() -> Result<()> {
-    // Shouldn't be hardcoded in production
-    // mnemonic can be generated with `manager.generate_mnemonic()?` and will be the only way to recover your funds if
-    // you loose the stronghold file/password, so be sure to save it securely
-    let nonsecure_use_of_development_mnemonic = "endorse answer radar about source reunion marriage tag sausage weekend frost daring base attack because joke dream slender leisure group reason prepare broken river".to_string();
-    let stronghold_password = "some_hopefully_secure_password";
-
-    // Setup Stronghold secret_manager
-    let mut secret_manager = StrongholdSecretManager::builder()
-        .password(&stronghold_password)
-        .build(PathBuf::from("wallet.stronghold"))?;
-
-    // The mnemonic only needs to be stored the first time
-    secret_manager
-        .store_mnemonic(nonsecure_use_of_development_mnemonic)
-        .await?;
-
-    // Create the accounts_and_addresses manager with the secret_manager and client options
-    let client_options = ClientOptions::new().with_node("https://api.testnet.shimmer.network/")?;
-
-    let manager = AccountManager::builder()
-        .with_secret_manager(SecretManager::Stronghold(secret_manager))
-        .with_client_options(client_options)
-        .with_coin_type(SHIMMER_COIN_TYPE)
-        .finish()
-        .await?;
-
-    // Create a new accounts_and_addresses, this will automatically generate an address
-    let account = manager
-        .create_account()
-        .with_alias("Alice".to_string())
-        .finish()
-        .await?;
-
-    println!(
-        "Generated a new accounts_and_addresses with addresses {:?}",
-        account.addresses().await?
-    );
-
-    Ok(())
-}
-```
+<CodeBlock className="language-rust" showLineNumbers metastring={'{12,37-42}'}>
+    {CodeSample}
+</CodeBlock>
 
 ## What's Next?
 
