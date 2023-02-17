@@ -11,9 +11,9 @@ The `wallet.rs` Wallet library also offers dedicated [Node.js bindings](../nodej
 | Environment   | Node.js, browsers |        Node.js        |
 | Installation  |         -         | Rust, Cargo required* |
 | Performance   |        ✔️         |          ✔️✔️        |
-| Ledger Nano   |         ❌        |          ✔️          |
-| Rocksdb       |         ❌        |          ✔️          |
-| Stronghold    |         ❌        |          ✔️          |
+| Ledger Nano   |        ❌         |          ✔️          |
+| Rocksdb       |        ❌         |          ✔️          |
+| Stronghold    |        ❌         |          ✔️          |
 
 *Node.js bindings only need to be compiled during `npm install` if a pre-compiled binary is not available for your platform.
 

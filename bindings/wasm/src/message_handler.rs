@@ -8,13 +8,13 @@ use iota_wallet::message_interface::{
 };
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
-/// The Client message handler.
+/// The Wallet message handler.
 #[wasm_bindgen(js_name = MessageHandler)]
 pub struct MessageHandler {
     handler: Rc<RefCell<Option<WalletMessageHandler>>>,
 }
 
-/// Creates a message handler with the given client options.
+/// Creates a message handler with the given options.
 #[wasm_bindgen(js_name = messageHandlerNew)]
 #[allow(non_snake_case)]
 pub fn message_handler_new(options: String) -> Result<MessageHandler, JsValue> {

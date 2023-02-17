@@ -4,7 +4,6 @@ on:
     branches:
       - develop
       - production
-      - bindings/wasm
     paths:
       - ".github/workflows/examine-wasm-bindings.yml"
       - ".github/actions/**"

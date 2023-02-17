@@ -14,7 +14,7 @@ lintAll(entryFile);
 
 let changedFile = entryFile
     // Comment out generated code as a workaround for webpack (does not recognise import.meta).
-    // Regex to avoid hard-coding 'identity_wasm_bg.wasm'.
+    // Regex to avoid hard-coding 'wallet_wasm_bg.wasm'.
     .replace(
         /input = new URL\((.*), import\.meta\.url\);/i,
         "// input = new URL($1, import.meta.url);"

@@ -40,3 +40,10 @@ jobs:
 
       - name: Build project
         run: yarn build
+
+      - name: Publish WASM bindings to NPM
+        shell: sh
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
+
