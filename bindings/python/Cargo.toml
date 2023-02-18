@@ -25,4 +25,4 @@ serde_json = { version = "1.0.93", default-features = false }
 tokio = { version = "1.25.0", default-features = false }
 
 [package.metadata.maturin]
-python-source = "python"
+python-source = "lib"
