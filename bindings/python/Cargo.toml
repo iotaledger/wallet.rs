@@ -23,3 +23,6 @@ once_cell = { version = "1.17.0", default-features = false }
 pyo3 = { version = "0.18.1", default-features = false, features = [ "macros", "extension-module" ] }
 serde_json = { version = "1.0.93", default-features = false }
 tokio = { version = "1.25.0", default-features = false }
+
+[package.metadata.maturin]
+python-source = "lib"
