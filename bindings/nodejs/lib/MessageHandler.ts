@@ -55,10 +55,10 @@ export class MessageHandler {
         });
     }
 
-    listen(
+    async listen(
         eventTypes: EventType[],
         callback: (error: Error, result: string) => void,
-    ): void {
+    ): Promise<void> {
         return listen(eventTypes, callback, this.messageHandler);
     }
 
