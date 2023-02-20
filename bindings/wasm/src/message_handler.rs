@@ -3,9 +3,14 @@
 
 use std::{cell::RefCell, rc::Rc};
 
-use iota_wallet::message_interface::{
-    create_message_handler, init_logger as init_logger_rust, ManagerOptions, Message, Response, WalletMessageHandler,
+use iota_wallet::{
+    events::types::{Event, WalletEventType},
+    message_interface::{
+        create_message_handler, init_logger as init_logger_rust, ManagerOptions, Message, Response,
+        WalletMessageHandler,
+    },
 };
+use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
 /// The Wallet message handler.
@@ -63,14 +68,58 @@ pub async fn send_message_async(message: String, message_handler: &MessageHandle
     }
 }
 
+/// It takes a list of event types, registers a callback function, and then listens for events of those
+/// types
 ///
+/// Arguments:
+///
+/// * `vec`: An array of strings that represent the event types you want to listen to.
+/// * `callback`: A JavaScript function that will be called when a wallet event occurs.
+/// * `message_handler`: This is the same message handler that we used in the previous section.
 #[wasm_bindgen]
 pub async fn listen(
-    _message_handler: &MessageHandler,
-    _vec: js_sys::Array,
-    _callback: &js_sys::Function,
+    vec: js_sys::Array,
+    callback: js_sys::Function,
+    message_handler: &MessageHandler,
 ) -> Result<JsValue, JsValue> {
-    Err(JsValue::from_str(
-        "Wallet listen is not currently supported for WebAssembly",
-    ))
+    let mut event_types = vec![];
+    for i in 0..vec.length() {
+        let event_type = vec.get(i).as_string().unwrap();
+        let wallet_event_type = WalletEventType::try_from(event_type.as_str()).or_else(|e| return Err(e))?;
+        event_types.push(wallet_event_type);
+    }
+
+    let (tx, mut rx): (UnboundedSender<Event>, UnboundedReceiver<Event>) = unbounded_channel();
+    message_handler
+        .handler
+        .borrow()
+        .as_ref()
+        .unwrap()
+        .listen(event_types, move |wallet_event| {
+            tx.send(wallet_event.clone()).unwrap();
+        })
+        .await;
+
+    // Spawn on the same thread a continuous loop to check the channel
+    wasm_bindgen_futures::spawn_local(async move {
+        loop {
+            match rx.recv().await {
+                Some(wallet_event) => {
+                    callback
+                        .call1(
+                            &JsValue::NULL,
+                            &JsValue::from(serde_json::to_string(&wallet_event).unwrap()),
+                        )
+                        // Safe to unwrap, our callback has no return
+                        .unwrap();
+                }
+                None => {
+                    // No more links to the unbounded_channel, exit loop
+                    break;
+                }
+            }
+        }
+    });
+
+    Ok(JsValue::UNDEFINED)
 }

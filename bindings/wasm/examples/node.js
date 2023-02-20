@@ -1,9 +1,9 @@
 // Copyright 2023 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import console from 'console';
-import fs from 'fs';
-import { AccountManager, CoinType } from '../node/lib';
+const console  = require('console');
+const fs  = require('fs');
+const { AccountManager, CoinType } = require('../node/lib');
 
 async function run() {
     try {
@@ -27,6 +27,11 @@ async function run() {
     const account = await manager.createAccount({
         alias: 'Alice',
     });
+
+    manager.listen(["TransactionProgress"], (event) => {
+        console.log(event);
+    });
+
     console.log('Account created:', account);
     account.setAlias('new alias');
 

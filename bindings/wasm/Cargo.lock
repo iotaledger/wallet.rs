@@ -836,7 +836,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "2.0.1-rc.6"
-source = "git+https://github.com/iotaledger/iota.rs?rev=8667530f5362c436c29053a622496843e998ca36#8667530f5362c436c29053a622496843e998ca36"
+source = "git+https://github.com/iotaledger/iota.rs?rev=2c40ee8fb8cae408bdec494be69f7f58ed3606c8#2c40ee8fb8cae408bdec494be69f7f58ed3606c8"
 dependencies = [
  "async-trait",
  "backtrace",
@@ -889,7 +889,7 @@ dependencies = [
 [[package]]
 name = "iota-pow"
 version = "1.0.0-rc.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=8667530f5362c436c29053a622496843e998ca36#8667530f5362c436c29053a622496843e998ca36"
+source = "git+https://github.com/iotaledger/iota.rs?rev=2c40ee8fb8cae408bdec494be69f7f58ed3606c8#2c40ee8fb8cae408bdec494be69f7f58ed3606c8"
 dependencies = [
  "instant",
  "iota-crypto",
@@ -898,8 +898,8 @@ dependencies = [
 
 [[package]]
 name = "iota-types"
-version = "1.0.0-rc.5"
-source = "git+https://github.com/iotaledger/iota.rs?rev=8667530f5362c436c29053a622496843e998ca36#8667530f5362c436c29053a622496843e998ca36"
+version = "1.0.0-rc.6"
+source = "git+https://github.com/iotaledger/iota.rs?rev=2c40ee8fb8cae408bdec494be69f7f58ed3606c8#2c40ee8fb8cae408bdec494be69f7f58ed3606c8"
 dependencies = [
  "bech32",
  "bitflags",
@@ -1917,9 +1917,9 @@ checksum = "0046fef7e28c3804e5e38bfa31ea2a0f73905319b677e57ebe37e49358989b5d"
 
 [[package]]
 name = "web-sys"
-version = "0.3.60"
+version = "0.3.61"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bcda906d8be16e728fd5adc5b729afad4e444e106ab28cd1c7256e54fa61510f"
+checksum = "e33b99f4b23ba3eec1a53ac264e35a755f00e966e0065077d6027c0f575b0b97"
 dependencies = [
  "js-sys",
  "wasm-bindgen",

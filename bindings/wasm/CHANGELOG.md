@@ -19,6 +19,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security -->
 
+
+## 1.0.0-alpha.2 - YYYY-MM-DD
+
+### Added
+
+- `listen` method to account manager;
+
 ## 1.0.0-alpha.1 - 2023-02-17
 
 Initial release of the wasm bindings.
