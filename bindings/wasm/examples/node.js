@@ -1,8 +1,8 @@
 // Copyright 2023 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-const console  = require('console');
-const fs  = require('fs');
+const console = require('console');
+const fs = require('fs');
 const { AccountManager, CoinType } = require('../node/lib');
 
 async function run() {
@@ -28,7 +28,7 @@ async function run() {
         alias: 'Alice',
     });
 
-    manager.listen(["TransactionProgress"], (event) => {
+    manager.listen(['TransactionProgress'], (event) => {
         console.log(event);
     });
 

@@ -15,6 +15,7 @@ module.exports = {
         sourceType: 'module',
     },
     rules: {
+        '@typescript-eslint/no-var-requires': 0,
         '@typescript-eslint/ban-ts-comment': [
             'error',
             { 'ts-ignore': 'allow-with-description' },
