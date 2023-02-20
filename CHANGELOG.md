@@ -26,10 +26,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated dependencies;
 - `StorageAdapter::get` return type changed to `Result<Option<String>>`;
 - `StorageManager::get_account_manager_data` return type changed to `Result<Option<AccountManagerBuilder>>`;
+- Added `#[serde(rename = "transactionOptions")]` to `PrepareOutput::transaction_options`;
 
 ### Removed
 
 - `mnemonic` feature;
+- `Error::RecordNotFound` variant;
+
+### Fixed
+
+- `Account::get_participation_overview()` with multiple events and different nodes;
 
 ## 1.0.0-rc.5 - 2023-02-09
 

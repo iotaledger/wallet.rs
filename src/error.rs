@@ -104,9 +104,6 @@ pub enum Error {
         /// The consolidation threshold.
         consolidation_threshold: usize,
     },
-    /// Record not found
-    #[error("record {0} not found")]
-    RecordNotFound(String),
     /// Storage access error.
     #[error("error accessing storage: {0}")]
     Storage(String),
