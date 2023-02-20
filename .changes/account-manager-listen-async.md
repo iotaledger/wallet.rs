@@ -2,4 +2,4 @@
 "nodejs-binding": patch
 ---
 
-Made account manager `listen` async
+Made account manager `listen` async.
