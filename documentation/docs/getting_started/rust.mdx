@@ -37,6 +37,15 @@ You can install _openssl_ with [vcpkg](https://github.com/microsoft/vcpkg) or
 [chocolatey](https://chocolatey.org/).
 
 <Tabs>
+<TabItem value={'chocolatey'} label={'chocolatey'}>
+
+```bash
+choco install openssl
+# you may need to set the OPENSSL_ROOT_DIR environment variable
+set OPENSSL_ROOT_DIR="C:\Program Files\OpenSSL-Win64"
+```
+
+</TabItem>
 <TabItem value={'vcpkg'} label={'vcpkg'}>
 
 ```bash
@@ -44,15 +53,6 @@ You can install _openssl_ with [vcpkg](https://github.com/microsoft/vcpkg) or
 ./vcpkg.exe integrate install
 # you may want to add this to the system environment variables since you'll need it to compile the crate
 set VCPKGRS_DYNAMIC=1
-```
-
-</TabItem>
-<TabItem value={'chocolatey'} label={'chocolatey'}>
-
-```bash
-choco install openssl
-# you may need to set the OPENSSL_ROOT_DIR environment variable
-set OPENSSL_ROOT_DIR="C:\Program Files\OpenSSL-Win64"
 ```
 
 </TabItem>
