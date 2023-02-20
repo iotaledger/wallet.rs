@@ -11,8 +11,13 @@ keywords:
 
 ---
 import WarningPasswordStorage from '../_admonitions/_warning_safe_password_storage.md'
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+import CodeSample from '!!raw-loader!../../../examples/01_create_wallet.rs';
 
-<WarningPasswordStorage/>
+The wallet.rs library is published on [crates.io](https://crates.io/crates/iota-wallet/versions). You can also download
+the source code from the [official GitHub repository](https://github.com/iotaledger/wallet.rs).
 
 ## Requirements
 
@@ -28,7 +33,8 @@ version [rustup update stable](https://github.com/rust-lang/rustup.rs#keeping-ru
 The library uses [_cmake_](https://cmake.org/documentation/) and [_openssl_](https://www.openssl.org/docs/). You may
 need install additional build tools on your system to run the build process successfully using Cargo.
 
-### Windows
+<Tabs>
+<TabItem value={'windows'} label={'Windows'}>
 
 You can install all needed prerequisites on Windows with [Chocolatey](https://community.chocolatey.org/packages?q=msys). If you have any of the tools already installed just remove them from the command
 
@@ -41,7 +47,8 @@ and install the needed packages with
 choco install visualstudio2022buildtools visualstudio2022-workload-vctools rust-ms msys2 llvm
 ```
 
-### macOS
+</TabItem>
+<TabItem value={'macOS'} label={'macOS'}>
 
 You can install _cmake_ and _openssl_ with [_Homebrew_](https://docs.brew.sh/) by running the following commands:
 
@@ -52,12 +59,17 @@ brew install openssl@1.1
 OPENSSL_ROOT_DIR=$(brew --prefix openssl@1.1)
 ```
 
-### Linux
+</TabItem>
+<TabItem value={'linux'} label={'Linux'}>
 
 You can install _cmake_ and _openssl_ with your distro's package manager or download from their websites. On Debian and
 Ubuntu you will also need the [_build-essential_](https://packages.debian.org/sid/build-essential) package.
 
-## Include the Library in Your `Cargo.toml`
+
+</TabItem>
+</Tabs>
+
+## Include the Library
 
 The only thing you need to do to start using the library is to add it as dependency in your `Cargo.toml` file:
 
@@ -69,61 +81,14 @@ tokio = "1.21.2"
 
 ## Use the Library
 
-In order to use the library, you need to create an _AccountManager_:
+In order to use the library, you need to create an `AccountManager`:
 
-```rust
-use std::path::PathBuf;
+<WarningPasswordStorage/>
 
-use iota_wallet::{
-    account_manager::AccountManager,
-    iota_client::constants::SHIMMER_COIN_TYPE,
-    secret::{stronghold::StrongholdSecretManager, SecretManager},
-    ClientOptions, Result,
-};
 
-#[tokio::main]
-async fn main() -> Result<()> {
-    // Shouldn't be hardcoded in production
-    // mnemonic can be generated with `manager.generate_mnemonic()?` and will be the only way to recover your funds if
-    // you loose the stronghold file/password, so be sure to save it securely
-    let nonsecure_use_of_development_mnemonic = "endorse answer radar about source reunion marriage tag sausage weekend frost daring base attack because joke dream slender leisure group reason prepare broken river".to_string();
-    let stronghold_password = "some_hopefully_secure_password";
-
-    // Setup Stronghold secret_manager
-    let mut secret_manager = StrongholdSecretManager::builder()
-        .password(&stronghold_password)
-        .build(PathBuf::from("wallet.stronghold"))?;
-
-    // The mnemonic only needs to be stored the first time
-    secret_manager
-        .store_mnemonic(nonsecure_use_of_development_mnemonic)
-        .await?;
-
-    // Create the accounts_and_addresses manager with the secret_manager and client options
-    let client_options = ClientOptions::new().with_node("http://localhost:14265")?;
-
-    let manager = AccountManager::builder()
-        .with_secret_manager(SecretManager::Stronghold(secret_manager))
-        .with_client_options(client_options)
-        .with_coin_type(SHIMMER_COIN_TYPE)
-        .finish()
-        .await?;
-
-    // Create a new accounts_and_addresses, this will automatically generate an address
-    let account = manager
-        .create_account()
-        .with_alias("Alice".to_string())
-        .finish()
-        .await?;
-
-    println!(
-        "Generated a new accounts_and_addresses with addresses {:?}",
-        account.addresses().await?
-    );
-
-    Ok(())
-}
-```
+<CodeBlock className="language-rust" showLineNumbers metastring={'{12,37-42}'}>
+    {CodeSample}
+</CodeBlock>
 
 ## What's Next?
 

@@ -1108,8 +1108,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "2.0.1-rc.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b8206762d9c7062a3de9ec8a1653537c51b2d07e58a6589e74b6e70615c2581a"
+source = "git+https://github.com/iotaledger/iota.rs?rev=3a491bc344ff097f3ca6e988e7c338bda748116b#3a491bc344ff097f3ca6e988e7c338bda748116b"
 dependencies = [
  "async-trait",
  "backtrace",
@@ -1189,20 +1188,17 @@ dependencies = [
 [[package]]
 name = "iota-pow"
 version = "1.0.0-rc.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "73b3ffe5d6ada4c62fa5e5d0a7622893af02ad431d6a6144979686662eee5f1c"
+source = "git+https://github.com/iotaledger/iota.rs?rev=3a491bc344ff097f3ca6e988e7c338bda748116b#3a491bc344ff097f3ca6e988e7c338bda748116b"
 dependencies = [
  "instant",
  "iota-crypto",
  "num_cpus",
- "thiserror",
 ]
 
 [[package]]
 name = "iota-types"
-version = "1.0.0-rc.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ac00be923ed4f7ae33c03628d24d03c920f0d6c27806daae57ce735ac240f96"
+version = "1.0.0-rc.6"
+source = "git+https://github.com/iotaledger/iota.rs?rev=3a491bc344ff097f3ca6e988e7c338bda748116b#3a491bc344ff097f3ca6e988e7c338bda748116b"
 dependencies = [
  "bech32 0.9.1",
  "bitflags",
@@ -1221,7 +1217,6 @@ dependencies = [
  "serde-big-array",
  "serde_json",
  "serde_repr",
- "thiserror",
 ]
 
 [[package]]
