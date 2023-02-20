@@ -28,7 +28,7 @@ async function run() {
         alias: 'Alice',
     });
 
-    manager.listen(['TransactionProgress'], (event) => {
+    await manager.listen(['TransactionProgress'], (event) => {
         console.log(event);
     });
 

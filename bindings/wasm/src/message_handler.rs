@@ -85,7 +85,7 @@ pub async fn listen(
     let mut event_types = vec![];
     for i in 0..vec.length() {
         let event_type = vec.get(i).as_string().unwrap();
-        let wallet_event_type = WalletEventType::try_from(event_type.as_str()).or_else(|e| return Err(e))?;
+        let wallet_event_type = WalletEventType::try_from(event_type.as_str()).map_err(|e| Err(e))?;
         event_types.push(wallet_event_type);
     }
 
@@ -102,23 +102,16 @@ pub async fn listen(
 
     // Spawn on the same thread a continuous loop to check the channel
     wasm_bindgen_futures::spawn_local(async move {
-        loop {
-            match rx.recv().await {
-                Some(wallet_event) => {
-                    callback
-                        .call1(
-                            &JsValue::NULL,
-                            &JsValue::from(serde_json::to_string(&wallet_event).unwrap()),
-                        )
-                        // Safe to unwrap, our callback has no return
-                        .unwrap();
-                }
-                None => {
-                    // No more links to the unbounded_channel, exit loop
-                    break;
-                }
-            }
+        while let Some(wallet_event) = rx.recv().await {
+            callback
+                .call1(
+                    &JsValue::NULL,
+                    &JsValue::from(serde_json::to_string(&wallet_event).unwrap()),
+                )
+                // Safe to unwrap, our callback has no return
+                .unwrap();
         }
+        // No more links to the unbounded_channel, exit loop
     });
 
     Ok(JsValue::UNDEFINED)
