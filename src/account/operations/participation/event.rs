@@ -84,9 +84,11 @@ impl AccountHandle {
     /// Retrieves IDs of all events tracked by the client options node.
     pub async fn get_participation_event_ids(
         &self,
+        node: &Node,
         event_type: Option<ParticipationEventType>,
     ) -> crate::Result<Vec<ParticipationEventId>> {
-        Ok(self.client.events(event_type).await?.event_ids)
+        let client = Client::builder().with_ignore_node_health().with_node_auth(node.url.as_str(), node.auth.clone())?.finish()?;
+        Ok(client.events(event_type).await?.event_ids)
     }
 
     /// Retrieves the latest status of a given participation event.

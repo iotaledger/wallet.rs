@@ -427,6 +427,7 @@ export class Account {
     }
 
     async getParticipationEventIds(
+        node: Node,
         eventType?: ParticipationEventType,
     ): Promise<ParticipationEventId[]> {
         const response = await this.messageHandler.callAccountMethod(
@@ -434,6 +435,7 @@ export class Account {
             {
                 name: 'getParticipationEventIds',
                 data: {
+                    node,
                     eventType,
                 },
             },

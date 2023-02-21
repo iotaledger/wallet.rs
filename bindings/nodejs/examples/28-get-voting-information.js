@@ -1,17 +1,19 @@
 /**
  * This example creates a new voting event
  */
-require('dotenv').config({ path: '../.env' });
 const getUnlockedManager = require('./account-manager');
+
+console.log(process.env)
 
 async function run() {
     try {
         const manager = await getUnlockedManager();
 
-        const account = await manager.getAccount('0');
+        const account = await manager.getAccount('0')
 
-        const eventIds = await account.getParticipationEventIds();
-        console.log('Event ids from the node:', eventIds)
+        const node = { url: 'https://api.testnet.shimmer.network' }//process.env.NODE_URL }
+        const eventIds = await account.getParticipationEventIds(node);
+        console.log('Event IDs from the node:', eventIds)
         let EVENT_ID = eventIds[0]
 
         // store the event information from a node locally

@@ -448,6 +448,7 @@ pub enum AccountMethod {
     #[cfg(feature = "participation")]
     #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
     GetParticipationEventIds {
+        node: Node,
         #[serde(rename = "eventType")]
         event_type: Option<ParticipationEventType>,
     },
