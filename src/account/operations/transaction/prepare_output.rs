@@ -12,13 +12,17 @@ use iota_client::block::{
             AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition,
             TimelockUnlockCondition, UnlockCondition,
         },
-        BasicOutputBuilder, NativeToken, NftId, NftOutputBuilder, Output, Rent,
+        BasicOutputBuilder, NativeToken, NftId, NftOutput, NftOutputBuilder, Output, Rent,
     },
     DtoError,
 };
 use serde::{Deserialize, Serialize};
 
-use crate::account::{handle::AccountHandle, operations::transaction::RemainderValueStrategy, TransactionOptions};
+use crate::account::{
+    handle::{AccountHandle, FilterOptions},
+    operations::transaction::RemainderValueStrategy,
+    TransactionOptions,
+};
 
 impl AccountHandle {
     /// Prepare an output for sending
@@ -37,9 +41,7 @@ impl AccountHandle {
 
         if let Some(assets) = &options.assets {
             if let Some(nft_id) = assets.nft_id {
-                return self
-                    .prepare_nft_output(options.clone(), transaction_options, nft_id)
-                    .await;
+                return self.prepare_nft_output(options, transaction_options, nft_id).await;
             }
         }
         let rent_structure = self.client.get_rent_structure().await?;
@@ -173,7 +175,7 @@ impl AccountHandle {
                 let new_sdr_unlock_condition = UnlockCondition::StorageDepositReturn(
                     StorageDepositReturnUnlockCondition::new(*sdr.return_address(), new_sdr_amount, token_supply)?,
                 );
-                third_output_builder = third_output_builder.replace_unlock_condition(new_sdr_unlock_condition)?;
+                third_output_builder = third_output_builder.replace_unlock_condition(new_sdr_unlock_condition);
             }
         }
 
@@ -192,10 +194,15 @@ impl AccountHandle {
 
         let token_supply = self.client.get_token_supply().await?;
         let rent_structure = self.client.get_rent_structure().await?;
-        let unspent_outputs = self.unspent_outputs(None).await?;
+        let unspent_nft_outputs = self
+            .unspent_outputs(Some(FilterOptions {
+                output_types: Some(vec![NftOutput::KIND]),
+                ..Default::default()
+            }))
+            .await?;
 
         // Find nft output from the inputs
-        let mut first_output_builder = if let Some(nft_output_data) = unspent_outputs.iter().find(|o| {
+        let mut first_output_builder = if let Some(nft_output_data) = unspent_nft_outputs.iter().find(|o| {
             if let Output::Nft(nft_output) = &o.output {
                 nft_id == nft_output.nft_id_non_null(&o.output_id)
             } else {
@@ -226,25 +233,25 @@ impl AccountHandle {
 
         if let Some(features) = options.features {
             if let Some(tag) = features.tag {
-                first_output_builder = first_output_builder.add_feature(Feature::Tag(TagFeature::new(
+                first_output_builder = first_output_builder.replace_feature(Feature::Tag(TagFeature::new(
                     prefix_hex::decode(&tag).map_err(|_| DtoError::InvalidField("tag"))?,
                 )?));
             }
 
             if let Some(metadata) = features.metadata {
-                first_output_builder = first_output_builder.add_feature(Feature::Metadata(MetadataFeature::new(
+                first_output_builder = first_output_builder.replace_feature(Feature::Metadata(MetadataFeature::new(
                     prefix_hex::decode(&metadata).map_err(|_| DtoError::InvalidField("metadata"))?,
                 )?));
+            }
+
+            if let Some(sender) = features.sender {
+                first_output_builder = first_output_builder
+                    .replace_feature(Feature::Sender(SenderFeature::new(Address::try_from_bech32(sender)?.1)))
             }
 
             if let Some(issuer) = features.issuer {
                 first_output_builder = first_output_builder
                     .add_immutable_feature(Feature::Issuer(IssuerFeature::new(Address::try_from_bech32(issuer)?.1)));
-            }
-
-            if let Some(sender) = features.sender {
-                first_output_builder = first_output_builder
-                    .add_feature(Feature::Sender(SenderFeature::new(Address::try_from_bech32(sender)?.1)))
             }
         }
 
@@ -301,7 +308,7 @@ impl AccountHandle {
                     );
                 }
 
-                // Check if the remainding balance wouldn't leave dust behind, which wouldn't allow the creation of this
+                // Check if the remaining balance wouldn't leave dust behind, which wouldn't allow the creation of this
                 // output. If that's the case, this remaining amount will be added to the output, to still allow sending
                 // it.
                 if storage_deposit.use_excess_if_low.unwrap_or_default() {
@@ -342,7 +349,7 @@ impl AccountHandle {
                 let new_sdr_unlock_condition = UnlockCondition::StorageDepositReturn(
                     StorageDepositReturnUnlockCondition::new(*sdr.return_address(), new_sdr_amount, token_supply)?,
                 );
-                third_output_builder = third_output_builder.replace_unlock_condition(new_sdr_unlock_condition)?;
+                third_output_builder = third_output_builder.replace_unlock_condition(new_sdr_unlock_condition);
             }
         }
 
