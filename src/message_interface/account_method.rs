@@ -27,6 +27,7 @@ use crate::{
         operations::{
             address_generation::AddressGenerationOptions,
             output_claiming::OutputsToClaim,
+            participation::ParticipationEventRegistrationOptions,
             syncing::SyncOptions,
             transaction::{
                 high_level::{
@@ -44,7 +45,6 @@ use crate::{
     message_interface::dtos::{AddressWithAmountDto, AddressWithMicroAmountDto},
     AddressAndNftId, AddressNativeTokens,
 };
-use crate::account::operations::participation::ParticipationEventRegistrationOptions;
 
 /// Each public account method.
 #[derive(Clone, Debug, Serialize, Deserialize)]

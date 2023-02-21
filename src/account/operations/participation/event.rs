@@ -11,22 +11,37 @@ use iota_client::{
     Client,
 };
 
-use crate::account::{operations::participation::{ParticipationEventRegistrationOptions, ParticipationEventWithNodes}, AccountHandle};
+use crate::account::{
+    operations::participation::{ParticipationEventRegistrationOptions, ParticipationEventWithNodes},
+    AccountHandle,
+};
 
 impl AccountHandle {
     /// Stores participation information for the given events locally and returns them all.
     ///
     /// This will NOT store the node url and auth inside the client options.
-    pub async fn register_participation_events(&self, options: &ParticipationEventRegistrationOptions) -> crate::Result<HashMap<ParticipationEventId, ParticipationEventWithNodes>> {
-        let client = Client::builder().with_ignore_node_health().with_node_auth(options.node.url.as_str(), options.node.auth.clone())?.finish()?;
+    pub async fn register_participation_events(
+        &self,
+        options: &ParticipationEventRegistrationOptions,
+    ) -> crate::Result<HashMap<ParticipationEventId, ParticipationEventWithNodes>> {
+        let client = Client::builder()
+            .with_ignore_node_health()
+            .with_node_auth(options.node.url.as_str(), options.node.auth.clone())?
+            .finish()?;
 
         let events_to_register = match &options.events_to_register {
-            Some(events_to_register_) => if events_to_register_.len() == 0 {
-                self.get_participation_event_ids(&options.node, Some(ParticipationEventType::Voting)).await?
-            } else {
-                events_to_register_.clone()
-            },
-            None => self.get_participation_event_ids(&options.node, Some(ParticipationEventType::Voting)).await?,
+            Some(events_to_register_) => {
+                if events_to_register_.len() == 0 {
+                    self.get_participation_event_ids(&options.node, Some(ParticipationEventType::Voting))
+                        .await?
+                } else {
+                    events_to_register_.clone()
+                }
+            }
+            None => {
+                self.get_participation_event_ids(&options.node, Some(ParticipationEventType::Voting))
+                    .await?
+            }
         };
 
         let mut registered_participation_events = HashMap::new();
@@ -94,7 +109,10 @@ impl AccountHandle {
         node: &Node,
         event_type: Option<ParticipationEventType>,
     ) -> crate::Result<Vec<ParticipationEventId>> {
-        let client = Client::builder().with_ignore_node_health().with_node_auth(node.url.as_str(), node.auth.clone())?.finish()?;
+        let client = Client::builder()
+            .with_ignore_node_health()
+            .with_node_auth(node.url.as_str(), node.auth.clone())?
+            .finish()?;
         Ok(client.events(event_type).await?.event_ids)
     }
 
