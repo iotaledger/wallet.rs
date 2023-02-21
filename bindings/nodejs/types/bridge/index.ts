@@ -84,6 +84,7 @@ import type {
     __StopBackgroundSyncMessage__,
     __StoreMnemonicMessage__,
     __VerifyMnemonicMessage__,
+    __UpdateNodeAuthMessage__,
 } from './accountManager';
 
 export type __AccountMethod__ =
@@ -179,4 +180,5 @@ export type __Message__ =
     | __StartBackgroundSyncMessage__
     | __StopBackgroundSyncMessage__
     | __StoreMnemonicMessage__
-    | __VerifyMnemonicMessage__;
+    | __VerifyMnemonicMessage__
+    | __UpdateNodeAuthMessage__;

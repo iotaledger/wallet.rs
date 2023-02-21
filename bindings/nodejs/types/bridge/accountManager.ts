@@ -163,3 +163,8 @@ export type __VerifyMnemonicMessage__ = {
     cmd: 'verifyMnemonic';
     payload: { mnemonic: string };
 };
+
+export type __UpdateNodeAuthMessage__ = {
+    cmd: 'updateNodeAuth';
+    payload: { url: string; auth?: Auth };
+};
