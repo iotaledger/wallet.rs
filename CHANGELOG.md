@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 1.0.0-rc.6 - 2023-XX-XX
 
+### Added
+
+- `Default` to `FilterOptions`;
+
 ### Changed
 
 - Updated dependencies;
@@ -37,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - `Account::get_participation_overview()` with multiple events and different nodes;
+- `prepare_nft_output` uses newly provided tag/metadata instead of previous ones from unspent output;
 
 ## 1.0.0-rc.5 - 2023-02-09
 
