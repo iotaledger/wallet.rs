@@ -26,7 +26,8 @@ import type {
     NftOptions,
 } from '../transactionOptions';
 import type {
-    ParticipationEventId, ParticipationEventRegistrationOptions,
+    ParticipationEventId,
+    ParticipationEventRegistrationOptions,
     ParticipationEventType,
 } from '../participation';
 
