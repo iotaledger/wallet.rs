@@ -992,10 +992,10 @@ impl WalletMessageHandler {
                 .await
             }
             #[cfg(feature = "participation")]
-            AccountMethod::RegisterParticipationEvent { event_id, nodes } => {
+            AccountMethod::RegisterParticipationEvents { options } => {
                 convert_async_panics(|| async {
-                    let event_and_nodes = account_handle.register_participation_event(event_id, nodes).await?;
-                    Ok(Response::ParticipationEvent(Some(event_and_nodes)))
+                    let events = account_handle.register_participation_events(&options).await?;
+                    Ok(Response::ParticipationEvents(events))
                 })
                 .await
             }

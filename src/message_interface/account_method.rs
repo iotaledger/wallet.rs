@@ -44,6 +44,7 @@ use crate::{
     message_interface::dtos::{AddressWithAmountDto, AddressWithMicroAmountDto},
     AddressAndNftId, AddressNativeTokens,
 };
+use crate::account::operations::participation::ParticipationEventRegistrationOptions;
 
 /// Each public account method.
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -421,13 +422,11 @@ pub enum AccountMethod {
     /// Stores participation information locally and returns the event.
     ///
     /// This will NOT store the node url and auth inside the client options.
-    /// Expected response: [`ParticipationEvent`](crate::message_interface::Response::ParticipationEvent)
+    /// Expected response: [`ParticipationEvents`](crate::message_interface::Response::ParticipationEvents)
     #[cfg(feature = "participation")]
     #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
-    RegisterParticipationEvent {
-        #[serde(rename = "eventId")]
-        event_id: ParticipationEventId,
-        nodes: Vec<Node>,
+    RegisterParticipationEvents {
+        options: ParticipationEventRegistrationOptions,
     },
     /// Removes a previously registered participation event from local storage.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)

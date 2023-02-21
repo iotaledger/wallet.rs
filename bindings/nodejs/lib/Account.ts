@@ -31,7 +31,7 @@ import type {
     ParticipationEventId,
     ParticipationEventStatus,
     ParticipationEventType,
-    ParticipationEventWithNodes,
+    ParticipationEventWithNodes, ParticipationEventRegistrationOptions, ParticipationEventMap,
 } from '../types';
 import type { SignedTransactionEssence } from '../types/signedTransactionEssence';
 import type {
@@ -443,9 +443,7 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
-    async getParticipationEvents(): Promise<{
-        [eventId: ParticipationEventId]: ParticipationEventWithNodes;
-    }> {
+    async getParticipationEvents(): Promise<ParticipationEventMap> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -845,17 +843,15 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
-    async registerParticipationEvent(
-        eventId: ParticipationEventId,
-        nodes: Node[],
-    ): Promise<ParticipationEventWithNodes> {
+    async registerParticipationEvents(
+        options: ParticipationEventRegistrationOptions,
+    ): Promise<ParticipationEventMap> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'registerParticipationEvent',
+                name: 'registerParticipationEvents',
                 data: {
-                    eventId,
-                    nodes,
+                    options,
                 },
             },
         );

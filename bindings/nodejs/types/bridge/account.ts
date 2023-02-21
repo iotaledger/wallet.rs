@@ -26,7 +26,7 @@ import type {
     NftOptions,
 } from '../transactionOptions';
 import type {
-    ParticipationEventId,
+    ParticipationEventId, ParticipationEventRegistrationOptions,
     ParticipationEventType,
 } from '../participation';
 
@@ -260,11 +260,10 @@ export type __PrepareTransactionMethod__ = {
     };
 };
 
-export type __RegisterParticipationEventMethod__ = {
-    name: 'registerParticipationEvent';
+export type __RegisterParticipationEventsMethod__ = {
+    name: 'registerParticipationEvents';
     data: {
-        eventId: ParticipationEventId;
-        nodes: Node[];
+        options: ParticipationEventRegistrationOptions;
     };
 };
 

@@ -11,38 +11,45 @@ use iota_client::{
     Client,
 };
 
-use crate::account::{operations::participation::ParticipationEventWithNodes, AccountHandle};
+use crate::account::{operations::participation::{ParticipationEventRegistrationOptions, ParticipationEventWithNodes}, AccountHandle};
 
 impl AccountHandle {
-    /// Stores participation information locally and returns the event.
+    /// Stores participation information for the given events locally and returns them all.
     ///
     /// This will NOT store the node url and auth inside the client options.
-    pub async fn register_participation_event(
-        &self,
-        id: ParticipationEventId,
-        nodes: Vec<Node>,
-    ) -> crate::Result<ParticipationEventWithNodes> {
-        let mut client_builder = Client::builder().with_ignore_node_health();
-        for node in &nodes {
-            client_builder = client_builder.with_node_auth(node.url.as_str(), node.auth.clone())?;
-        }
-        let client = client_builder.finish()?;
+    pub async fn register_participation_events(&self, options: &ParticipationEventRegistrationOptions) -> crate::Result<HashMap<ParticipationEventId, ParticipationEventWithNodes>> {
+        let client = Client::builder().with_ignore_node_health().with_node_auth(options.node.url.as_str(), options.node.auth.clone())?.finish()?;
 
-        let event_data = client.event(&id).await?;
-
-        let event_with_nodes = ParticipationEventWithNodes {
-            id,
-            data: event_data,
-            nodes,
+        let events_to_register = match &options.events_to_register {
+            Some(events_to_register_) => if events_to_register_.len() == 0 {
+                self.get_participation_event_ids(&options.node, Some(ParticipationEventType::Voting)).await?
+            } else {
+                events_to_register_.clone()
+            },
+            None => self.get_participation_event_ids(&options.node, Some(ParticipationEventType::Voting)).await?,
         };
 
-        self.storage_manager
-            .lock()
-            .await
-            .insert_participation_event(self.read().await.index, event_with_nodes.clone())
-            .await?;
+        let mut registered_participation_events = HashMap::new();
+        for event_id in events_to_register {
+            if options.events_to_ignore.as_ref().unwrap().contains(&event_id) {
+                continue;
+            } else {
+                let event_data = client.event(&event_id).await?;
+                let event_with_node = ParticipationEventWithNodes {
+                    id: event_id,
+                    data: event_data,
+                    nodes: vec![options.node.clone()],
+                };
+                self.storage_manager
+                    .lock()
+                    .await
+                    .insert_participation_event(self.read().await.index, event_with_node.clone())
+                    .await?;
+                registered_participation_events.insert(event_id, event_with_node.clone());
+            }
+        }
 
-        Ok(event_with_nodes)
+        Ok(registered_participation_events)
     }
 
     /// Removes a previously registered participation event from local storage.
