@@ -65,6 +65,7 @@ impl AccountManager {
 
     /// Update the authentication for a node.
     pub async fn update_node_auth(&self, url: Url, auth: Option<NodeAuth>) -> crate::Result<()> {
+        log::debug!("[update_node_auth]");
         let mut client_options = self.client_options.write().await;
 
         if let Some(primary_node) = &client_options.node_manager_builder.primary_node {
@@ -137,25 +138,29 @@ impl AccountManager {
         }
         client_options.node_manager_builder.nodes = new_nodes;
 
-        let new_client = client_options.clone().finish()?;
-
-        let mut accounts = self.accounts.write().await;
-        for account in accounts.iter_mut() {
-            account.update_account_with_new_client(new_client.clone()).await?;
-        }
+        let new_client_options = client_options.clone();
+        // Need to drop client_options here to prevent a deadlock
+        drop(client_options);
 
         #[cfg(feature = "storage")]
         {
             // Update account manager data with new client options
             let account_manager_builder = AccountManagerBuilder::from_account_manager(self)
                 .await
-                .with_client_options(client_options.clone());
+                .with_client_options(new_client_options.clone());
 
             self.storage_manager
                 .lock()
                 .await
                 .save_account_manager_data(&account_manager_builder)
                 .await?;
+        }
+
+        let new_client = new_client_options.finish()?;
+
+        let mut accounts = self.accounts.write().await;
+        for account in accounts.iter_mut() {
+            account.update_account_with_new_client(new_client.clone()).await?;
         }
 
         Ok(())
