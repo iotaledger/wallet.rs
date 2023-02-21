@@ -12,7 +12,8 @@ use iota_client::{
 };
 
 use crate::account::{
-    operations::participation::{ParticipationEventRegistrationOptions, ParticipationEventWithNodes},
+    operations::participation::{ParticipationEventWithNodes},
+    types::participation::{ParticipationEventRegistrationOptions},
     AccountHandle,
 };
 

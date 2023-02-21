@@ -7,6 +7,9 @@ pub(crate) mod address;
 pub(crate) mod address_serde;
 pub(crate) mod balance;
 
+#[cfg(feature = "participation")]
+pub mod participation;
+
 use std::str::FromStr;
 
 use crypto::keys::slip10::Chain;

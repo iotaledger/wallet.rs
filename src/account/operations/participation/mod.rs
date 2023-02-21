@@ -37,16 +37,16 @@ pub struct AccountParticipationOverview {
     pub participations: HashMap<ParticipationEventId, HashMap<OutputId, TrackedParticipation>>,
 }
 
-/// Options when registering participation events.
-/// If `events_to_register` is an empty `Vec` or `None`,
-/// then every event being tracked by the node will be registered.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ParticipationEventRegistrationOptions {
-    node: Node,
-    events_to_register: Option<Vec<ParticipationEventId>>,
-    events_to_ignore: Option<Vec<ParticipationEventId>>,
-}
+// /// Options when registering participation events.
+// /// If `events_to_register` is an empty `Vec` or `None`,
+// /// then every event being tracked by the node will be registered.
+// #[derive(Debug, Clone, Serialize, Deserialize)]
+// #[serde(rename_all = "camelCase")]
+// pub struct ParticipationEventRegistrationOptions {
+//     node: Node,
+//     events_to_register: Option<Vec<ParticipationEventId>>,
+//     events_to_ignore: Option<Vec<ParticipationEventId>>,
+// }
 
 /// A participation event with the provided client nodes.
 #[derive(Debug, Clone, Serialize, Deserialize)]
