@@ -21,6 +21,8 @@ use iota_client::{
 };
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "participation")]
+use crate::account::types::participation::ParticipationEventRegistrationOptions;
 use crate::{
     account::{
         handle::FilterOptions,
@@ -43,10 +45,6 @@ use crate::{
     },
     message_interface::dtos::{AddressWithAmountDto, AddressWithMicroAmountDto},
     AddressAndNftId, AddressNativeTokens,
-};
-#[cfg(feature = "participation")]
-use crate::{
-    account::types::participation::ParticipationEventRegistrationOptions,
 };
 
 /// Each public account method.

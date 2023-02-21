@@ -68,11 +68,13 @@ async fn main() -> Result<()> {
         auth: None,
         disabled: false,
     };
-    account.register_participation_events(&ParticipationEventRegistrationOptions {
-        node,
-        events_to_ignore: Some(vec![event_id]),
-        events_to_register: None,
-    }).await?;
+    account
+        .register_participation_events(&ParticipationEventRegistrationOptions {
+            node,
+            events_to_ignore: Some(vec![event_id]),
+            events_to_register: None,
+        })
+        .await?;
 
     let registered_participation_events = account.get_participation_events().await?;
 

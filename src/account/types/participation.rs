@@ -1,9 +1,5 @@
-use iota_client::{
-    api_types::plugins::participation::types::ParticipationEventId,
-    node_manager::node::Node,
-};
-
-use serde::{Serialize, Deserialize};
+use iota_client::{api_types::plugins::participation::types::ParticipationEventId, node_manager::node::Node};
+use serde::{Deserialize, Serialize};
 
 /// Options when registering participation events.
 /// If `events_to_register` is an empty `Vec` or `None`,
