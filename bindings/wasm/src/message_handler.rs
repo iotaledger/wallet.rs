@@ -85,7 +85,7 @@ pub async fn listen(
     let mut event_types = vec![];
     for i in 0..vec.length() {
         let event_type = vec.get(i).as_string().unwrap();
-        let wallet_event_type = WalletEventType::try_from(event_type.as_str()).map_err(|e| Err(e))?;
+        let wallet_event_type = WalletEventType::try_from(event_type.as_str()).map_err(JsValue::from)?;
         event_types.push(wallet_event_type);
     }
 
