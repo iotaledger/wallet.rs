@@ -220,6 +220,9 @@ impl AccountHandle {
             return Err(crate::Error::NftNotFoundInUnspentOutputs);
         };
 
+        // Remove potentially existing features.
+        first_output_builder = first_output_builder.with_features(vec![]);
+
         // Set new address unlock condition
         first_output_builder = first_output_builder.with_unlock_conditions(vec![UnlockCondition::Address(
             AddressUnlockCondition::new(Address::try_from_bech32(options.recipient_address.clone())?.1),
@@ -233,20 +236,20 @@ impl AccountHandle {
 
         if let Some(features) = options.features {
             if let Some(tag) = features.tag {
-                first_output_builder = first_output_builder.replace_feature(Feature::Tag(TagFeature::new(
+                first_output_builder = first_output_builder.add_feature(Feature::Tag(TagFeature::new(
                     prefix_hex::decode(&tag).map_err(|_| DtoError::InvalidField("tag"))?,
                 )?));
             }
 
             if let Some(metadata) = features.metadata {
-                first_output_builder = first_output_builder.replace_feature(Feature::Metadata(MetadataFeature::new(
+                first_output_builder = first_output_builder.add_feature(Feature::Metadata(MetadataFeature::new(
                     prefix_hex::decode(&metadata).map_err(|_| DtoError::InvalidField("metadata"))?,
                 )?));
             }
 
             if let Some(sender) = features.sender {
                 first_output_builder = first_output_builder
-                    .replace_feature(Feature::Sender(SenderFeature::new(Address::try_from_bech32(sender)?.1)))
+                    .add_feature(Feature::Sender(SenderFeature::new(Address::try_from_bech32(sender)?.1)))
             }
 
             if let Some(issuer) = features.issuer {
