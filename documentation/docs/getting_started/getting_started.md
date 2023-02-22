@@ -45,5 +45,5 @@ some testnet tokens through the [Shimmer Faucet](https://faucet.testnet.shimmer.
 ## Available Programming Languages
 
 The wallet.rs library is written in [Rust](./rust.mdx), and also has convenient bindings
-in [Node.js](./nodejs.mdx), [Java](./java.mdx) and  [Python](./python.mdx). Each of these languages has specific
+in [Node.js](./nodejs.mdx), [Java](./java.mdx) and [Python](./python.mdx). Each of these languages has specific
 instructions you will need to follow to use wallet.rs in your project. 
