@@ -46,22 +46,24 @@ impl AccountHandle {
 
         let mut registered_participation_events = HashMap::new();
         for event_id in events_to_register {
-            if options.events_to_ignore.as_ref().unwrap().contains(&event_id) {
-                continue;
-            } else {
-                let event_data = client.event(&event_id).await?;
-                let event_with_node = ParticipationEventWithNodes {
-                    id: event_id,
-                    data: event_data,
-                    nodes: vec![options.node.clone()],
-                };
-                self.storage_manager
-                    .lock()
-                    .await
-                    .insert_participation_event(self.read().await.index, event_with_node.clone())
-                    .await?;
-                registered_participation_events.insert(event_id, event_with_node.clone());
+            if let Some(events_to_ignore) = &options.events_to_ignore {
+                if events_to_ignore.contains(&event_id) {
+                    continue;
+                }
             }
+
+            let event_data = client.event(&event_id).await?;
+            let event_with_node = ParticipationEventWithNodes {
+                id: event_id,
+                data: event_data,
+                nodes: vec![options.node.clone()],
+            };
+            self.storage_manager
+                .lock()
+                .await
+                .insert_participation_event(self.read().await.index, event_with_node.clone())
+                .await?;
+            registered_participation_events.insert(event_id, event_with_node.clone());
         }
 
         Ok(registered_participation_events)
