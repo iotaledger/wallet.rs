@@ -7,8 +7,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # using macos-11 because of rocksdb
-        os: [macos-11, ubuntu-latest, windows-latest]
+        os: [macos-latest, ubuntu-latest, windows-latest]
         python-version: ['3.8', '3.9', '3.10', '3.11']
 
     steps:
@@ -20,7 +19,7 @@ jobs:
 
       - name: Get current date
         run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-        if: matrix.os == 'macos-11' || matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'macos-latest' || matrix.os == 'ubuntu-latest'
 
       - name: Get current date
         if: matrix.os == 'windows-2019'
@@ -62,7 +61,7 @@ jobs:
       # Set custom deployment target because of rocksdb
       - name: Set deployment target (macOS)
         run: echo "MACOSX_DEPLOYMENT_TARGET=10.14" >> $GITHUB_ENV 
-        if: matrix.os == 'macos-11'
+        if: matrix.os == 'macos-latest'
 
       - name: Install required packages (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
@@ -71,13 +70,13 @@ jobs:
           sudo apt-get install libudev-dev libusb-1.0-0-dev
 
       - name: Build wheels
-        if: matrix.os == 'macos-11' || matrix.os == 'windows-latest'
+        if: matrix.os == 'macos-latest' || matrix.os == 'windows-latest'
         uses: PyO3/maturin-action@v1
         with:
           args: --release --out dist -m bindings/python/Cargo.toml -i python${{ matrix.python-version }}
 
       - name: Build wheels for --target aarch64-apple-darwin
-        if: matrix.os == 'macos-11'
+        if: matrix.os == 'macos-latest'
         uses: PyO3/maturin-action@v1
         with:
           args: --target aarch64-apple-darwin --release --out dist -m bindings/python/Cargo.toml -i python${{ matrix.python-version }}
