@@ -31,7 +31,7 @@ impl AccountHandle {
 
         let events_to_register = match &options.events_to_register {
             Some(events_to_register_) => {
-                if events_to_register_.len() == 0 {
+                if events_to_register_.is_empty() {
                     self.get_participation_event_ids(&options.node, Some(ParticipationEventType::Voting))
                         .await?
                 } else {
