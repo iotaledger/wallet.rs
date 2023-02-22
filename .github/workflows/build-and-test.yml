@@ -294,6 +294,11 @@ jobs:
       run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
       if: matrix.os == 'windows-latest'
 
+    # Set custom deployment target because of rocksdb
+    - name: Set deployment target (macOS)
+      run: echo "MACOSX_DEPLOYMENT_TARGET=10.14" >> $GITHUB_ENV 
+      if: matrix.os == 'macos-latest'
+
     - name: Get current date
       run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
       if: matrix.os == 'macos-latest' || matrix.os == 'ubuntu-latest'
