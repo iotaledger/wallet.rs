@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `Account::get_participation_overview()` with multiple events and different nodes;
 - `prepare_nft_output` uses newly provided tag/metadata instead of previous ones from unspent output;
+- `Account::claim_outputs()` when the account has no basic outputs available;
 
 ## 1.0.0-rc.5 - 2023-02-09
 
