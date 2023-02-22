@@ -11,38 +11,62 @@ use iota_client::{
     Client,
 };
 
-use crate::account::{operations::participation::ParticipationEventWithNodes, AccountHandle};
+use crate::account::{
+    operations::participation::ParticipationEventWithNodes,
+    types::participation::ParticipationEventRegistrationOptions, AccountHandle,
+};
 
 impl AccountHandle {
-    /// Stores participation information locally and returns the event.
+    /// Stores participation information for the given events locally and returns them all.
     ///
     /// This will NOT store the node url and auth inside the client options.
-    pub async fn register_participation_event(
+    pub async fn register_participation_events(
         &self,
-        id: ParticipationEventId,
-        nodes: Vec<Node>,
-    ) -> crate::Result<ParticipationEventWithNodes> {
-        let mut client_builder = Client::builder().with_ignore_node_health();
-        for node in &nodes {
-            client_builder = client_builder.with_node_auth(node.url.as_str(), node.auth.clone())?;
-        }
-        let client = client_builder.finish()?;
+        options: &ParticipationEventRegistrationOptions,
+    ) -> crate::Result<HashMap<ParticipationEventId, ParticipationEventWithNodes>> {
+        let client = Client::builder()
+            .with_ignore_node_health()
+            .with_node_auth(options.node.url.as_str(), options.node.auth.clone())?
+            .finish()?;
 
-        let event_data = client.event(&id).await?;
-
-        let event_with_nodes = ParticipationEventWithNodes {
-            id,
-            data: event_data,
-            nodes,
+        let events_to_register = match &options.events_to_register {
+            Some(events_to_register_) => {
+                if events_to_register_.is_empty() {
+                    self.get_participation_event_ids(&options.node, Some(ParticipationEventType::Voting))
+                        .await?
+                } else {
+                    events_to_register_.clone()
+                }
+            }
+            None => {
+                self.get_participation_event_ids(&options.node, Some(ParticipationEventType::Voting))
+                    .await?
+            }
         };
 
-        self.storage_manager
-            .lock()
-            .await
-            .insert_participation_event(self.read().await.index, event_with_nodes.clone())
-            .await?;
+        let mut registered_participation_events = HashMap::new();
+        for event_id in events_to_register {
+            if let Some(events_to_ignore) = &options.events_to_ignore {
+                if events_to_ignore.contains(&event_id) {
+                    continue;
+                }
+            }
 
-        Ok(event_with_nodes)
+            let event_data = client.event(&event_id).await?;
+            let event_with_node = ParticipationEventWithNodes {
+                id: event_id,
+                data: event_data,
+                nodes: vec![options.node.clone()],
+            };
+            self.storage_manager
+                .lock()
+                .await
+                .insert_participation_event(self.read().await.index, event_with_node.clone())
+                .await?;
+            registered_participation_events.insert(event_id, event_with_node.clone());
+        }
+
+        Ok(registered_participation_events)
     }
 
     /// Removes a previously registered participation event from local storage.
@@ -84,9 +108,14 @@ impl AccountHandle {
     /// Retrieves IDs of all events tracked by the client options node.
     pub async fn get_participation_event_ids(
         &self,
+        node: &Node,
         event_type: Option<ParticipationEventType>,
     ) -> crate::Result<Vec<ParticipationEventId>> {
-        Ok(self.client.events(event_type).await?.event_ids)
+        let client = Client::builder()
+            .with_ignore_node_health()
+            .with_node_auth(node.url.as_str(), node.auth.clone())?
+            .finish()?;
+        Ok(client.events(event_type).await?.event_ids)
     }
 
     /// Retrieves the latest status of a given participation event.

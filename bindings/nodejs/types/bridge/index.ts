@@ -33,7 +33,7 @@ import type {
     __PrepareOutputMethod__,
     __PrepareSendAmountMethod__,
     __PrepareTransactionMethod__,
-    __RegisterParticipationEventMethod__,
+    __RegisterParticipationEventsMethod__,
     __RequestFundsFromFaucetMethod__,
     __RetryTransactionUntilIncludedMethod__,
     __SendAmountMethod__,
@@ -125,7 +125,7 @@ export type __AccountMethod__ =
     | __PrepareOutputMethod__
     | __PrepareSendAmountMethod__
     | __PrepareTransactionMethod__
-    | __RegisterParticipationEventMethod__
+    | __RegisterParticipationEventsMethod__
     | __RequestFundsFromFaucetMethod__
     | __RetryTransactionUntilIncludedMethod__
     | __SendAmountMethod__

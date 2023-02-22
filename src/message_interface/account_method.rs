@@ -21,6 +21,8 @@ use iota_client::{
 };
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "participation")]
+use crate::account::types::participation::ParticipationEventRegistrationOptions;
 use crate::{
     account::{
         handle::FilterOptions,
@@ -421,13 +423,11 @@ pub enum AccountMethod {
     /// Stores participation information locally and returns the event.
     ///
     /// This will NOT store the node url and auth inside the client options.
-    /// Expected response: [`ParticipationEvent`](crate::message_interface::Response::ParticipationEvent)
+    /// Expected response: [`ParticipationEvents`](crate::message_interface::Response::ParticipationEvents)
     #[cfg(feature = "participation")]
     #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
-    RegisterParticipationEvent {
-        #[serde(rename = "eventId")]
-        event_id: ParticipationEventId,
-        nodes: Vec<Node>,
+    RegisterParticipationEvents {
+        options: ParticipationEventRegistrationOptions,
     },
     /// Removes a previously registered participation event from local storage.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
@@ -448,6 +448,7 @@ pub enum AccountMethod {
     #[cfg(feature = "participation")]
     #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
     GetParticipationEventIds {
+        node: Node,
         #[serde(rename = "eventType")]
         event_type: Option<ParticipationEventType>,
     },

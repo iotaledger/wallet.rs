@@ -27,6 +27,7 @@ import type {
 } from '../transactionOptions';
 import type {
     ParticipationEventId,
+    ParticipationEventRegistrationOptions,
     ParticipationEventType,
 } from '../participation';
 
@@ -260,11 +261,10 @@ export type __PrepareTransactionMethod__ = {
     };
 };
 
-export type __RegisterParticipationEventMethod__ = {
-    name: 'registerParticipationEvent';
+export type __RegisterParticipationEventsMethod__ = {
+    name: 'registerParticipationEvents';
     data: {
-        eventId: ParticipationEventId;
-        nodes: Node[];
+        options: ParticipationEventRegistrationOptions;
     };
 };
 
@@ -393,6 +393,7 @@ export type __GetParticipationEventMethod__ = {
 export type __GetParticipationEventIdsMethod__ = {
     name: 'getParticipationEventIds';
     data: {
+        node: Node,
         eventType?: ParticipationEventType;
     };
 };

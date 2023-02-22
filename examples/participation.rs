@@ -11,6 +11,7 @@ use iota_client::{
     request_funds_from_faucet, Url,
 };
 use iota_wallet::{
+    account::types::participation::ParticipationEventRegistrationOptions,
     account_manager::AccountManager,
     iota_client::constants::SHIMMER_COIN_TYPE,
     secret::{mnemonic::MnemonicSecretManager, SecretManager},
@@ -62,36 +63,22 @@ async fn main() -> Result<()> {
 
     let event_id =
         ParticipationEventId::from_str("0x80f57f6368933b61af9b3d8e1b152cf5d23bf4537f6362778b0a7302a7000d48")?;
-    let event_nodes = vec![Node {
+    let node = Node {
         url: Url::parse("http://localhost:14265").map_err(iota_client::Error::Url)?,
         auth: None,
         disabled: false,
-    }];
-
-    account.register_participation_event(event_id, event_nodes).await?;
+    };
+    account
+        .register_participation_events(&ParticipationEventRegistrationOptions {
+            node,
+            events_to_ignore: Some(vec![event_id]),
+            events_to_register: None,
+        })
+        .await?;
 
     let registered_participation_events = account.get_participation_events().await?;
 
     println!("registered events: {registered_participation_events:?}");
-
-    // Update nodes.
-    account
-        .register_participation_event(
-            event_id,
-            vec![
-                Node {
-                    url: Url::parse("http://localhost:14265").map_err(iota_client::Error::Url)?,
-                    auth: None,
-                    disabled: false,
-                },
-                Node {
-                    url: Url::parse("http://localhost:14265").map_err(iota_client::Error::Url)?,
-                    auth: None,
-                    disabled: false,
-                },
-            ],
-        )
-        .await?;
 
     let event = account.get_participation_event(event_id).await;
     println!("event: {event:?}");

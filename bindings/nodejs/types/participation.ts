@@ -24,6 +24,12 @@ export interface ParticipationEvent {
     data: ParticipationEventData;
 }
 
+export interface ParticipationEventRegistrationOptions {
+    node: Node;
+    eventsToRegister?: ParticipationEventId[];
+    eventsToIgnore?: ParticipationEventId[];
+}
+
 export interface ParticipationEventWithNodes {
     id: ParticipationEventId;
     data: ParticipationEventData;
@@ -31,6 +37,10 @@ export interface ParticipationEventWithNodes {
 }
 
 export type ParticipationEventId = string;
+
+export type ParticipationEventMap = {
+    [id: ParticipationEventId]: ParticipationEventWithNodes
+}
 
 export interface ParticipationEventStatus {
     milestoneIndex: number;
