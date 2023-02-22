@@ -30,7 +30,7 @@ use crate::{
 };
 
 /// Options to filter outputs
-#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq, Hash)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, Eq, PartialEq, Hash)]
 pub struct FilterOptions {
     /// Filter all outputs where the booked milestone index is below the specified timestamp
     #[serde(rename = "lowerBoundBookedTimestamp")]
