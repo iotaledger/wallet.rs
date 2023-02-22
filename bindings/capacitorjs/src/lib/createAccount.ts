@@ -47,7 +47,7 @@ import type {
 type MessageHandler = Awaited<ReturnType<typeof MessageHandler>>
 
 /** The Account factory function. */
-export function Account(accountMeta: AccountMeta, messageHandler: MessageHandler) {
+export function createAccount(accountMeta: AccountMeta, messageHandler: MessageHandler) {
     
     return {
         /**

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { MessageHandler } from './MessageHandler';
-import { Account } from './Account';
+import { createAccount } from './createAccount';
 
 import type {
     AccountId,
@@ -22,8 +22,10 @@ import type {
     GenerateAddressOptions,
 } from '../types';
 
+type Account = ReturnType<typeof createAccount>
+
 /** The AccountManager class. */
-export async function AccountManager(options: AccountManagerOptions) {
+export async function createAccountManager(options: AccountManagerOptions) {
     
     let id: AccountId
     
@@ -106,7 +108,7 @@ export async function AccountManager(options: AccountManagerOptions) {
                 cmd: 'createAccount',
                 payload,
             });
-            return new Account(JSON.parse(response).payload, messageHandler);
+            return createAccount(JSON.parse(response).payload, messageHandler);
         },
 
         /**
@@ -154,7 +156,7 @@ export async function AccountManager(options: AccountManagerOptions) {
                 payload: accountId,
             });
 
-            const account = new Account(
+            const account = createAccount(
                 JSON.parse(response).payload,
                 messageHandler,
             );
@@ -186,7 +188,7 @@ export async function AccountManager(options: AccountManagerOptions) {
             const accounts: Account[] = [];
 
             for (const account of payload) {
-                accounts.push(new Account(account, messageHandler));
+                accounts.push(createAccount(account, messageHandler));
             }
             return accounts;
         },
@@ -307,7 +309,7 @@ export async function AccountManager(options: AccountManagerOptions) {
             const accounts: Account[] = [];
 
             for (const account of JSON.parse(response).payload) {
-                accounts.push(new Account(account, messageHandler));
+                accounts.push(createAccount(account, messageHandler));
             }
             return accounts;
         },

@@ -3,9 +3,9 @@
 
 import { AccountId, CreateAccountPayload } from '../types/account'
 import { AccountManagerOptions } from '../types'
-import { AccountManager } from './AccountManager'
+import { createAccountManager } from './createAccountManager'
 
-type ProfileManager = Awaited<ReturnType<typeof AccountManager>>
+type ProfileManager = Awaited<ReturnType<typeof createAccountManager>>
 type RecoverAccounts = NonNullable<Parameters<ProfileManager['recoverAccounts']>>
 interface ProfileManagers {
     [key: string]: ProfileManager
@@ -14,7 +14,7 @@ const profileManagers: ProfileManagers = {}
 // @ts-ignore
 const WalletApi: any = {
     async createAccountManager(id: AccountId, options: AccountManagerOptions) {
-        const manager = await AccountManager(options)
+        const manager = await createAccountManager(options)
         manager.id = id
         profileManagers[id] = manager
         return manager
