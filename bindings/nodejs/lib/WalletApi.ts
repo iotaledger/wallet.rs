@@ -12,7 +12,7 @@ interface ProfileManagers {
 }
 const profileManagers: ProfileManagers = {}
 // @ts-ignore
-function WalletApi(): any {
+export function WalletApi(): any {
     return {
         async createAccountManager(id: AccountId, options: AccountManagerOptions) {
             const manager = await AccountManager(options)
@@ -48,4 +48,3 @@ function WalletApi(): any {
     }
 }
 
-export { WalletApi }
