@@ -1,9 +1,11 @@
+// Copyright 2023 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use iota_client::{api_types::plugins::participation::types::ParticipationEventId, node_manager::node::Node};
 use serde::{Deserialize, Serialize};
 
 /// Options when registering participation events.
-/// If `events_to_register` is an empty `Vec` or `None`,
-/// then every event being tracked by the node will be registered.
+/// If `events_to_register` is an empty `Vec` or `None`, then every event being tracked by the node will be registered.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ParticipationEventRegistrationOptions {

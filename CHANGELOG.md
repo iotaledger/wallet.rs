@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 1.0.0-rc.6 - 2023-XX-XX
 
+### Added
+
+- `ParticipationEventRegistrationOptions` type;
+
 ### Changed
 
 - Updated dependencies;
@@ -28,6 +32,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `StorageManager::get_account_manager_data` return type changed to `Result<Option<AccountManagerBuilder>>`;
 - `Features::{tag, metadata}` encoded as hex strings instead of utf-8 strings for NFT Outputs;
 - Added `#[serde(rename = "transactionOptions")]` to `PrepareOutput::transaction_options`;
+- `AccountMethod::RegisterParticipationEvent` renamed to `AccountMethod::RegisterParticipationEvents`,
+  contains a `ParticipationEventRegistrationOptions` and expects a `ParticipationEvents` response;
+- `AccountMethod::GetParticipationEventIds` now also contains a `Node`;
 
 ### Removed
 

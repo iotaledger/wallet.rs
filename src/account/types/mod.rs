@@ -6,7 +6,6 @@ pub(crate) mod address;
 /// Custom de/serialization for [`address::AddressWrapper`]
 pub(crate) mod address_serde;
 pub(crate) mod balance;
-
 #[cfg(feature = "participation")]
 pub mod participation;
 
