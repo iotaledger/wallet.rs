@@ -9,7 +9,7 @@ use iota_client::block::address::Address;
 use iota_wallet::{
     account::{Assets, Features, OutputOptions, Unlocks},
     iota_client::block::output::{NativeToken, NftId, TokenId},
-    Result, U256,
+    NftOptions, Result, U256,
 };
 
 #[tokio::test]
@@ -369,6 +369,73 @@ async fn output_preparation() -> Result<()> {
     assert_eq!(output.amount(), 53900);
     // address, sdr, expiration
     assert_eq!(output.unlock_conditions().unwrap().len(), 3);
+
+    common::tear_down(storage_path)
+}
+
+#[ignore]
+#[tokio::test]
+async fn prepare_nft_output_features_update() -> Result<()> {
+    let storage_path = "test-storage/output_preparation";
+    common::setup(storage_path)?;
+
+    let manager = common::make_manager(storage_path, None, None).await?;
+    let accounts = &common::create_accounts_with_funds(&manager, 1).await?;
+    let address = accounts[0].addresses().await?[0].address().to_bech32();
+
+    let nft_options = vec![NftOptions {
+        address: Some(address.clone()),
+        sender: Some(address.clone()),
+        metadata: Some(b"some nft metadata".to_vec()),
+        tag: Some(b"some nft tag".to_vec()),
+        issuer: Some(address.clone()),
+        immutable_metadata: Some(b"some immutable nft metadata".to_vec()),
+    }];
+
+    let transaction = accounts[0].mint_nfts(nft_options, None).await.unwrap();
+    accounts[0]
+        .retry_transaction_until_included(&transaction.transaction_id, None, None)
+        .await?;
+
+    let nft_id = *accounts[0].sync(None).await?.nfts.first().unwrap();
+
+    let nft = accounts[0]
+        .prepare_output(
+            OutputOptions {
+                recipient_address: address,
+                amount: 1_000_000,
+                assets: Some(Assets {
+                    native_tokens: None,
+                    nft_id: Some(nft_id),
+                }),
+                features: Some(Features {
+                    metadata: Some("0x2a".to_string()),
+                    tag: None,
+                    issuer: None,
+                    sender: None,
+                }),
+                unlocks: None,
+                storage_deposit: None,
+            },
+            None,
+        )
+        .await?
+        .as_nft()
+        .clone();
+
+    assert_eq!(nft.amount(), 1_000_000);
+    assert_eq!(nft.address(), accounts[0].addresses().await?[0].address().as_ref());
+    assert!(nft.features().sender().is_none());
+    assert!(nft.features().tag().is_none());
+    assert_eq!(nft.features().metadata().unwrap().data(), &[42]);
+    assert_eq!(
+        nft.immutable_features().metadata().unwrap().data(),
+        b"some immutable nft metadata"
+    );
+    assert_eq!(
+        nft.immutable_features().issuer().unwrap().address(),
+        accounts[0].addresses().await?[0].address().as_ref()
+    );
 
     common::tear_down(storage_path)
 }
