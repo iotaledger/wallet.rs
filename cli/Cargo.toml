@@ -20,13 +20,4 @@ log = { version = "0.4.17", default-features = false }
 prefix-hex = { version = "0.5.0", default-features = false, features = [ "std" ] }
 serde_json = { version = "1.0.93", default-features = false }
 thiserror = { version = "1.0.38", default-features = false }
-tokio = { version = "1.25.0", default-features = false, features = [ "fs" ] }    
-
-[profile.release]
-panic = "abort"
-
-[profile.production]
-codegen-units = 1
-inherits = "release"
-lto = true
-strip = "symbols"
+tokio = { version = "1.25.0", default-features = false, features = [ "fs" ] }
