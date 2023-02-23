@@ -1,0 +1,17 @@
+{
+    "name": "cli-wallet",
+    "version": "0.0.0",
+    "private": true,
+    "scripts": {
+        "start": "iota-wiki start",
+        "build": "iota-wiki build"
+    },
+    "license": "UNLICENSED",
+    "engines": {
+        "node": ">=14.14.0"
+    },
+    "devDependencies": {
+        "@iota-community/iota-wiki-cli": "iota-community/iota-wiki-cli#v2"
+    },
+    "packageManager": "yarn@3.2.0"
+}
