@@ -259,15 +259,26 @@ impl AccountHandle {
                 // build new output with same amount, nft_id, immutable/feature blocks and native tokens, just
                 // updated address unlock conditions
 
-                let nft_output = NftOutputBuilder::from(nft_output)
-                    .with_minimum_storage_deposit(rent_structure.clone())
-                    .with_nft_id(nft_output.nft_id_non_null(&output_data.output_id))
-                    .with_unlock_conditions([UnlockCondition::Address(AddressUnlockCondition::new(
-                        first_account_address.address.inner,
-                    ))])
-                    // Set native tokens empty, we will collect them from all inputs later
-                    .with_native_tokens([])
-                    .finish_output(token_supply)?;
+                let nft_output = if possible_additional_inputs.is_empty() {
+                    // Only update address and nft id if we have no additional inputs which can provide the storage
+                    // deposit for the remaining amount and possible NTs
+                    NftOutputBuilder::from(nft_output)
+                        .with_nft_id(nft_output.nft_id_non_null(&output_data.output_id))
+                        .with_unlock_conditions([UnlockCondition::Address(AddressUnlockCondition::new(
+                            first_account_address.address.inner,
+                        ))])
+                        .finish_output(token_supply)?
+                } else {
+                    NftOutputBuilder::from(nft_output)
+                        .with_minimum_storage_deposit(rent_structure.clone())
+                        .with_nft_id(nft_output.nft_id_non_null(&output_data.output_id))
+                        .with_unlock_conditions([UnlockCondition::Address(AddressUnlockCondition::new(
+                            first_account_address.address.inner,
+                        ))])
+                        // Set native tokens empty, we will collect them from all inputs later
+                        .with_native_tokens([])
+                        .finish_output(token_supply)?
+                };
 
                 // Add required amount for the new output
                 required_amount_for_nfts += nft_output.amount();
@@ -282,8 +293,12 @@ impl AccountHandle {
         };
 
         // Check if the new amount is enough for the storage deposit, otherwise increase it to this
-        let mut required_amount = required_amount_for_nfts
-            + minimum_storage_deposit_basic_output(&rent_structure, &option_native_token, token_supply)?;
+        let mut required_amount = if possible_additional_inputs.is_empty() {
+            required_amount_for_nfts
+        } else {
+            required_amount_for_nfts
+                + minimum_storage_deposit_basic_output(&rent_structure, &option_native_token, token_supply)?
+        };
 
         let mut additional_inputs = Vec::new();
         if available_amount < required_amount {
@@ -343,14 +358,20 @@ impl AccountHandle {
         }
 
         // Create output with claimed values
-        outputs_to_send.push(
-            BasicOutputBuilder::new_with_amount(available_amount - required_amount_for_nfts)?
-                .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                    first_account_address.address.inner,
-                )))
-                .with_native_tokens(new_native_tokens.finish()?)
-                .finish_output(token_supply)?,
-        );
+        if available_amount - required_amount_for_nfts > 0 {
+            outputs_to_send.push(
+                BasicOutputBuilder::new_with_amount(available_amount - required_amount_for_nfts)?
+                    .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+                        first_account_address.address.inner,
+                    )))
+                    .with_native_tokens(new_native_tokens.finish()?)
+                    .finish_output(token_supply)?,
+            );
+        } else if !new_native_tokens.finish()?.is_empty() {
+            return Err(crate::Error::Client(
+                iota_client::Error::NoBalanceForNativeTokenRemainder.into(),
+            ));
+        }
 
         let claim_tx = self
             .finish_transaction(
