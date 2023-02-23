@@ -380,7 +380,7 @@ async fn prepare_nft_output_features_update() -> Result<()> {
     common::setup(storage_path)?;
 
     let manager = common::make_manager(storage_path, None, None).await?;
-    let accounts = &common::create_accounts_with_funds(&manager, 2).await?;
+    let accounts = &common::create_accounts_with_funds(&manager, 1).await?;
     let address = accounts[0].addresses().await?[0].address().to_bech32();
 
     let nft_options = vec![NftOptions {
