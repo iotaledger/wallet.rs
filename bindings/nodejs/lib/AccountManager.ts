@@ -375,4 +375,14 @@ export class AccountManager {
             payload: { mnemonic },
         });
     }
+
+    /**
+     * Update the authentication for the provided node.
+     */
+    async updateNodeAuth(url: string, auth?: Auth): Promise<void> {
+        await this.messageHandler.sendMessage({
+            cmd: 'updateNodeAuth',
+            payload: { url, auth },
+        });
+    }
 }

@@ -355,6 +355,13 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            Message::UpdateNodeAuth { url, auth } => {
+                convert_async_panics(|| async {
+                    self.account_manager.update_node_auth(url, auth).await?;
+                    Ok(Response::Ok(()))
+                })
+                .await
+            }
         };
 
         let response = match response {

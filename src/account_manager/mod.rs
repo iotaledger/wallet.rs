@@ -9,7 +9,7 @@ use std::sync::{
     Arc,
 };
 
-use iota_client::{secret::SecretManager, Client, NodeInfoWrapper};
+use iota_client::{secret::SecretManager, Client};
 #[cfg(feature = "events")]
 use tokio::sync::Mutex;
 use tokio::sync::RwLock;
@@ -122,55 +122,6 @@ impl AccountManager {
         self.secret_manager.clone()
     }
 
-    /// Sets the client options for all accounts and sets the new bech32_hrp for the addresses.
-    pub async fn set_client_options(&self, options: ClientOptions) -> crate::Result<()> {
-        log::debug!("[set_client_options]");
-
-        let mut client_options = self.client_options.write().await;
-        *client_options = options.clone();
-        drop(client_options);
-
-        let new_client = options.clone().finish()?;
-
-        let mut accounts = self.accounts.write().await;
-        for account in accounts.iter_mut() {
-            account.update_account_with_new_client(new_client.clone()).await?;
-        }
-
-        #[cfg(feature = "storage")]
-        {
-            // Update account manager data with new client options
-            let account_manager_builder = AccountManagerBuilder::from_account_manager(self)
-                .await
-                .with_client_options(options);
-
-            self.storage_manager
-                .lock()
-                .await
-                .save_account_manager_data(&account_manager_builder)
-                .await?;
-        }
-        Ok(())
-    }
-
-    /// Get the used client options
-    pub async fn get_client_options(&self) -> ClientOptions {
-        self.client_options.read().await.clone()
-    }
-
-    /// Get the node info
-    pub async fn get_node_info(&self) -> crate::Result<NodeInfoWrapper> {
-        let accounts = self.accounts.read().await;
-
-        // Try to get the Client from the first account and only build the Client if we have no account
-        let node_info_wrapper = match &accounts.first() {
-            Some(account) => account.client.get_info().await?,
-            None => self.client_options.read().await.clone().finish()?.get_info().await?,
-        };
-
-        Ok(node_info_wrapper)
-    }
-
     /// Get the balance of all accounts added together
     pub async fn balance(&self) -> crate::Result<AccountBalance> {
         let accounts = self.accounts.read().await;
@@ -199,25 +150,6 @@ impl AccountManager {
         let balance = add_balances(balances)?;
 
         Ok(balance)
-    }
-
-    /// Stop the background syncing of the accounts
-    pub async fn stop_background_syncing(&self) -> crate::Result<()> {
-        log::debug!("[stop_background_syncing]");
-        // immediately return if not running
-        if self.background_syncing_status.load(Ordering::Relaxed) == 0 {
-            return Ok(());
-        }
-        // send stop request
-        self.background_syncing_status.store(2, Ordering::Relaxed);
-        // wait until it stopped
-        while self.background_syncing_status.load(Ordering::Relaxed) != 0 {
-            #[cfg(target_family = "wasm")]
-            gloo_timers::future::TimeoutFuture::new(10).await;
-            #[cfg(not(target_family = "wasm"))]
-            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
-        }
-        Ok(())
     }
 
     /// Listen to wallet events, empty vec will listen to all events

@@ -7,10 +7,6 @@
 - [Account](classes/Account.md)
 - [AccountManager](classes/AccountManager.md)
 
-### Functions
-
-- [initLogger](api_ref.md#initlogger)
-
 ### Type Aliases
 
 - [AccountId](api_ref.md#accountid)
@@ -90,24 +86,6 @@
 - [LedgerDeviceType](enums/LedgerDeviceType.md)
 - [InclusionState](enums/InclusionState.md)
 
-## Functions
-
-### initLogger
-
-▸ **initLogger**(`config`): `any`
-
-Function to create wallet logs
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `config` | [`LoggerConfig`](interfaces/LoggerConfig.md) |
-
-#### Returns
-
-`any`
-
 ## Type Aliases
 
 ### AccountId
@@ -138,8 +116,7 @@ Basic Auth or JWT
 | Name | Type |
 | :------ | :------ |
 | `jwt?` | `string` |
-| `username?` | `string` |
-| `password?` | `string` |
+| `basicAuthNamePwd?` | [`string`, `string`] |
 
 ___
 

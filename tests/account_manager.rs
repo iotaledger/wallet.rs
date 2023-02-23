@@ -17,7 +17,6 @@ use iota_wallet::{
     ClientOptions, Result,
 };
 
-#[cfg(feature = "storage")]
 #[tokio::test]
 async fn update_client_options() -> Result<()> {
     let storage_path = "test-storage/update_client_options";
@@ -225,6 +224,33 @@ async fn account_manager_address_generation() -> Result<()> {
             "smr1qrpwecegav7eh0z363ca69laxej64rrt4e3u0rtycyuh0mam3vq3ulygj9p"
         );
     }
+
+    common::tear_down(storage_path)
+}
+
+#[tokio::test]
+async fn update_node_auth() -> Result<()> {
+    let storage_path = "test-storage/update_node_auth";
+    common::setup(storage_path)?;
+
+    let manager = common::make_manager(storage_path, None, Some(common::NODE_OTHER)).await?;
+
+    let node_auth = iota_client::node_manager::node::NodeAuth {
+        jwt: Some("jwt".to_string()),
+        basic_auth_name_pwd: None,
+    };
+    manager
+        .update_node_auth(Url::parse(common::NODE_OTHER).unwrap(), Some(node_auth.clone()))
+        .await?;
+
+    let client_options = manager.get_client_options().await;
+
+    let node = client_options.node_manager_builder.nodes.into_iter().next().unwrap();
+    if let NodeDto::Node(node) = node {
+        assert_eq!(node.auth.expect("missing provided auth"), node_auth);
+    } else {
+        panic!("Wrong node dto");
+    };
 
     common::tear_down(storage_path)
 }

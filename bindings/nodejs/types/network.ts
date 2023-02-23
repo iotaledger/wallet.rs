@@ -9,8 +9,7 @@ export enum Network {
 /** Basic Auth or JWT */
 export type Auth = {
     jwt?: string;
-    username?: string;
-    password?: string;
+    basicAuthNamePwd?: [string, string];
 };
 
 /** Information about the network and client */

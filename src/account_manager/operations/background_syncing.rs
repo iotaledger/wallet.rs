@@ -72,4 +72,23 @@ impl AccountManager {
         });
         Ok(())
     }
+
+    /// Stop the background syncing of the accounts
+    pub async fn stop_background_syncing(&self) -> crate::Result<()> {
+        log::debug!("[stop_background_syncing]");
+        // immediately return if not running
+        if self.background_syncing_status.load(Ordering::Relaxed) == 0 {
+            return Ok(());
+        }
+        // send stop request
+        self.background_syncing_status.store(2, Ordering::Relaxed);
+        // wait until it stopped
+        while self.background_syncing_status.load(Ordering::Relaxed) != 0 {
+            #[cfg(target_family = "wasm")]
+            gloo_timers::future::TimeoutFuture::new(10).await;
+            #[cfg(not(target_family = "wasm"))]
+            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        }
+        Ok(())
+    }
 }

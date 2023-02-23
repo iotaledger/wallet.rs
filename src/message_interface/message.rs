@@ -5,7 +5,6 @@ use std::fmt::{Debug, Formatter, Result};
 #[cfg(feature = "stronghold")]
 use std::path::PathBuf;
 
-use iota_client::{node_manager::node::NodeAuth, secret::GenerateAddressOptions};
 use serde::{Deserialize, Serialize};
 
 use super::account_method::AccountMethod;
@@ -13,6 +12,7 @@ use super::account_method::AccountMethod;
 use crate::events::types::{WalletEvent, WalletEventType};
 use crate::{
     account::{operations::syncing::SyncOptions, types::AccountIdentifier},
+    iota_client::{node_manager::node::NodeAuth, secret::GenerateAddressOptions, Url},
     ClientOptions,
 };
 
@@ -216,6 +216,14 @@ pub enum Message {
         #[serde(rename = "eventTypes")]
         event_types: Vec<WalletEventType>,
     },
+    /// Update the authentication for the provided node.
+    /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
+    UpdateNodeAuth {
+        /// Node url
+        url: Url,
+        /// Authentication options
+        auth: Option<NodeAuth>,
+    },
 }
 
 // Custom Debug implementation to not log secrets
@@ -310,6 +318,7 @@ impl Debug for Message {
             }
             #[cfg(feature = "events")]
             Self::ClearListeners { event_types } => write!(f, "ClearListeners{{ event_types: {event_types:?} }}"),
+            Self::UpdateNodeAuth { url, auth: _ } => write!(f, "UpdateNodeAuth{{ url: {url}, auth: <omitted> }}"),
         }
     }
 }
