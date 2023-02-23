@@ -1,5 +1,25 @@
 # Changelog
 
+## \[2.0.3-rc.22]
+
+- Change `Auth::{username, password}` to `Auth::basicAuthNamePwd`;
+  - [f776d094](https://github.com/iotaledger/wallet.rs/commit/f776d094a57fd71f9f1bb36b625a3192fd8dbf09) Add update node auth ([#1881](https://github.com/iotaledger/wallet.rs/pull/1881)) on 2023-02-23
+- Fix `Account::claimOutputs()` when no basic outputs are available.
+  - [33069b6e](https://github.com/iotaledger/wallet.rs/commit/33069b6ef1b1709eac2dc65a59a92b9414d38353) Fix claim_outputs when no basic outputs are available ([#1885](https://github.com/iotaledger/wallet.rs/pull/1885)) on 2023-02-23
+- Fixed `Account::getParticipationOverview()` with multiple events and different nodes;
+  - [890214b8](https://github.com/iotaledger/wallet.rs/commit/890214b88c4a7683414087f62ca1e89249e062e7) Fix get_participation_overview() ([#1867](https://github.com/iotaledger/wallet.rs/pull/1867)) on 2023-02-17
+- Tag and metadata are expected as a hex string for NFTs as well
+  - [9ebfa335](https://github.com/iotaledger/wallet.rs/commit/9ebfa3355af46be72ffbac62a465be122b8c325e) fix: expect hex tag and metadata when preparing NFT outputs ([#1876](https://github.com/iotaledger/wallet.rs/pull/1876)) on 2023-02-21
+- Renamed `registerParticipationEvent` to `registerParticipationEvents` and added a `ParticipationEventRegistrationOptions` parameter.
+  Added a `node` parameter to the `getParticipationEventIds` API method.
+  - [f5a8b5bd](https://github.com/iotaledger/wallet.rs/commit/f5a8b5bd8d24dcc2cd15d5144c353c06db854553) feat: change `register_participation_event` method ([#1882](https://github.com/iotaledger/wallet.rs/pull/1882)) on 2023-02-22
+- `prepareOutputs` uses newly provided tag/metadata instead of previous ones from unspent NFT output.
+  - [cb358c89](https://github.com/iotaledger/wallet.rs/commit/cb358c8920a48013ddd59c5df9110148ade5b0ec) Replace features in prepare NFT ([#1880](https://github.com/iotaledger/wallet.rs/pull/1880)) on 2023-02-22
+- Removed clearListener from the direct bindings in favour of the message interface.
+  - [5566baa3](https://github.com/iotaledger/wallet.rs/commit/5566baa3242cf30c1db627a5fc00bbf26f4274fd) Add wasm bindings ([#1855](https://github.com/iotaledger/wallet.rs/pull/1855)) on 2023-02-17
+- Add `AccountManger::updateNodeAuth()`.
+  - [f776d094](https://github.com/iotaledger/wallet.rs/commit/f776d094a57fd71f9f1bb36b625a3192fd8dbf09) Add update node auth ([#1881](https://github.com/iotaledger/wallet.rs/pull/1881)) on 2023-02-23
+
 ## \[2.0.3-rc.21]
 
 - Stop endlessly waiting in `AccountManager::stopBackgroundSync()` if background syncing wasn't started;
