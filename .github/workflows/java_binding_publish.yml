@@ -79,7 +79,7 @@ jobs:
       - name: Read build.gradle
         shell: bash
         id: read-build-gradle
-        working-directory: bindings/java/
+        working-directory: wallet/bindings/java/
         run: |
           buildGradle="$(cat build.gradle)"
           buildGradle=$(echo $buildGradle | tr '\n' ' ')
@@ -101,7 +101,7 @@ jobs:
 
       - name: Build JAR for default target and an additional JAR that does not contain the native library
         shell: bash
-        working-directory: bindings/java/
+        working-directory: wallet/bindings/java/
         run: |
           chmod +x gradlew
           ./gradlew build jarWithoutNativeLibs
@@ -109,7 +109,7 @@ jobs:
       - name: Build JAR for aarch64-apple-darwin target
         if: matrix.os == 'macos-latest'
         shell: bash
-        working-directory: bindings/java/
+        working-directory: wallet/bindings/java/
         run: |
           rustup target add aarch64-apple-darwin
           ./gradlew build -PbuildTarget=aarch64-apple-darwin
@@ -117,7 +117,7 @@ jobs:
       - name: Get filename for tag construction
         shell: bash
         id: filename
-        working-directory: bindings/java/
+        working-directory: wallet/bindings/java/
         run: |
           cd lib/build/libs/
           fileName="$(ls | grep -m 1 jar)"
@@ -128,7 +128,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
-            bindings/java/lib/build/libs/*.jar
+            wallet/bindings/java/lib/build/libs/*.jar
           tag_name: ${{ steps.construct-tag.outputs.tag }}
           append_body: true
           prerelease: true
@@ -140,7 +140,7 @@ jobs:
           ORG_GRADLE_PROJECT_base64EncodedAsciiArmoredSigningKey: ${{ secrets.ORG_GRADLE_PROJECT_BASE64_ENCODED_ASCII_ARMORED_SIGNING_KEY }}
           ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.ORG_GRADLE_PROJECT_SIGNING_PASSWORD }}
         shell: bash
-        working-directory: bindings/java/
+        working-directory: wallet/bindings/java/
         run: |
           ./gradlew publishToSonatype
           if [ "$RUNNER_OS" == "macOS" ];
@@ -215,20 +215,20 @@ jobs:
 
       - name: Install cargo-ndk
         shell: bash
-        working-directory: bindings/java/
+        working-directory: wallet/bindings/java/
         run: |
           cargo install cargo-ndk@2.12.4
 
       - name: Add the Android targets
         shell: bash
-        working-directory: bindings/java/
+        working-directory: wallet/bindings/java/
         run: |
           rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android
 
       - name: Read build.gradle
         shell: bash
         id: read-build-gradle
-        working-directory: bindings/java/
+        working-directory: wallet/bindings/java/
         run: |
           buildGradle="$(cat build.gradle)"
           buildGradle=$(echo $buildGradle | tr '\n' ' ')
@@ -250,14 +250,14 @@ jobs:
 
       - name: Build for the Android targets
         shell: bash
-        working-directory: bindings/java/
+        working-directory: wallet/bindings/java/
         run: |
           cd lib/native
           cargo ndk -t arm64-v8a -t armeabi-v7a -t x86 -t x86_64 -o ./cargo-ndk/jniLibs build --release
 
       - name: Copy libc++_shared.so to the correct location
         shell: bash
-        working-directory: bindings/java/lib/native/cargo-ndk/jniLibs
+        working-directory: wallet/bindings/java/lib/native/cargo-ndk/jniLibs
         run: |
           echo $ANDROID_NDK_HOME
           cp $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so arm64-v8a/libc++_shared.so
@@ -270,14 +270,14 @@ jobs:
         with:
           type: 'zip'
           filename: 'jniLibs.zip'
-          directory: bindings/java/lib/native/cargo-ndk
+          directory: wallet/bindings/java/lib/native/cargo-ndk
 
       - name: Upload ZIP to Github
         uses: softprops/action-gh-release@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
-            bindings/java/lib/native/cargo-ndk/jniLibs.zip
+            wallet/bindings/java/lib/native/cargo-ndk/jniLibs.zip
           tag_name: ${{ steps.construct-tag.outputs.tag }}
           append_body: true
           prerelease: true

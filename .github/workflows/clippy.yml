@@ -46,11 +46,11 @@ jobs:
       uses: actions-rs/clippy-check@v1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        args: --manifest-path ./bindings/nodejs/Cargo.toml --all-features --all-targets -- -D warnings
+        args: --manifest-path ./wallet/bindings/nodejs/Cargo.toml --all-features --all-targets -- -D warnings
         name: nodejs-binding
     - name: python binding clippy check
       uses: actions-rs/clippy-check@v1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        args: --manifest-path ./bindings/python/Cargo.toml --all-features --all-targets -- -D warnings
+        args: --manifest-path ./wallet/bindings/python/Cargo.toml --all-features --all-targets -- -D warnings
         name: python-binding
