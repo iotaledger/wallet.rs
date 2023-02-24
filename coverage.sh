@@ -19,7 +19,7 @@ BINARIES=""
 
 for file in \
   $( \
-    RUSTFLAGS="-Zinstrument-coverage" \
+    RUSTFLAGS="-C instrument-coverage" \
       cargo +nightly test --tests --all --all-features --no-run --message-format=json --manifest-path wallet/Cargo.toml -- --include-ignored \
         | jq -r "select(.profile.test == true) | .filenames[]" \
         | grep -v dSYM - \
