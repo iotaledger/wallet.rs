@@ -34,8 +34,8 @@ https://www.rust-lang.org/tools/install
 ### 2. Compile
 
 ```sh
-git clone https://github.com/iotaledger/cli-wallet -b develop
-cd cli-wallet
+git clone https://github.com/iotaledger/wallet.rs -b develop
+cd wallet.rs/cli
 cargo build --profile production
 ```
 
