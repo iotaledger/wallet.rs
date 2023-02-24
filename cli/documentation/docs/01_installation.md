@@ -4,7 +4,7 @@
 
 ### 1. Download
 
-Go to https://github.com/iotaledger/cli-wallet/releases and download the latest release binary for your platform.
+Go to https://github.com/iotaledger/wallet.rs/releases and download the latest CLI release binary for your platform.
 
 `cli-wallet` is available on `linux`, `macos` and `windows`.
 

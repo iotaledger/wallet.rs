@@ -52,6 +52,7 @@ jobs:
     needs: create-release
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
+    working-directory: cli
 
     strategy:
       fail-fast: false

@@ -81,7 +81,7 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: test
-        args: --tests --all-features -- --ignored
+        args: --tests --all-features --manifest-path wallet/Cargo.toml -- --ignored
     
     - name: Tear down private tangle
       if: always()

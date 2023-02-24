@@ -96,7 +96,7 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: test
-        args: --all-features --release
+        args: --all-features --release --manifest-path wallet/Cargo.toml
 
   nodejs-bindings:
     runs-on: ${{ matrix.os }}

@@ -22,3 +22,4 @@ online_walletdb
 addresses.json
 prepared_transaction.json
 signed_transaction.json
+wallet/test-storage
