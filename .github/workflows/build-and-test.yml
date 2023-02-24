@@ -96,7 +96,7 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: test
-        args: --all-features --release
+        args: --all-features --release --manifest-path wallet/Cargo.toml
 
   nodejs-bindings:
     runs-on: ${{ matrix.os }}
@@ -181,8 +181,8 @@ jobs:
         # https://github.com/iotaledger/wallet.rs/pull/467/checks?check_run_id=2214108362#step:11:41
         with:
           path: |
-            bindings/nodejs/target
-            bindings/nodejs/artifacts.json
+            wallet/bindings/nodejs/target
+            wallet/bindings/nodejs/artifacts.json
           # Add date to the cache to keep it up to date
           key: ${{ matrix.os }}-stable-cargo-build-node-target-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
           # Restore from outdated cache for speed
@@ -192,11 +192,11 @@ jobs:
 
       - name: Build nodejs binding
         run: npm ci --build-from-source
-        working-directory: bindings/nodejs
+        working-directory: wallet/bindings/nodejs
 
       - name: Run npm test
         run: npm test
-        working-directory: bindings/nodejs
+        working-directory: wallet/bindings/nodejs
 
   swift-bindings:
     runs-on: ${{ matrix.os }}
@@ -250,10 +250,10 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --all-features --release --manifest-path bindings/swift/Cargo.toml
+          args: --all-features --release --manifest-path wallet/bindings/swift/Cargo.toml
 
       - name: Move built library to xcode folder
-        run: mv "$GITHUB_WORKSPACE/bindings/swift/target/release/libiota_wallet.dylib" "$GITHUB_WORKSPACE/bindings/swift/xcode/IotaWallet/iota_wallet"
+        run: mv "$GITHUB_WORKSPACE/wallet/bindings/swift/target/release/libiota_wallet.dylib" "$GITHUB_WORKSPACE/wallet/bindings/swift/xcode/IotaWallet/iota_wallet"
 
       - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@v1
@@ -264,7 +264,7 @@ jobs:
         run: |
           set -o pipefail
           xcodebuild build -scheme IotaWallet -project IotaWallet.xcodeproj -destination 'platform=macOS' | xcpretty
-        working-directory: bindings/swift/xcode/IotaWallet
+        working-directory: wallet/bindings/swift/xcode/IotaWallet
 
   python-bindings:
     runs-on: ${{ matrix.os }}
@@ -348,7 +348,7 @@ jobs:
     - name: Cache python binding cargo target
       uses: actions/cache@v3
       with:
-        path: bindings/python/target
+        path: wallet/bindings/python/target
         # Add date to the cache to keep it up to date
         key: ${{ matrix.os }}-stable-cargo-build-python-target-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
         # Restore from outdated cache for speed
@@ -358,7 +358,7 @@ jobs:
 
     - name: Build and test python binding
       run: tox
-      working-directory: bindings/python
+      working-directory: wallet/bindings/python
 
   test-java:
     name: Test Java binding
@@ -433,7 +433,7 @@ jobs:
 
       - name: Test
         shell: bash
-        working-directory: bindings/java/
+        working-directory: wallet/bindings/java/
         run: |
           chmod +x gradlew
           ./gradlew test -i

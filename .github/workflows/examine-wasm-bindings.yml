@@ -7,7 +7,7 @@ on:
     paths:
       - ".github/workflows/examine-wasm-bindings.yml"
       - ".github/actions/**"
-      - "bindings/wasm/**"
+      - "wallet/bindings/wasm/**"
       # Watch the Rust core too
       - "src/**"
       - "Cargo.toml"
@@ -19,7 +19,7 @@ on:
     paths:
       - ".github/workflows/examine-wasm-bindings.yml"
       - ".github/actions/**"
-      - "bindings/wasm/**"
+      - "wallet/bindings/wasm/**"
       # Watch the Rust core too
       - "src/**"
       - "Cargo.toml"
@@ -52,7 +52,7 @@ jobs:
         with:
           toolchain: nightly
           target: wasm32-unknown-unknown
-          cache-root: bindings/wasm/
+          cache-root: wallet/bindings/wasm/
           cache-job-id: ${{ github.workflow }}-${{ github.job }}-${{ matrix.os }}-${{ matrix.node }}
           cache-hash: ${{ hashFiles('.github/workflows/examine-wasm-bindings.yml') }}
 
@@ -67,18 +67,18 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           cache: yarn
-          cache-dependency-path: bindings/wasm/yarn.lock
+          cache-dependency-path: wallet/bindings/wasm/yarn.lock
 
       - name: Run Yarn Install
-        working-directory: bindings/wasm/
+        working-directory: wallet/bindings/wasm/
         run: yarn install
 
       - name: Run Yarn Build
-        working-directory: bindings/wasm/
+        working-directory: wallet/bindings/wasm/
         run: yarn build
 
       - name: Run Yarn Test
-        working-directory: bindings/wasm/
+        working-directory: wallet/bindings/wasm/
         run: yarn test
 
   lint:
@@ -96,7 +96,7 @@ jobs:
           toolchain: beta
           target: wasm32-unknown-unknown
           components: clippy
-          cache-root: bindings/wasm/
+          cache-root: wallet/bindings/wasm/
           cache-job-id: ${{ github.workflow }}-${{ github.job }}
           cache-hash: ${{ hashFiles('.github/workflows/examine-wasm-bindings.yml') }}
 
@@ -104,22 +104,22 @@ jobs:
         uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          args: --manifest-path bindings/wasm/Cargo.toml --all-features --target=wasm32-unknown-unknown -- --deny warnings
+          args: --manifest-path wallet/bindings/wasm/Cargo.toml --all-features --target=wasm32-unknown-unknown -- --deny warnings
           name: Clippy Results for the Wasm Bindings
 
       - name: Setup Node.js
         uses: actions/setup-node@v2
         with:
           cache: yarn
-          cache-dependency-path: bindings/wasm/yarn.lock
+          cache-dependency-path: wallet/bindings/wasm/yarn.lock
           node-version: 16.x
 
       - name: Install Dependencies
-        working-directory: bindings/wasm/
+        working-directory: wallet/bindings/wasm/
         run: yarn
 
       - name: Lint
-        working-directory: bindings/wasm/
+        working-directory: wallet/bindings/wasm/
         run: yarn lint
 
   check-unused-deps:
@@ -137,7 +137,7 @@ jobs:
           toolchain: nightly
           target: wasm32-unknown-unknown
           install: cargo-udeps
-          cache-root: bindings/wasm/
+          cache-root: wallet/bindings/wasm/
           cache-job-id: ${{ github.workflow }}-${{ github.job }}
           cache-hash: ${{ hashFiles('.github/workflows/examine-wasm-bindings.yml') }}
 
@@ -145,7 +145,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: udeps
-          args: --manifest-path bindings/wasm/Cargo.toml --all-features --target=wasm32-unknown-unknown
+          args: --manifest-path wallet/bindings/wasm/Cargo.toml --all-features --target=wasm32-unknown-unknown
 
       # TODO: Check yarn too
 
@@ -176,7 +176,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: fmt
-          args: --manifest-path bindings/wasm/Cargo.toml --all -- --check
+          args: --manifest-path wallet/bindings/wasm/Cargo.toml --all -- --check
 
       - name: Run cargo-license-template
         uses: actions-rs/cargo@v1
@@ -188,15 +188,15 @@ jobs:
         uses: actions/setup-node@v2
         with:
           cache: yarn
-          cache-dependency-path: bindings/wasm/yarn.lock
+          cache-dependency-path: wallet/bindings/wasm/yarn.lock
           node-version: 16.x
 
       - name: Install Dependencies
-        working-directory: bindings/wasm/
+        working-directory: wallet/bindings/wasm/
         run: yarn
 
       - name: Format
-        working-directory: bindings/wasm/
+        working-directory: wallet/bindings/wasm/
         run: yarn format-check
 
   audit:
@@ -224,6 +224,6 @@ jobs:
           #
           # - RUSTSEC-2021-0145: `atty` potential unaligned read.
           #   - Waiting for https://github.com/mackwic/colored/pull/122 to be merged.
-          args: --file bindings/wasm/Cargo.lock --deny warnings --ignore RUSTSEC-2021-0145
+          args: --file wallet/bindings/wasm/Cargo.lock --deny warnings --ignore RUSTSEC-2021-0145
 
       # TODO: Check the JavaScript code too
