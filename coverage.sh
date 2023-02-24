@@ -7,7 +7,7 @@ mkdir coverage
 
 # Run tests with profiling instrumentation
 echo "Running instrumented unit tests..."
-RUSTFLAGS="-Zinstrument-coverage" LLVM_PROFILE_FILE="iota-wallet-%m.profraw" cargo +nightly test --tests --all --all-features -- --include-ignored
+RUSTFLAGS="-C instrument-coverage" LLVM_PROFILE_FILE="iota-wallet-%m.profraw" cargo +nightly test --tests --all-features --manifest-path wallet/Cargo.toml -- --include-ignored
 
 # Merge all .profraw files into "iota-wallet.profdata"
 echo "Merging coverage data..."
@@ -20,7 +20,7 @@ BINARIES=""
 for file in \
   $( \
     RUSTFLAGS="-Zinstrument-coverage" \
-      cargo +nightly test --tests --all --all-features --no-run --message-format=json -- --include-ignored \
+      cargo +nightly test --tests --all --all-features --no-run --message-format=json --manifest-path wallet/Cargo.toml -- --include-ignored \
         | jq -r "select(.profile.test == true) | .filenames[]" \
         | grep -v dSYM - \
   ); \
