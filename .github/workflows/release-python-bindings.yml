@@ -51,16 +51,16 @@ jobs:
         uses: KyleMayes/install-llvm-action@32c4866ebb71e0949e8833eb49beeebed48532bd
         if: matrix.os == 'windows-latest'
         with:
-         version: "11.0"
-         directory: ${{ runner.temp }}/llvm
-      
+          version: "11.0"
+          directory: ${{ runner.temp }}/llvm
+
       - name: Set LIBCLANG_PATH (Windows)
         if: matrix.os == 'windows-latest'
         run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
 
       # Set custom deployment target because of rocksdb
       - name: Set deployment target (macOS)
-        run: echo "MACOSX_DEPLOYMENT_TARGET=10.14" >> $GITHUB_ENV 
+        run: echo "MACOSX_DEPLOYMENT_TARGET=10.14" >> $GITHUB_ENV
         if: matrix.os == 'macos-latest'
 
       - name: Install required packages (Ubuntu)
@@ -96,25 +96,65 @@ jobs:
           name: wheels
           path: dist
 
+  build-wheels-docker:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3 # Required to mount the Github Workspace to a volume
+      - uses: addnab/docker-run-action@v3
+        with:
+          image: python:3.9.12-slim-bullseye
+          options: -v ${{ github.workspace }}:/root
+          run: |
+            cd root
+            mkdir dist
+
+            apt-get update 
+            apt-get install -y git 
+            apt-get install -y curl 
+            apt install -y build-essential 
+            apt install -y libudev-dev libusb-1.0-0-dev 
+            apt install -y pkg-config 
+            apt install -y clang 
+            curl https://sh.rustup.rs -sSf | sh -s -- -y 
+            . "$HOME/.cargo/env" 
+
+            cd wallet/bindings/python 
+            pip install -r requirements-dev.txt 
+            pip install patchelf
+            pip install maturin
+            maturin build --out ../../../dist --release
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v3
+        with:
+          name: wheels
+          path: dist
+
   release:
     name: Release
     runs-on: ubuntu-latest
-    needs: [ build-wheels ]
+    needs: [build-wheels-docker]
+    # needs: [build-wheels, build-wheels-docker]
     steps:
+      - uses: actions/checkout@v3
+      - name: Get tag name
+        id: tagname
+        run: |
+          cd wallet/bindings/python
+          tagName="iota-wallet-python-$(cargo read-manifest | jq -r '.version')"
+          echo $tagName
+          echo "TAG_NAME=$tagName" >> $GITHUB_OUTPUT
+
       - uses: actions/download-artifact@v3
         with:
           name: wheels
           path: wheels
-
       - run: ls -R
-
-      - name: Get tag name
-        shell: bash
-        id: tagname
-        run: |
-          cd wheels
-          tagName="$(ls | grep -m 1 win_amd64.whl | rev | cut -c 26- | rev)"
-          echo "TAG_NAME=$tagName" >> $GITHUB_OUTPUT
 
       - name: Upload Wheels to Github
         uses: softprops/action-gh-release@v1
@@ -129,10 +169,10 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Publish to PyPI
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-        run: |
-          pip install --upgrade twine
-          twine upload --skip-existing wheels/*
+      # - name: Publish to PyPI
+      #   env:
+      #     TWINE_USERNAME: __token__
+      #     TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+      #   run: |
+      #     pip install --upgrade twine
+      #     twine upload --skip-existing wheels/*
