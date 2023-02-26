@@ -5,7 +5,7 @@ import type { MessageHandler } from './MessageHandler'
 import type {
     AccountBalance,
     AccountMetadata,
-    AccountSyncOptions,
+    SyncOptions,
     AccountMeta,
     Address,
     AddressWithAmount,
@@ -20,14 +20,18 @@ import type {
     MintTokenTransaction,
     NativeTokenOptions,
     NftOptions,
+    Node,
     OutputData,
     OutputOptions,
     OutputsToClaim,
     PreparedTransactionData,
     Transaction,
     TransactionOptions,
-    IncomingTransactionData,
     ParticipationOverview,
+    ParticipationEventId,
+    ParticipationEventStatus,
+    ParticipationEventType,
+    ParticipationEventWithNodes, ParticipationEventRegistrationOptions, ParticipationEventMap,
 } from '../types'
 import type { SignedTransactionEssence } from '../types/signedTransactionEssence'
 import type {
@@ -62,8 +66,8 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                     name: 'buildAliasOutput',
                     data,
                 },
-            )
-            return JSON.parse(resp).payload
+            );
+            return JSON.parse(resp).payload;
         },
 
         /**
@@ -78,8 +82,8 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                     name: 'buildBasicOutput',
                     data,
                 },
-            )
-            return JSON.parse(resp).payload
+            );
+            return JSON.parse(resp).payload;
         },
 
         /**
@@ -96,8 +100,8 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                     name: 'buildFoundryOutput',
                     data,
                 },
-            )
-            return JSON.parse(resp).payload
+            );
+            return JSON.parse(resp).payload;
         },
 
         /**
@@ -112,8 +116,8 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                     name: 'buildNftOutput',
                     data,
                 },
-            )
-            return JSON.parse(resp).payload
+            );
+            return JSON.parse(resp).payload;
         },
 
         /**
@@ -141,8 +145,8 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         options: transactionOptions,
                     },
                 },
-            )
-            return JSON.parse(resp).payload
+            );
+            return JSON.parse(resp).payload;
         },
 
         /**
@@ -167,8 +171,8 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         options: transactionOptions,
                     },
                 },
-            )
-            return JSON.parse(resp).payload
+            );
+            return JSON.parse(resp).payload;
         },
 
         /**
@@ -186,8 +190,8 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         outputIdsToClaim: outputIds,
                     },
                 },
-            )
-            return JSON.parse(resp).payload
+            );
+            return JSON.parse(resp).payload;
         },
 
         /**
@@ -211,8 +215,8 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         outputConsolidationThreshold,
                     },
                 },
-            )
-            return JSON.parse(resp).payload
+            );
+            return JSON.parse(resp).payload;
         },
 
         /**
@@ -235,8 +239,8 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         options: transactionOptions,
                     },
                 },
-            )
-            return JSON.parse(resp).payload
+            );
+            return JSON.parse(resp).payload;
         },
 
         /**
@@ -263,8 +267,23 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         options: transactionOptions,
                     },
                 },
-            )
-            return JSON.parse(resp).payload
+            );
+            return JSON.parse(resp).payload;
+        },
+
+        async deregisterParticipationEvent(
+            eventId: ParticipationEventId,
+        ): Promise<void> {
+            const resp = await messageHandler.callAccountMethod(
+                accountMeta.index,
+                {
+                    name: 'deregisterParticipationEvent',
+                    data: {
+                        eventId,
+                    },
+                },
+            );
+            return JSON.parse(resp).payload;
         },
 
         /**
@@ -289,8 +308,8 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         options: transactionOptions,
                     },
                 },
-            )
-            return JSON.parse(resp).payload
+            );
+            return JSON.parse(resp).payload;
         },
 
         /**
@@ -314,8 +333,8 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         options: transactionOptions,
                     },
                 },
-            )
-            return JSON.parse(resp).payload
+            );
+            return JSON.parse(resp).payload;
         },
 
         /**
@@ -326,8 +345,8 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
         async generateAddress(
             options?: AddressGenerationOptions,
         ): Promise<Address> {
-            const addresses = await this.generateAddresses(1, options)
-            return addresses[0]
+            const addresses = await this.generateAddresses(1, options);
+            return addresses[0];
         },
 
         /**
@@ -349,8 +368,8 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         options,
                     },
                 },
-            )
-            return JSON.parse(response).payload
+            );
+            return JSON.parse(response).payload;
         },
 
         /**
@@ -363,9 +382,9 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                 {
                     name: 'getBalance',
                 },
-            )
+            );
 
-            return JSON.parse(response).payload
+            return JSON.parse(response).payload;
         },
 
         /**
@@ -382,8 +401,65 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         outputId,
                     },
                 },
-            )
-            return JSON.parse(response).payload
+            );
+            return JSON.parse(response).payload;
+        },
+
+        async getParticipationEvent(
+            eventId: ParticipationEventId,
+        ): Promise<ParticipationEventWithNodes> {
+            const response = await messageHandler.callAccountMethod(
+                accountMeta.index,
+                {
+                    name: 'getParticipationEvent',
+                    data: {
+                        eventId,
+                    },
+                },
+            );
+            return JSON.parse(response).payload;
+        },
+
+        async getParticipationEventIds(
+            node: Node,
+            eventType?: ParticipationEventType,
+        ): Promise<ParticipationEventId[]> {
+            const response = await messageHandler.callAccountMethod(
+                accountMeta.index,
+                {
+                    name: 'getParticipationEventIds',
+                    data: {
+                        node,
+                        eventType,
+                    },
+                },
+            );
+            return JSON.parse(response).payload;
+        },
+
+        async getParticipationEvents(): Promise<ParticipationEventMap> {
+            const response = await messageHandler.callAccountMethod(
+                accountMeta.index,
+                {
+                    name: 'getParticipationEvents',
+                },
+            );
+            return JSON.parse(response).payload;
+        },
+
+        async getParticipationEventStatus(
+            eventId: ParticipationEventId,
+        ): Promise<ParticipationEventStatus> {
+            const response = await messageHandler.callAccountMethod(
+                accountMeta.index,
+                {
+                    name: 'getParticipationEventStatus',
+                    data: {
+                        eventId,
+                    },
+                },
+            );
+            return JSON.parse(response).payload;
         },
 
         /**
@@ -401,8 +477,8 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         tokenId,
                     },
                 },
-            )
-            return JSON.parse(response).payload
+            );
+            return JSON.parse(response).payload;
         },
 
         /**
@@ -421,8 +497,8 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         outputsToClaim: outputs,
                     },
                 },
-            )
-            return JSON.parse(response).payload
+            );
+            return JSON.parse(response).payload;
         },
 
         /**
@@ -439,8 +515,8 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         transactionId,
                     },
                 },
-            )
-            return JSON.parse(response).payload
+            );
+            return JSON.parse(response).payload;
         },
 
         /**
@@ -451,7 +527,7 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
          */
         async getIncomingTransactionData(
             transactionId: string,
-        ): Promise<IncomingTransactionData> {
+        ): Promise<Transaction> {
             const response = await messageHandler.callAccountMethod(
                 accountMeta.index,
                 {
@@ -460,8 +536,8 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         transactionId,
                     },
                 },
-            )
-            return JSON.parse(response).payload
+            );
+            return JSON.parse(response).payload;
         },
 
         /**
@@ -474,9 +550,9 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                 {
                     name: 'addresses',
                 },
-            )
+            );
 
-            return JSON.parse(response).payload
+            return JSON.parse(response).payload;
         },
 
         /**
@@ -489,9 +565,9 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                 {
                     name: 'addressesWithUnspentOutputs',
                 },
-            )
+            );
 
-            return JSON.parse(response).payload
+            return JSON.parse(response).payload;
         },
 
         /**
@@ -506,9 +582,9 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                     name: 'outputs',
                     data: { filterOptions },
                 },
-            )
+            );
 
-            return JSON.parse(response).payload
+            return JSON.parse(response).payload;
         },
 
         /**
@@ -521,23 +597,23 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                 {
                     name: 'pendingTransactions',
                 },
-            )
-            return JSON.parse(response).payload
+            );
+            return JSON.parse(response).payload;
         },
 
         /**
          * List all incoming transactions of the account.
          * @returns The incoming transactions with their inputs.
          */
-        async incomingTransactions(): Promise<[string, IncomingTransactionData][]> {
+        async incomingTransactions(): Promise<[string, Transaction][]> {
             const response = await messageHandler.callAccountMethod(
                 accountMeta.index,
                 {
                     name: 'incomingTransactions',
                 },
-            )
+            );
 
-            return JSON.parse(response).payload
+            return JSON.parse(response).payload;
         },
 
         /**
@@ -550,9 +626,9 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                 {
                     name: 'transactions',
                 },
-            )
+            );
 
-            return JSON.parse(response).payload
+            return JSON.parse(response).payload;
         },
 
         /**
@@ -567,9 +643,9 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                     name: 'unspentOutputs',
                     data: { filterOptions },
                 },
-            )
+            );
 
-            return JSON.parse(response).payload
+            return JSON.parse(response).payload;
         },
 
         /**
@@ -581,7 +657,7 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                 alias: accountMeta.alias,
                 coinType: accountMeta.coinType,
                 index: accountMeta.index,
-            }
+            };
         },
 
         /**
@@ -598,8 +674,8 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         output,
                     },
                 },
-            )
-            return JSON.parse(response).payload
+            );
+            return JSON.parse(response).payload;
         },
 
         /**
@@ -628,9 +704,9 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         options: transactionOptions,
                     },
                 },
-            )
+            );
 
-            return JSON.parse(response).payload
+            return JSON.parse(response).payload;
         },
 
         /**
@@ -653,9 +729,9 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         options: transactionOptions,
                     },
                 },
-            )
+            );
 
-            return JSON.parse(response).payload
+            return JSON.parse(response).payload;
         },
 
         /**
@@ -678,9 +754,9 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         options: transactionOptions,
                     },
                 },
-            )
+            );
 
-            return JSON.parse(response).payload
+            return JSON.parse(response).payload;
         },
 
         /**
@@ -689,7 +765,7 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
          * below the minimum required storage deposit, by default the remaining
          * amount will automatically be added with a `StorageDepositReturn` `UnlockCondition`,
          * when setting the `ReturnStrategy` to `gift`, the full minimum required
-         * storage deposit will be sent  to the recipient. When the assets contain
+         * storage deposit will be sent to the recipient. When the assets contain
          * an nft id, the data from the existing `NftOutput` will be used, just with
          * the address unlock conditions replaced.
          * @param transactionOptions The options to define a `RemainderValueStrategy`
@@ -709,8 +785,8 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         transactionOptions,
                     },
                 },
-            )
-            return JSON.parse(response).payload
+            );
+            return JSON.parse(response).payload;
         },
 
         /**
@@ -733,8 +809,8 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         options,
                     },
                 },
-            )
-            return JSON.parse(response).payload
+            );
+            return JSON.parse(response).payload;
         },
 
         /**
@@ -757,8 +833,40 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         options,
                     },
                 },
-            )
-            return JSON.parse(response).payload
+            );
+            return JSON.parse(response).payload;
+        },
+
+        async registerParticipationEvents(
+            options: ParticipationEventRegistrationOptions,
+        ): Promise<ParticipationEventMap> {
+            const response = await messageHandler.callAccountMethod(
+                accountMeta.index,
+                {
+                    name: 'registerParticipationEvents',
+                    data: {
+                        options,
+                    },
+                },
+            );
+            return JSON.parse(response).payload;
+        },
+
+        /**
+         * Request funds from a faucet.
+         */
+        async requestFundsFromFaucet(
+            url: string,
+            address: string,
+        ): Promise<string> {
+            const response = await messageHandler.callAccountMethod(
+                accountMeta.index,
+                {
+                    name: 'requestFundsFromFaucet',
+                    data: { url, address },
+                },
+            );
+            return JSON.parse(response).payload;
         },
 
         /**
@@ -780,8 +888,8 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         maxAttempts,
                     },
                 },
-            )
-            return JSON.parse(response).payload
+            );
+            return JSON.parse(response).payload;
         },
 
         /**
@@ -804,9 +912,9 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         options: transactionOptions,
                     },
                 },
-            )
+            );
 
-            return JSON.parse(response).payload
+            return JSON.parse(response).payload;
         },
 
         /**
@@ -829,9 +937,9 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         options: transactionOptions,
                     },
                 },
-            )
+            );
 
-            return JSON.parse(response).payload
+            return JSON.parse(response).payload;
         },
 
         /**
@@ -854,9 +962,9 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         options: transactionOptions,
                     },
                 },
-            )
+            );
 
-            return JSON.parse(response).payload
+            return JSON.parse(response).payload;
         },
 
         /**
@@ -879,9 +987,9 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         options: transactionOptions,
                     },
                 },
-            )
+            );
 
-            return JSON.parse(response).payload
+            return JSON.parse(response).payload;
         },
 
         /**
@@ -904,18 +1012,22 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         options: transactionOptions,
                     },
                 },
-            )
+            );
 
-            return JSON.parse(response).payload
+            return JSON.parse(response).payload;
         },
 
+        /**
+         * Set the alias for the account
+         * @param alias The account alias to set.
+         */
         async setAlias(alias: string): Promise<void> {
             await messageHandler.callAccountMethod(accountMeta.index, {
                 name: 'setAlias',
                 data: {
                     alias,
                 },
-            })
+            });
         },
 
         /**
@@ -934,8 +1046,8 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         preparedTransactionData,
                     },
                 },
-            )
-            return JSON.parse(response).payload
+            );
+            return JSON.parse(response).payload;
         },
 
         /**
@@ -954,8 +1066,8 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         signedTransactionData,
                     },
                 },
-            )
-            return JSON.parse(response).payload
+            );
+            return JSON.parse(response).payload;
         },
 
         /**
@@ -964,7 +1076,7 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
          * @param options Optional synchronization options.
          * @returns The account balance.
          */
-        async sync(options?: AccountSyncOptions): Promise<AccountBalance> {
+        async sync(options?: SyncOptions): Promise<AccountBalance> {
             const resp = await messageHandler.callAccountMethod(
                 accountMeta.index,
                 {
@@ -973,11 +1085,14 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         options,
                     },
                 },
-            )
-            return JSON.parse(resp).payload
+            );
+            return JSON.parse(resp).payload;
         },
 
-        async vote(eventId: string, answers: number[]): Promise<Transaction> {
+        async vote(
+            eventId?: ParticipationEventId,
+            answers?: number[],
+        ): Promise<Transaction> {
             const resp = await messageHandler.callAccountMethod(
                 accountMeta.index,
                 {
@@ -987,11 +1102,13 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         answers,
                     },
                 },
-            )
-            return JSON.parse(resp).payload
+            );
+            return JSON.parse(resp).payload;
         },
 
-        async stopParticipating(eventId: string): Promise<Transaction> {
+        async stopParticipating(
+            eventId: ParticipationEventId,
+        ): Promise<Transaction> {
             const resp = await messageHandler.callAccountMethod(
                 accountMeta.index,
                 {
@@ -1000,8 +1117,8 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         eventId,
                     },
                 },
-            )
-            return JSON.parse(resp).payload
+            );
+            return JSON.parse(resp).payload;
         },
 
         async getVotingPower(): Promise<string> {
@@ -1010,8 +1127,8 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                 {
                     name: 'getVotingPower',
                 },
-            )
-            return JSON.parse(resp).payload
+            );
+            return JSON.parse(resp).payload;
         },
 
         async getParticipationOverview(): Promise<ParticipationOverview> {
@@ -1020,8 +1137,8 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                 {
                     name: 'getParticipationOverview',
                 },
-            )
-            return JSON.parse(resp).payload
+            );
+            return JSON.parse(resp).payload;
         },
 
         async increaseVotingPower(amount: string): Promise<Transaction> {
@@ -1033,8 +1150,8 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         amount,
                     },
                 },
-            )
-            return JSON.parse(resp).payload
+            );
+            return JSON.parse(resp).payload;
         },
 
         async decreaseVotingPower(amount: string): Promise<Transaction> {
@@ -1046,8 +1163,8 @@ export function createAccount(accountMeta: AccountMeta, messageHandler: MessageH
                         amount,
                     },
                 },
-            )
-            return JSON.parse(resp).payload
+            );
+            return JSON.parse(resp).payload;
         }
     }
 }
