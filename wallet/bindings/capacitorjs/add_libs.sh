@@ -1,17 +1,18 @@
 #!/bin/bash
 
-set -e
-rm -rf tmp && mkdir tmp && cd tmp
+# 🛑 temporarily hidden in favor of using the latest version of wallet.rs
 
-curl -SL --progress-bar --fail https://github.com/iotaledger/wallet.rs/releases/download/iota-wallet-java-1.0.0-rc.1-new/iota-wallet-1.0.0-rc.1-android.zip > iota-wallet.zip
-unzip iota-wallet.zip             
+# set -e
+# rm -rf tmp && mkdir tmp && cd tmp
 
-rm -rf ../android/src/main/jniLibs
-cp -r jniLibs ../android/src/main/jniLibs
+# curl -SL --progress-bar --fail https://github.com/iotaledger/wallet.rs/releases/download/iota-wallet-java-1.0.0-rc.1-new/iota-wallet-1.0.0-rc.1-android.zip > iota-wallet.zip
+# unzip iota-wallet.zip             
 
-curl -SL --progress-bar --fail https://github.com/iotaledger/wallet.rs/releases/download/iota-wallet-java-1.0.0-rc.1-new/iota-wallet-1.0.0-rc.1.jar > iota-wallet.jar
-rm -rf ../android/libs && mkdir -p ../android/libs             
-cp -r iota-wallet.jar ../android/libs
+# rm -rf ../android/src/main/jniLibs
+# cp -r jniLibs ../android/src/main/jniLibs
 
-cd .. && rm -rf tmp
-echo "success!"
+# curl -SL --progress-bar --fail https://github.com/iotaledger/wallet.rs/releases/download/iota-wallet-java-1.0.0-rc.1-new/iota-wallet-1.0.0-rc.1.jar > iota-wallet.jar
+# rm -rf ../android/libs && mkdir -p ../android/libs             
+# cp -r iota-wallet.jar ../android/libs
+
+# cd .. && rm -rf tmp
