@@ -5,7 +5,6 @@ import {
     sendMessageAsync,
     messageHandlerNew,
     listen as _listen,
-    clearListeners as _clearListeners,
     destroy as _destroy,
 } from './bindings';
 import type {
@@ -60,23 +59,11 @@ export async function MessageHandler(options?: AccountManagerOptions) {
             const Error = error ? {
                 name: error.toString(), 
                 message: error.cause?.toString() || ''
-            } : undefined
+            }: undefined
             callback(
                 Error,
                 result
             )
-        });
-    }
-
-    async function clearListeners(
-        eventTypes: EventType[]
-    ): Promise<void> {
-        await _clearListeners({ eventTypes, messageHandler }, ({ error, result }) => {
-            const Error = error ? {
-                name: error.toString(), 
-                message: error?.cause?.toString()
-            } : undefined
-            return Error || result
         });
     }
 
@@ -89,7 +76,6 @@ export async function MessageHandler(options?: AccountManagerOptions) {
         sendMessage,
         callAccountMethod,
         listen,
-        clearListeners,
         destroy
     }
 }
