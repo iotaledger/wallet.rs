@@ -184,24 +184,4 @@ public class IotaWalletMobile: CAPPlugin {
         call.resolve()
     }
 
-    @objc func clearListeners(_ call: CAPPluginCall) {
-        print("Capacitor call clearListeners received", call.jsObjectRepresentation)
-        guard let handler = call.getInt("messageHandler") else {
-            return call.reject("handler is required")
-        }
-        let messageHandler: OpaquePointer? = OpaquePointer(bitPattern: handler)
-        
-        guard let eventTypes = call.getArray("eventTypes") else {
-            return call.reject("eventTypes is required")
-        }
-        let eventChar = eventTypes.description.cString(using: .utf8)
-        
-        let contextResult = ContextResult(_call: call)
-        let context = Unmanaged<ContextResult>.passRetained(contextResult).toOpaque()
-        
-        iota_clear_listeners(
-            messageHandler, eventChar, contextResult.callback, context,
-            error_buffer, error_buffer_size
-        )
-    }
 }
