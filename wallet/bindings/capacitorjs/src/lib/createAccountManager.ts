@@ -6,20 +6,16 @@ import { createAccount } from './createAccount';
 
 import type {
     AccountId,
-    Auth,
-    EventType,
     AccountManagerOptions,
-    CreateAccountPayload,
-    NodeInfoWrapper,
-    ClientOptions,
     AccountSyncOptions,
-    WalletEvent,
-    LedgerNanoStatus,
-    Event,
-    EventId,
-    Node,
-    EventStatus,
+    Auth,
+    ClientOptions,
+    CreateAccountPayload,
+    EventType,
     GenerateAddressOptions,
+    LedgerNanoStatus,
+    NodeInfoWrapper,
+    WalletEvent,
 } from '../types';
 
 type Account = ReturnType<typeof createAccount>
@@ -33,23 +29,6 @@ export async function createAccountManager(options: AccountManagerOptions) {
 
     return {
         id,
-
-        /**
-         * Listen to wallet events with a callback. An empty array will listen to all possible events.
-         */
-         async listen(
-            eventTypes: EventType[],
-            callback: (error: Error | undefined, result: string) => void,
-        ): Promise<void> {
-            return messageHandler.listen(eventTypes, callback);
-        },
-
-        /**
-         * Clear the callbacks for provided events. An empty array will clear all listeners.
-         */
-        clearListeners(eventTypes: EventType[]): Promise<void> {
-            return messageHandler.clearListeners(eventTypes);
-        },
 
         /**
          * Backup the data to a Stronghold snapshot.
@@ -70,7 +49,7 @@ export async function createAccountManager(options: AccountManagerOptions) {
         async bech32ToHex(bech32Address: string): Promise<string> {
             const response = await messageHandler.sendMessage({
                 cmd: 'bech32ToHex',
-                payload: bech32Address,
+                payload: { bech32Address },
             });
             return JSON.parse(response).payload;
         },
@@ -114,17 +93,8 @@ export async function createAccountManager(options: AccountManagerOptions) {
         /**
          * Destroy the AccountManager and drop its database connection.
          */
-        destroy(): void {
-            messageHandler.destroy();
-        },
-
-        async deregisterParticipationEvent(eventId: EventId): Promise<void> {
-            await messageHandler.sendMessage({
-                cmd: 'deregisterParticipationEvent',
-                payload: {
-                    eventId,
-                },
-            });
+        async destroy(): Promise<void> {
+            await messageHandler.destroy();
         },
 
         /**
@@ -133,7 +103,7 @@ export async function createAccountManager(options: AccountManagerOptions) {
         async emitTestEvent(event: WalletEvent): Promise<void> {
             await messageHandler.sendMessage({
                 cmd: 'emitTestEvent',
-                payload: event,
+                payload: { event },
             });
         },
 
@@ -153,7 +123,7 @@ export async function createAccountManager(options: AccountManagerOptions) {
         async getAccount(accountId: AccountId): Promise<Account> {
             const response = await messageHandler.sendMessage({
                 cmd: 'getAccount',
-                payload: accountId,
+                payload: { accountId },
             });
 
             const account = createAccount(
@@ -237,33 +207,6 @@ export async function createAccountManager(options: AccountManagerOptions) {
             return JSON.parse(response).payload;
         },
 
-        async getParticipationEvent(eventId: EventId): Promise<Event> {
-            const response = await messageHandler.sendMessage({
-                cmd: 'getParticipationEvent',
-                payload: {
-                    eventId,
-                },
-            });
-            return JSON.parse(response).payload;
-        },
-
-        async getParticipationEvents(): Promise<Event[]> {
-            const response = await messageHandler.sendMessage({
-                cmd: 'getParticipationEvents',
-            });
-            return JSON.parse(response).payload;
-        },
-
-        async getParticipationEventStatus(eventId: EventId): Promise<EventStatus> {
-            const response = await messageHandler.sendMessage({
-                cmd: 'getParticipationEventStatus',
-                payload: {
-                    eventId,
-                },
-            });
-            return JSON.parse(response).payload;
-        },
-
         /**
          * Transform hex encoded address to bech32 encoded address. If no bech32Hrp
          * is provided, the AccountManager will attempt to retrieve it from the
@@ -283,6 +226,27 @@ export async function createAccountManager(options: AccountManagerOptions) {
         async isStrongholdPasswordAvailable(): Promise<boolean> {
             const response = await messageHandler.sendMessage({
                 cmd: 'isStrongholdPasswordAvailable',
+            });
+            return JSON.parse(response).payload;
+        },
+
+        /**
+         * Listen to wallet events with a callback. An empty array will listen to all possible events.
+         */
+        async listen(
+            eventTypes: EventType[],
+            callback: (error: Error, result: string) => void,
+        ): Promise<void> {
+            return messageHandler.listen(eventTypes, callback);
+        },
+
+        /**
+         * Clear the callbacks for provided events. An empty array will clear all listeners.
+         */
+        async clearListeners(eventTypes: EventType[]): Promise<void> {
+            const response = await messageHandler.sendMessage({
+                cmd: 'clearListeners',
+                payload: { eventTypes },
             });
             return JSON.parse(response).payload;
         },
@@ -323,21 +287,6 @@ export async function createAccountManager(options: AccountManagerOptions) {
             });
         },
 
-        async registerParticipationEvent(
-            eventId: EventId,
-            nodes: Node[],
-        ): Promise<Event> {
-            const response = await messageHandler.sendMessage({
-                cmd: 'registerParticipationEvent',
-                payload: {
-                    eventId,
-                    nodes,
-                },
-            });
-
-            return JSON.parse(response).payload;
-        },
-
         /**
          * Restore a backup from a Stronghold file
          * Replaces client_options, coin_type, secret_manager and accounts. Returns an error if accounts were already created
@@ -357,10 +306,10 @@ export async function createAccountManager(options: AccountManagerOptions) {
         /**
          * Set ClientOptions.
          */
-        async setClientOptions(options: ClientOptions): Promise<void> {
+        async setClientOptions(clientOptions: ClientOptions): Promise<void> {
             await messageHandler.sendMessage({
                 cmd: 'setClientOptions',
-                payload: options,
+                payload: { clientOptions },
             });
         },
 
@@ -370,7 +319,7 @@ export async function createAccountManager(options: AccountManagerOptions) {
         async setStrongholdPassword(password: string): Promise<void> {
             await messageHandler.sendMessage({
                 cmd: 'setStrongholdPassword',
-                payload: password,
+                payload: { password },
             });
         },
 
@@ -382,7 +331,7 @@ export async function createAccountManager(options: AccountManagerOptions) {
         ): Promise<void> {
             await messageHandler.sendMessage({
                 cmd: 'setStrongholdPasswordClearInterval',
-                payload: intervalInMilliseconds,
+                payload: { intervalInMilliseconds },
             });
         },
 
@@ -417,7 +366,7 @@ export async function createAccountManager(options: AccountManagerOptions) {
         async storeMnemonic(mnemonic: string): Promise<void> {
             await messageHandler.sendMessage({
                 cmd: 'storeMnemonic',
-                payload: mnemonic,
+                payload: { mnemonic },
             });
         },
 
@@ -427,8 +376,18 @@ export async function createAccountManager(options: AccountManagerOptions) {
         async verifyMnemonic(mnemonic: string): Promise<void> {
             await messageHandler.sendMessage({
                 cmd: 'verifyMnemonic',
-                payload: mnemonic,
+                payload: { mnemonic },
             });
-        }
+        },
+
+        /**
+         * Update the authentication for the provided node.
+         */
+        async updateNodeAuth(url: string, auth?: Auth): Promise<void> {
+            await messageHandler.sendMessage({
+                cmd: 'updateNodeAuth',
+                payload: { url, auth },
+            });
+        },
     }
 }
