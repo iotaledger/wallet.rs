@@ -1,40 +1,66 @@
-// import type { OutputId } from './output';
+import type { Node } from './network';
+import type { OutputId } from './output';
 
 export interface ParticipationOverview {
-    participations: {[eventId: string]: { [outputId: string]: TrackedParticipationOverview }};
+    participations: Participations;
+}
+
+export interface Participations {
+    [eventId: ParticipationEventId]: {
+        [outputId: OutputId]: TrackedParticipationOverview;
+    };
 }
 
 export interface TrackedParticipationOverview {
-    blockId: string;
     amount: string;
-    startMilestoneIndex: number;
+    answers: number[];
+    blockId: string;
     endMilestoneIndex: number;
+    startMilestoneIndex: number;
 }
 
-export interface Event {
-    id: EventId;
-    data: EventData;
+export interface ParticipationEvent {
+    id: ParticipationEventId;
+    data: ParticipationEventData;
 }
 
-export type EventId = string;
+export interface ParticipationEventRegistrationOptions {
+    node: Node;
+    eventsToRegister?: ParticipationEventId[];
+    eventsToIgnore?: ParticipationEventId[];
+}
 
-export interface EventStatus {
+export interface ParticipationEventWithNodes {
+    id: ParticipationEventId;
+    data: ParticipationEventData;
+    nodes: Node[];
+}
+
+export type ParticipationEventId = string;
+
+export type ParticipationEventMap = {
+    [id: ParticipationEventId]: ParticipationEventWithNodes
+}
+
+export interface ParticipationEventStatus {
     milestoneIndex: number;
     status: string;
-    questions?: Answer[];
+    questions?: QuestionStatus[];
     checksum: string;
 }
 
-export interface EventData {
+export interface ParticipationEventData {
     name: string;
     milestoneIndexCommence: number;
     milestoneIndexStart: number;
     milestoneIndexEnd: number;
-    payload: EventPayload;
+    payload: ParticipationEventPayload;
     additionalInfo: string;
 }
 
-export type EventPayload = VotingEventPayload | StakingEventPayload;
+export type ParticipationEventPayload =
+    | VotingEventPayload
+    | StakingEventPayload;
 
 export interface VotingEventPayload {
     type: ParticipationEventType.Voting;
@@ -61,6 +87,16 @@ export interface Answer {
     value: number;
     text: string;
     additionalInfo: string;
+}
+
+export interface QuestionStatus {
+    answers: AnswerStatus[];
+}
+
+export interface AnswerStatus {
+    value: number;
+    current: number;
+    accumulated: number;
 }
 
 export enum ParticipationEventType {
