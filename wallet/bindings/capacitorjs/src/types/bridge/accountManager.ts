@@ -6,10 +6,6 @@ import type {
 import type { GenerateAddressOptions } from '../address';
 import type { EventType, WalletEvent } from '../event';
 import type { Auth, ClientOptions } from '../network';
-import type {
-    ParticipationEventId,
-    ParticipationEventType,
-} from '../participation';
 
 export type __BackupMessage__ = {
     cmd: 'backup';
