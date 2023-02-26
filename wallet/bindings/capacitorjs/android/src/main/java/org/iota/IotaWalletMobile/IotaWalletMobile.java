@@ -177,14 +177,4 @@ public class IotaWalletMobile extends Plugin {
         }
     }
 
-    @PluginMethod()
-    public void clearListeners(final PluginCall call) {
-        try {
-            wallet.clearListeners();
-            call.release(bridge);
-        } catch (Exception ex) {
-            call.reject(ex.getMessage() + Arrays.toString(ex.getStackTrace()));
-        }
-    }
-
 }
