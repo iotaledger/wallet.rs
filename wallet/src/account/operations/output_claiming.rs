@@ -368,9 +368,10 @@ impl AccountHandle {
                     .finish_output(token_supply)?,
             );
         } else if !new_native_tokens.finish()?.is_empty() {
-            return Err(crate::Error::Client(
-                iota_client::Error::NoBalanceForNativeTokenRemainder.into(),
-            ));
+            return Err(iota_client::api::input_selection::Error::InsufficientAmount {
+                found: available_amount,
+                required: required_amount_for_nfts,
+            })?;
         }
 
         let claim_tx = self

@@ -142,6 +142,12 @@ impl From<iota_client::Error> for Error {
     }
 }
 
+impl From<iota_client::api::input_selection::Error> for Error {
+    fn from(error: iota_client::api::input_selection::Error) -> Self {
+        Self::Client(Box::new(iota_client::Error::InputSelection(error)))
+    }
+}
+
 #[cfg(feature = "rocksdb")]
 impl From<rocksdb::Error> for Error {
     fn from(error: rocksdb::Error) -> Self {
