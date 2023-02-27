@@ -145,6 +145,6 @@ impl From<iota_client::Error> for Error {
 #[cfg(feature = "rocksdb")]
 impl From<rocksdb::Error> for Error {
     fn from(error: rocksdb::Error) -> Self {
-        Error::Storage(error.to_string())
+        Self::Storage(error.to_string())
     }
 }
