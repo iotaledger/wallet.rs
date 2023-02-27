@@ -9,11 +9,6 @@ pub mod rocksdb;
 
 use std::collections::HashMap;
 
-#[cfg(not(target_family = "wasm"))]
-fn storage_err<E: ToString>(error: E) -> crate::Error {
-    crate::Error::Storage(error.to_string())
-}
-
 /// The storage adapter.
 #[async_trait::async_trait]
 pub trait StorageAdapter: std::fmt::Debug {

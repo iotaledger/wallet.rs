@@ -6,7 +6,7 @@ use std::{collections::HashMap, path::Path, sync::Arc};
 use rocksdb::{DBCompressionType, Options, WriteBatch, DB};
 use tokio::sync::Mutex;
 
-use super::{storage_err, StorageAdapter};
+use super::StorageAdapter;
 
 /// The storage id.
 pub const STORAGE_ID: &str = "RocksDB";
@@ -24,7 +24,7 @@ impl RocksdbStorageAdapter {
         opts.set_compression_type(DBCompressionType::Lz4);
         opts.create_if_missing(true);
         opts.create_missing_column_families(true);
-        let db = DB::open(&opts, path).map_err(storage_err)?;
+        let db = DB::open(&opts, path)?;
         Ok(Self {
             db: Arc::new(Mutex::new(db)),
         })
@@ -43,18 +43,13 @@ impl StorageAdapter for RocksdbStorageAdapter {
             .db
             .lock()
             .await
-            .get(key.as_bytes())
-            .map_err(storage_err)?
+            .get(key.as_bytes())?
             .map(|r| String::from_utf8_lossy(&r).to_string()))
     }
 
     /// Saves or updates a record on the storage.
     async fn set(&mut self, key: &str, record: String) -> crate::Result<()> {
-        self.db
-            .lock()
-            .await
-            .put(key.as_bytes(), record.as_bytes())
-            .map_err(storage_err)?;
+        self.db.lock().await.put(key.as_bytes(), record.as_bytes())?;
         Ok(())
     }
 
@@ -64,13 +59,13 @@ impl StorageAdapter for RocksdbStorageAdapter {
         for (key, value) in records {
             batch.put(key.as_bytes(), value.as_bytes());
         }
-        self.db.lock().await.write(batch).map_err(storage_err)?;
+        self.db.lock().await.write(batch)?;
         Ok(())
     }
 
     /// Removes a record from the storage.
     async fn remove(&mut self, key: &str) -> crate::Result<()> {
-        self.db.lock().await.delete(key.as_bytes()).map_err(storage_err)?;
+        self.db.lock().await.delete(key.as_bytes())?;
         Ok(())
     }
 }
