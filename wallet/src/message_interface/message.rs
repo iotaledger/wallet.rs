@@ -12,7 +12,9 @@ use super::account_method::AccountMethod;
 use crate::events::types::{WalletEvent, WalletEventType};
 use crate::{
     account::{operations::syncing::SyncOptions, types::AccountIdentifier},
-    iota_client::{node_manager::node::NodeAuth, secret::GenerateAddressOptions, Url},
+    iota_client::{
+        message_interface::Message as ClientMessage, node_manager::node::NodeAuth, secret::GenerateAddressOptions, Url,
+    },
     ClientOptions,
 };
 
@@ -21,6 +23,9 @@ use crate::{
 #[serde(tag = "cmd", content = "payload", rename_all = "camelCase")]
 #[allow(clippy::large_enum_variant)]
 pub enum Message {
+    ClientMessage {
+        message: ClientMessage,
+    },
     /// Creates an account.
     /// Expected response: [`Account`](crate::message_interface::Response::Account)
     CreateAccount {
@@ -121,7 +126,9 @@ pub enum Message {
     GenerateMnemonic,
     /// Checks if the given mnemonic is valid.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
-    VerifyMnemonic { mnemonic: String },
+    VerifyMnemonic {
+        mnemonic: String,
+    },
     /// Updates the client options for all accounts.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     SetClientOptions {
@@ -162,7 +169,9 @@ pub enum Message {
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "stronghold")]
     #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
-    SetStrongholdPassword { password: String },
+    SetStrongholdPassword {
+        password: String,
+    },
     /// Set the stronghold password clear interval.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "stronghold")]
@@ -175,7 +184,9 @@ pub enum Message {
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "stronghold")]
     #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
-    StoreMnemonic { mnemonic: String },
+    StoreMnemonic {
+        mnemonic: String,
+    },
     /// Start background syncing.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     StartBackgroundSync {
@@ -192,7 +203,9 @@ pub enum Message {
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "events")]
     #[cfg_attr(docsrs, doc(cfg(feature = "events")))]
-    EmitTestEvent { event: WalletEvent },
+    EmitTestEvent {
+        event: WalletEvent,
+    },
     /// Transforms a bech32 encoded address to hex
     /// Expected response: [`HexAddress`](crate::message_interface::Response::HexAddress)
     Bech32ToHex {
@@ -230,6 +243,9 @@ pub enum Message {
 impl Debug for Message {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
+            Self::ClientMessage { message } => {
+                write!(f, "ClientMessage {{ message: {message:?} }}")
+            }
             Self::CreateAccount { alias, bech32_hrp } => {
                 write!(f, "CreateAccount{{ alias: {alias:?}, bech32_hrp: {bech32_hrp:?} }}")
             }

@@ -23,6 +23,7 @@ use iota_client::{
         DtoError,
     },
     constants::SHIMMER_TESTNET_BECH32_HRP,
+    message_interface::{create_message_handler, ClientMessageHandler},
     request_funds_from_faucet, utils, Client, NodeInfoWrapper,
 };
 use primitive_types::U256;
@@ -97,6 +98,7 @@ where
 /// The Wallet message handler.
 pub struct WalletMessageHandler {
     account_manager: AccountManager,
+    client_message_handler: ClientMessageHandler,
 }
 
 impl WalletMessageHandler {
@@ -104,13 +106,17 @@ impl WalletMessageHandler {
     pub async fn new() -> Result<Self> {
         let instance = Self {
             account_manager: AccountManager::builder().finish().await?,
+            client_message_handler: create_message_handler(None)?,
         };
         Ok(instance)
     }
 
     /// Creates a new instance of the message handler with the specified account manager.
-    pub fn with_manager(account_manager: AccountManager) -> Self {
-        Self { account_manager }
+    pub fn with_manager(account_manager: AccountManager) -> Result<Self> {
+        Ok(Self {
+            account_manager,
+            client_message_handler: create_message_handler(None)?,
+        })
     }
 
     /// Listen to wallet events, empty vec will listen to all events
@@ -128,6 +134,9 @@ impl WalletMessageHandler {
         log::debug!("Message: {:?}", message);
 
         let response: Result<Response> = match message {
+            Message::ClientMessage { message } => Ok(Response::Client(
+                self.client_message_handler.send_message(message).await,
+            )),
             Message::CreateAccount { alias, bech32_hrp } => {
                 convert_async_panics(|| async { self.create_account(alias, bech32_hrp).await }).await
             }

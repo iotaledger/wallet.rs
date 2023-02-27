@@ -93,5 +93,5 @@ pub async fn create_message_handler(options: Option<ManagerOptions>) -> crate::R
         AccountManager::builder().finish().await?
     };
 
-    Ok(WalletMessageHandler::with_manager(manager))
+    WalletMessageHandler::with_manager(manager)
 }

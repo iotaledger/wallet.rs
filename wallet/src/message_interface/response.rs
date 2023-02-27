@@ -12,6 +12,7 @@ use iota_client::{
         payload::transaction::TransactionId,
         BlockId,
     },
+    message_interface::Response as ClientResponse,
     NodeInfoWrapper,
 };
 use serde::Serialize;
@@ -36,6 +37,7 @@ use crate::{
 #[derive(Serialize)]
 #[serde(tag = "type", content = "payload", rename_all = "camelCase")]
 pub enum Response {
+    Client(ClientResponse),
     /// Response for
     /// [`CreateAccount`](crate::message_interface::Message::CreateAccount),
     /// [`GetAccount`](crate::message_interface::Message::GetAccount)
@@ -194,6 +196,7 @@ pub enum Response {
 impl Debug for Response {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
+            Self::Client(response) => write!(f, "Client({response:?})"),
             Self::Account(account) => write!(f, "Account({account:?})"),
             Self::AccountIndexes(account_indexes) => write!(f, "AccountIndexes({account_indexes:?})"),
             Self::Accounts(accounts) => write!(f, "Accounts({accounts:?})"),
