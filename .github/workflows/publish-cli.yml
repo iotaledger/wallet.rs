@@ -1,10 +1,6 @@
 name: Publish cli wallet
 
 on:
-  push:
-    branches:
-      - develop
-      - production
   workflow_dispatch:
 
 jobs:
