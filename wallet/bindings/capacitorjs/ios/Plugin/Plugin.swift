@@ -156,7 +156,7 @@ public class IotaWalletMobile: CAPPlugin {
         let error_buffer: UnsafeMutablePointer<CChar>? = nil
         let error_buffer_size = 0
         
-        iota_send_message(messageHandler, message, contextResult.callback, context)
+        iota_send_message(messageHandler, message.cString(using: .utf8), contextResult.callback, context)
     }
 
     @objc func listen(_ call: CAPPluginCall) {
