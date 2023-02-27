@@ -76,6 +76,7 @@ pub enum AccountCommand {
     },
     /// Mint an NFT to an optional bech32 encoded address: `mint-nft
     /// rms1qztwng6cty8cfm42nzvq099ev7udhrnk0rw8jt8vttf9kpqnxhpsx869vr3 "immutable metadata" "metadata"`
+    /// IOTA NFT Standard - TIP27: https://github.com/iotaledger/tips/blob/main/tips/TIP-0027/tip-0027.md
     MintNft {
         address: Option<String>,
         #[clap(long, group = "immutable_metadata")]

@@ -295,6 +295,8 @@ Mint a native token with a maximum supply and foundry metadata from a file.
 
 Mints an NFT.
 
+[IOTA NFT Standard - TIP27](https://github.com/iotaledger/tips/blob/main/tips/TIP-0027/tip-0027.md).
+
 #### Parameters
 
 | Name                      | Optional  | Default                           | Example                                                         |
