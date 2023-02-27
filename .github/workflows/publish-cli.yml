@@ -1,7 +1,6 @@
 name: Publish cli wallet
 
-on:
-  workflow_dispatch:
+on: workflow_dispatch
 
 jobs:
   create-release:
