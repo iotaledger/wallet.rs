@@ -141,3 +141,10 @@ impl From<iota_client::Error> for Error {
         Self::Client(Box::new(error))
     }
 }
+
+#[cfg(feature = "rocksdb")]
+impl From<rocksdb::Error> for Error {
+    fn from(error: rocksdb::Error) -> Self {
+        Error::Storage(error.to_string())
+    }
+}
