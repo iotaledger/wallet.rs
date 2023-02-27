@@ -76,6 +76,7 @@ pub enum AccountCommand {
     },
     /// Mint an NFT to an optional bech32 encoded address: `mint-nft
     /// rms1qztwng6cty8cfm42nzvq099ev7udhrnk0rw8jt8vttf9kpqnxhpsx869vr3 "immutable metadata" "metadata"`
+    /// IOTA NFT Standard - TIP27: https://github.com/iotaledger/tips/blob/main/tips/TIP-0027/tip-0027.md
     MintNft {
         address: Option<String>,
         #[clap(long, group = "immutable_metadata")]
@@ -519,17 +520,15 @@ pub async fn send_native_token_command(
         let rent_structure = account_handle.client().get_rent_structure().await?;
         let token_supply = account_handle.client().get_token_supply().await?;
 
-        let outputs = vec![
-            BasicOutputBuilder::new_with_minimum_storage_deposit(rent_structure)?
-                .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                    Address::try_from_bech32(address)?.1,
-                )))
-                .with_native_tokens(vec![NativeToken::new(
-                    TokenId::from_str(&token_id)?,
-                    U256::from_dec_str(&amount).map_err(|e| Error::Miscellaneous(e.to_string()))?,
-                )?])
-                .finish_output(token_supply)?,
-        ];
+        let outputs = vec![BasicOutputBuilder::new_with_minimum_storage_deposit(rent_structure)?
+            .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+                Address::try_from_bech32(address)?.1,
+            )))
+            .with_native_tokens(vec![NativeToken::new(
+                TokenId::from_str(&token_id)?,
+                U256::from_dec_str(&amount).map_err(|e| Error::Miscellaneous(e.to_string()))?,
+            )?])
+            .finish_output(token_supply)?];
 
         account_handle.send(outputs, None).await?
     } else {
