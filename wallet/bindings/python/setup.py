@@ -22,7 +22,7 @@ def get_py_version_cfgs():
 
 setup(
     name="iota_wallet",
-    version="1.0.0-rc.1",
+    version="1.0.0-rc.2",
     classifiers=[
         "License :: SPDX-License-Identifier ::  Apache-2.0",
         "Intended Audience :: Developers",
