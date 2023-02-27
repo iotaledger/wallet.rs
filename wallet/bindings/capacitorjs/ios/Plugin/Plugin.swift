@@ -107,7 +107,6 @@ public class IotaWalletMobile: CAPPlugin {
                 }}
             }
             """
-            print(options)
             
             let error_buffer: UnsafeMutablePointer<CChar>? = nil
             let error_buffer_size = 0
@@ -118,7 +117,7 @@ public class IotaWalletMobile: CAPPlugin {
             iota_init_logger(filename.cString(using: .utf8), level_filter.cString(using: .utf8))
             
             // Keep the C++ handler / pointer of the messageHandler call result
-            let handler: OpaquePointer? = iota_initialize(options, error_buffer, error_buffer_size)
+            let handler: OpaquePointer? = iota_initialize(options.cString(using: .utf8), error_buffer, error_buffer_size)
             // Convert pointer to integer keeping bit pattern
             call.resolve(["messageHandler": Int(bitPattern: handler)])
         
