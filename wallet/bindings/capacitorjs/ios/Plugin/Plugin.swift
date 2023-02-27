@@ -48,10 +48,6 @@ public class IotaWalletMobile: CAPPlugin {
         }
     }
 
-    // TODO: we really need pass this params from swift?
-    private let error_buffer: UnsafeMutablePointer<CChar>? = nil
-    private let error_buffer_size = 0
-    
     @objc func messageHandlerNew(_ call: CAPPluginCall) {
         do {
             print("Capacitor call messageHandlerNew received", call.jsObjectRepresentation)
@@ -113,6 +109,9 @@ public class IotaWalletMobile: CAPPlugin {
             """
             print(options)
             
+            let error_buffer: UnsafeMutablePointer<CChar>? = nil
+            let error_buffer_size = 0
+        
             // TODO: implement logger as a fn
             let filename = "\(path)/iota_wallet.log"
             let level_filter = "debug"
@@ -155,11 +154,13 @@ public class IotaWalletMobile: CAPPlugin {
         // where it will be converted back to object type ready to use
         let context = Unmanaged<ContextResult>.passRetained(contextResult).toOpaque()
         
+        let error_buffer: UnsafeMutablePointer<CChar>? = nil
+        let error_buffer_size = 0
+        
         iota_send_message(messageHandler, message, contextResult.callback, context)
     }
 
     @objc func listen(_ call: CAPPluginCall) {
-        print("Capacitor call listen received", call.jsObjectRepresentation)
         guard let handler = call.getInt("messageHandler") else {
             return call.reject("handler is required")
         }
