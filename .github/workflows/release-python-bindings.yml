@@ -96,7 +96,7 @@ jobs:
           name: wheels
           path: dist
 
-  build-wheels-docker:
+  build-wheels-aarch64:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -111,15 +111,9 @@ jobs:
           options: -v ${{ github.workspace }}:/root
           run: |
             cd root
-            mkdir dist
 
             apt-get update 
-            apt-get install -y git 
-            apt-get install -y curl 
-            apt install -y build-essential 
-            apt install -y libudev-dev libusb-1.0-0-dev 
-            apt install -y pkg-config 
-            apt install -y clang 
+            apt-get install -y git curl build-essential libudev-dev libusb-1.0-0-dev pkg-config clang
             curl https://sh.rustup.rs -sSf | sh -s -- -y 
             . "$HOME/.cargo/env" 
 
