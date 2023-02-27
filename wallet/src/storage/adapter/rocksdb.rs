@@ -11,10 +11,6 @@ use super::StorageAdapter;
 /// The storage id.
 pub const STORAGE_ID: &str = "RocksDB";
 
-// fn storage_err<E: ToString>(error: E) -> crate::Error {
-//     crate::Error::Storage(error.to_string())
-// }
-
 /// Key value storage adapter.
 #[derive(Debug)]
 pub struct RocksdbStorageAdapter {
