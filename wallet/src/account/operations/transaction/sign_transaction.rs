@@ -55,7 +55,7 @@ impl AccountHandle {
             .secret_manager
             .read()
             .await
-            .sign_transaction_essence(prepared_transaction_data)
+            .sign_transaction_essence(prepared_transaction_data, None)
             .await?;
 
         let transaction_payload = TransactionPayload::new(prepared_transaction_data.essence.clone(), unlocks)?;

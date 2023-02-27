@@ -63,7 +63,6 @@ impl OutputData {
         &self,
         account: &Account,
         current_time: u32,
-        bech32_hrp: &str,
         alias_transition: Option<AliasTransition>,
     ) -> crate::Result<Option<InputSigningData>> {
         let (unlock_address, _unlocked_alias_or_nft_address) =
@@ -97,7 +96,6 @@ impl OutputData {
             output: self.output.clone(),
             output_metadata: OutputMetadata::try_from(&self.metadata)?,
             chain,
-            bech32_address: unlock_address.to_bech32(bech32_hrp),
         }))
     }
 }

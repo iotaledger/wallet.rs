@@ -7,7 +7,6 @@ use iota_client::{
     api::input_selection::{Burn, InputSelection, Selected},
     block::{
         address::Address,
-        input::INPUT_COUNT_MAX,
         output::{AliasTransition, Output, OutputId},
     },
     secret::types::InputSigningData,
@@ -71,7 +70,6 @@ impl AccountHandle {
             &account,
             account.unspent_outputs.values(),
             current_time,
-            protocol_parameters.bech32_hrp(),
             &outputs,
             burn,
             custom_inputs.as_ref(),
@@ -176,17 +174,17 @@ impl AccountHandle {
         let selected_transaction_data = match input_selection.select() {
             Ok(r) => r,
             // TODO this error doesn't exist with the new ISA
-            Err(iota_client::Error::ConsolidationRequired(output_count)) => {
-                #[cfg(feature = "events")]
-                self.event_emitter
-                    .lock()
-                    .await
-                    .emit(account.index, WalletEvent::ConsolidationRequired);
-                return Err(crate::Error::ConsolidationRequired {
-                    output_count,
-                    output_count_max: INPUT_COUNT_MAX,
-                });
-            }
+            // Err(iota_client::Error::ConsolidationRequired(output_count)) => {
+            //     #[cfg(feature = "events")]
+            //     self.event_emitter
+            //         .lock()
+            //         .await
+            //         .emit(account.index, WalletEvent::ConsolidationRequired);
+            //     return Err(crate::Error::ConsolidationRequired {
+            //         output_count,
+            //         output_count_max: INPUT_COUNT_MAX,
+            //     });
+            // }
             Err(e) => return Err(e.into()),
         };
 
@@ -223,7 +221,6 @@ fn filter_inputs(
     account: &Account,
     available_outputs: Values<'_, OutputId, OutputData>,
     current_time: u32,
-    bech32_hrp: &str,
     outputs: &[Output],
     burn: Option<&Burn>,
     custom_inputs: Option<&HashSet<OutputId>>,
@@ -256,9 +253,7 @@ fn filter_inputs(
         // Defaults to state transition if it is not explicitly a governance transition or a burn.
         let alias_state_transition = alias_state_transition(output_data, outputs, burn)?;
 
-        if let Some(available_input) =
-            output_data.input_signing_data(account, current_time, bech32_hrp, alias_state_transition)?
-        {
+        if let Some(available_input) = output_data.input_signing_data(account, current_time, alias_state_transition)? {
             available_outputs_signing_data.push(available_input);
         }
     }
