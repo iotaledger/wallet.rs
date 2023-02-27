@@ -32,7 +32,7 @@ prefix-hex = { version = "0.5.0", default-features = false, features = [ "std" ]
 primitive-types = { version = "0.12.1", default-features = false }
 rocksdb = { version = "0.20.1", default-features = false, features = [ "lz4" ], optional = true }
 serde = { version = "1.0.152", default-features = false, features = [ "derive" ] }
-serde_json = { version = "1.0.92", default-features = false }
+serde_json = { version = "1.0.93", default-features = false }
 thiserror = { version = "1.0.38", default-features = false }
 tokio = { version = "1.25.0", default-features = false, features = [ "sync", "rt", "time" ] }
 zeroize = { version = "1.5.7", default-features = false, features = [ "zeroize_derive" ] }
@@ -40,7 +40,7 @@ zeroize = { version = "1.5.7", default-features = false, features = [ "zeroize_d
 [target.'cfg(target_family = "wasm")'.dependencies]
 gloo-storage = { version = "0.2.2", default-features = false }
 gloo-timers = { version = "0.2.6", default-features = false, features = [ "futures" ] }
-wasm-bindgen-futures = { version = "0.4.3", default-features = false }
+wasm-bindgen-futures = { version = "0.4.34", default-features = false }
 
 [dev-dependencies]
 dotenv = { version = "0.15.0", default-features = false }
