@@ -1,14 +1,16 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::fmt::{Debug, Display};
+use std::fmt::Debug;
 
 use iota_client::block::payload::transaction::TransactionId;
-use serde::{ser::Serializer, Serialize};
+use serde::{
+    ser::{SerializeMap, Serializer},
+    Serialize,
+};
 
 /// The wallet error type.
-#[derive(Debug, thiserror::Error, Serialize)]
-#[serde(tag = "type", content = "error", rename_all = "camelCase")]
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
     /// Account alias must be unique.
     #[error("can't create account: account alias {0} already exists")]
@@ -24,25 +26,21 @@ pub enum Error {
     Backup(&'static str),
     /// Error from block crate.
     #[error("{0}")]
-    #[serde(serialize_with = "display_string")]
     Block(Box<iota_client::block::Error>),
     /// Block dtos error
     #[error("{0}")]
-    #[serde(serialize_with = "display_string")]
     BlockDto(#[from] iota_client::block::DtoError),
     /// Burning or melting failed
     #[error("burning or melting failed: {0}")]
     BurningOrMeltingFailed(String),
     /// Client error.
     #[error("`{0}`")]
-    #[serde(serialize_with = "display_string")]
     Client(Box<iota_client::Error>),
     /// Funds are spread over too many outputs
     #[error("funds are spread over too many outputs {output_count}/{output_count_max}, consolidation required")]
     ConsolidationRequired { output_count: usize, output_count_max: u16 },
     /// Crypto.rs error
     #[error("{0}")]
-    #[serde(serialize_with = "display_string")]
     Crypto(#[from] crypto::Error),
     /// Custom input error
     #[error("custom input error {0}")]
@@ -67,11 +65,9 @@ pub enum Error {
     InvalidOutputKind(String),
     /// IO error. (storage, backup, restore)
     #[error("`{0}`")]
-    #[serde(serialize_with = "display_string")]
     Io(#[from] std::io::Error),
     /// serde_json error.
     #[error("`{0}`")]
-    #[serde(serialize_with = "display_string")]
     Json(#[from] serde_json::error::Error),
     /// Minting failed
     #[error("minting failed {0}")]
@@ -92,7 +88,6 @@ pub enum Error {
     #[cfg(feature = "participation")]
     #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
     #[error("participation error {0}")]
-    #[serde(serialize_with = "display_string")]
     Participation(#[from] iota_client::api_types::plugins::participation::error::Error),
     /// No outputs available for consolidating
     #[error(
@@ -114,20 +109,31 @@ pub enum Error {
     StorageIsEncrypted,
     /// Tokio task join error
     #[error("{0}")]
-    #[serde(serialize_with = "display_string")]
     TaskJoin(#[from] tokio::task::JoinError),
     /// Transaction not found
     #[error("transaction {0} not found")]
     TransactionNotFound(TransactionId),
 }
 
-/// Use this to serialize Error variants that implements Debug but not Serialize
-fn display_string<T, S>(value: &T, serializer: S) -> std::result::Result<S::Ok, S::Error>
-where
-    T: Display,
-    S: Serializer,
-{
-    value.to_string().serialize(serializer)
+// Serialize type with Display error
+impl Serialize for Error {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut seq = serializer.serialize_map(Some(2))?;
+        let kind_dbg = format!("{self:?}");
+        // Safe to unwrap because kind_dbg is never an empty string
+        let kind = kind_dbg
+            .split_whitespace()
+            .next()
+            .unwrap()
+            .split('(')
+            .collect::<Vec<&str>>()[0];
+        seq.serialize_entry("type", &(kind[0..1].to_lowercase() + &kind[1..]))?;
+        seq.serialize_entry("error", &self.to_string())?;
+        seq.end()
+    }
 }
 
 impl From<iota_client::block::Error> for Error {

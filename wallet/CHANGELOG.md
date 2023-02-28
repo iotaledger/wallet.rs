@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `AccountMethod::RegisterParticipationEvent` renamed to `AccountMethod::RegisterParticipationEvents`,
   contains a `ParticipationEventRegistrationOptions` and expects a `ParticipationEvents` response;
 - `AccountMethod::GetParticipationEventIds` now also contains a `Node`;
+- Custom `Serialize` implementation for `Error`;
 
 ### Removed
 
