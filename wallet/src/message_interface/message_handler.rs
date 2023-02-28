@@ -134,7 +134,7 @@ impl WalletMessageHandler {
         log::debug!("Message: {:?}", message);
 
         let response: Result<Response> = match message {
-            Message::ClientMessage { message } => Ok(Response::Client(
+            Message::Client { message } => Ok(Response::Client(
                 self.client_message_handler.send_message(message).await,
             )),
             Message::CreateAccount { alias, bech32_hrp } => {

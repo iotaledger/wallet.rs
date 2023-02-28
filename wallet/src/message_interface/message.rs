@@ -235,8 +235,8 @@ pub enum Message {
 impl Debug for Message {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
-            Self::ClientMessage { message } => {
-                write!(f, "ClientMessage{{ message: {message:?} }}")
+            Self::Client { message } => {
+                write!(f, "Client{{ message: {message:?} }}")
             }
             Self::CreateAccount { alias, bech32_hrp } => {
                 write!(f, "CreateAccount{{ alias: {alias:?}, bech32_hrp: {bech32_hrp:?} }}")

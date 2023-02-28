@@ -4,7 +4,10 @@
 mod common;
 
 #[cfg(feature = "message_interface")]
-use std::sync::{atomic::Ordering, Arc};
+use std::{
+    str::FromStr,
+    sync::{atomic::Ordering, Arc},
+};
 
 #[cfg(feature = "message_interface")]
 use iota_client::{
@@ -15,8 +18,10 @@ use iota_client::{
             unlock_condition::{AddressUnlockCondition, UnlockCondition},
             BasicOutputBuilder,
         },
+        BlockDto, BlockId,
     },
     constants::SHIMMER_COIN_TYPE,
+    message_interface::{Message as ClientMessage, Response as ClientResponse},
     ClientBuilder,
 };
 #[cfg(feature = "events")]
@@ -444,6 +449,64 @@ async fn message_interface_address_generation() -> Result<()> {
             assert_eq!(
                 address,
                 "rms1qr239vcjzxxdyre8jsek8wrdves9hnnk6mguplvs43cwftt4svaszsvy98h"
+            );
+        }
+        response_type => panic!("Unexpected response type: {response_type:?}"),
+    }
+
+    common::tear_down(storage_path)
+}
+
+#[cfg(feature = "message_interface")]
+#[tokio::test]
+async fn client_message_interface() -> Result<()> {
+    let storage_path = "test-storage/client_message_interface";
+    common::setup(storage_path)?;
+
+    let secret_manager = r#"{"Mnemonic":"acoustic trophy damage hint search taste love bicycle foster cradle brown govern endless depend situate athlete pudding blame question genius transfer van random vast"}"#;
+    let client_options = r#"{"nodes":["http://localhost:14265"]}"#;
+
+    let options = ManagerOptions {
+        #[cfg(feature = "storage")]
+        storage_path: Some(storage_path.to_string()),
+        client_options: Some(ClientBuilder::new().from_json(client_options).unwrap()),
+        coin_type: Some(SHIMMER_COIN_TYPE),
+        secret_manager: Some(serde_json::from_str(secret_manager).unwrap()),
+    };
+
+    let wallet_handle = create_message_handler(Some(options)).await.unwrap();
+
+    let block = r#"
+    {
+        "protocolVersion":2,
+        "parents":
+            [
+                "0x2881c4781c4126f2413a704ebdf8cd375b46007f8df0e32ee9158684ac7e307b",
+                "0xe1956a33d608cb2bcfd6adeb67fe56ed0f33fc5ffd157e28a71047ecc52b0314",
+                "0xecc442108b1f30b6208ea57d24d892a6bdbdd9eb068dd34640a4d38b3c757132",
+                "0xfad7cc342cfa1135f9c12e99f98ec1658ec178524d19bde7b4797d81cecf9ea6"
+            ],
+        "payload":
+            {
+                "type":5,
+                "tag":"0x484f524e4554205370616d6d6572",
+                "data":"0x494f5441202d2041206e6577206461776e0a436f756e743a203030323330330a54696d657374616d703a20323032322d30342d32375431383a35343a30395a0a54697073656c656374696f6e3a203832c2b573"
+            },
+        "nonce":"22897"
+    }"#;
+
+    let block_dto: BlockDto = serde_json::from_str(block).unwrap();
+    let message = Message::Client {
+        message: ClientMessage::BlockId { block: block_dto },
+    };
+
+    let response = wallet_handle.send_message(message).await;
+
+    match response {
+        Response::Client(ClientResponse::BlockId(block_id)) => {
+            assert_eq!(
+                block_id,
+                BlockId::from_str("0xbcd2b9feed097a7aa8b894cae5eaeb1d8f516a14af25aa6f7d8aa7e2604c406c").unwrap()
             );
         }
         response_type => panic!("Unexpected response type: {response_type:?}"),
