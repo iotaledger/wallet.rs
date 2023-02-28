@@ -37,6 +37,8 @@ use crate::{
 #[derive(Serialize)]
 #[serde(tag = "type", content = "payload", rename_all = "camelCase")]
 pub enum Response {
+    /// Response for
+    /// [`Client`](crate::message_interface::Message::Client),
     Client(ClientResponse),
     /// Response for
     /// [`CreateAccount`](crate::message_interface::Message::CreateAccount),
