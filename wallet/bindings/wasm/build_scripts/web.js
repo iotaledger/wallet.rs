@@ -3,8 +3,8 @@ const fs = require('fs')
 const { lintAll } = require('./lints')
 const generatePackage = require('./utils/generatePackage');
 
-const rustPackageName = "wallet_wasm";
-const wasmFilename = "wallet_wasm_bg.wasm";
+const rustPackageName = "iota_wallet_wasm";
+const wasmFilename = "iota_wallet_wasm_bg.wasm";
 
 const RELEASE_FOLDER = path.join(__dirname, '../web/wasm/');
 const entryFilePath = path.join(RELEASE_FOLDER, rustPackageName + '.js');
@@ -60,4 +60,4 @@ fs.writeFileSync(path.join(RELEASE_FOLDER + "../", 'package.json'), JSON.stringi
 
 // Export the Wasm init() function from `index.ts.
 const indexFile = path.join(__dirname, "..", "out", "lib", "index.ts");
-fs.writeFileSync(indexFile, "// @ts-ignore\nexport { init } from '../wasm/wallet_wasm';", { flag: 'a' });
+fs.writeFileSync(indexFile, "// @ts-ignore\nexport { init } from '../wasm/iota_wallet_wasm';", { flag: 'a' });
