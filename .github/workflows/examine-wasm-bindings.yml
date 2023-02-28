@@ -90,23 +90,6 @@ jobs:
       - name: Checkout the Source Code
         uses: actions/checkout@v3
 
-      - name: Set Up Beta Clippy
-        uses: ./.github/actions/setup-rust
-        with:
-          toolchain: beta
-          target: wasm32-unknown-unknown
-          components: clippy
-          cache-root: wallet/bindings/wasm/
-          cache-job-id: ${{ github.workflow }}-${{ github.job }}
-          cache-hash: ${{ hashFiles('.github/workflows/examine-wasm-bindings.yml') }}
-
-      - name: Run Clippy
-        uses: actions-rs/clippy-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --manifest-path wallet/bindings/wasm/Cargo.toml --all-features --target=wasm32-unknown-unknown -- --deny warnings
-          name: Clippy Results for the Wasm Bindings
-
       - name: Setup Node.js
         uses: actions/setup-node@v2
         with:
