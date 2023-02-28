@@ -18,7 +18,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ env.CRATE_VERSION }}
+          tag_name: "cli-wallet-${{ env.CRATE_VERSION }}"
           release_name: "cli-wallet-${{ env.CRATE_VERSION }}"
           body: |
             # Changelog
