@@ -1,9 +1,5 @@
-[workspace]
-
 [package]
-# NOTE: cargo-cp-artifact reads the name of crate for artifacts, so the name of
-# this crate stays the same as the one specified in `package.json`.
-name = "wallet"
+name = "iota-wallet-nodejs"
 version = "0.2.0"
 authors = [ "IOTA Stiftung" ]
 edition = "2021"

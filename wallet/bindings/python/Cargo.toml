@@ -1,7 +1,5 @@
-[workspace]
-
 [package]
-name = "iota-wallet"
+name = "iota-wallet-python"
 version = "1.0.0-rc.2"
 authors = [ "IOTA Stiftung" ]
 edition = "2021"

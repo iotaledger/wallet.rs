@@ -1,7 +1,5 @@
-[workspace]
-
 [package]
-name = "wallet_wasm"
+name = "iota-wallet-wasm"
 version = "0.1.0"
 authors = [ "IOTA Stiftung" ]
 edition = "2021"
