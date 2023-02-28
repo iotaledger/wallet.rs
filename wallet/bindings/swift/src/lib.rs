@@ -207,6 +207,8 @@ pub unsafe extern "C" fn iota_listen(
     0
 }
 
+/// # Safety
+///
 #[no_mangle]
 pub unsafe extern "C" fn iota_init_logger(file_name: *const c_char, level_filter: *const c_char) -> i8 {
     assert!(!file_name.is_null());
