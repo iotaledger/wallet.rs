@@ -3,18 +3,17 @@
 
 #![recursion_limit = "256"]
 
+use std::{
+    ffi::{CStr, CString},
+    os::raw::{c_char, c_void},
+    sync::Arc,
+};
+
 use iota_wallet::{
     events::types::{Event, WalletEventType},
     message_interface::{self, init_logger, ManagerOptions, Message, WalletMessageHandler},
 };
-
-use std::{
-    ffi::{CStr, CString},
-    os::raw::{c_char, c_void},
-};
-
 use once_cell::sync::OnceCell;
-use std::sync::Arc;
 use tokio::runtime::Runtime;
 
 type Callback = extern "C" fn(message: *const c_char, error: *const c_char, context: *mut c_void);
