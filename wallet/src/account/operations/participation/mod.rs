@@ -49,8 +49,12 @@ pub struct ParticipationEventWithNodes {
 }
 
 impl AccountHandle {
-    /// Calculates the voting overview of an account.
-    pub async fn get_participation_overview(&self) -> Result<AccountParticipationOverview> {
+    /// Calculates the voting overview of an account. If event_ids are provided, only return outputs and tracked
+    /// participations for them.
+    pub async fn get_participation_overview(
+        &self,
+        event_ids: Option<Vec<ParticipationEventId>>,
+    ) -> Result<AccountParticipationOverview> {
         log::debug!("[get_participation_overview]");
         // TODO: Could use the address endpoint in the future when https://github.com/iotaledger/inx-participation/issues/50 is done.
 
@@ -70,6 +74,12 @@ impl AccountHandle {
             let metadata = output_data.output.features().and_then(|f| f.metadata()).unwrap();
             if let Ok(participations) = Participations::from_bytes(&mut metadata.data()) {
                 for participation in participations.participations {
+                    // Skip events that aren't in `event_ids` if not None
+                    if let Some(event_ids) = event_ids.as_ref() {
+                        if !event_ids.contains(&participation.event_id) {
+                            continue;
+                        }
+                    }
                     match events.entry(participation.event_id) {
                         Entry::Vacant(entry) => {
                             entry.insert(vec![output_data.output_id]);
@@ -105,6 +115,12 @@ impl AccountHandle {
                     match result {
                         Ok(status) => {
                             for (event_id, participation) in status.participations {
+                                // Skip events that aren't in `event_ids` if not None
+                                if let Some(event_ids) = event_ids.as_ref() {
+                                    if !event_ids.contains(&event_id) {
+                                        continue;
+                                    }
+                                }
                                 match participations.entry(event_id) {
                                     Entry::Vacant(entry) => {
                                         entry.insert(HashMap::from([(output_id, participation)]));

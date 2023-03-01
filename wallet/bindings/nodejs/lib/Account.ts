@@ -31,7 +31,9 @@ import type {
     ParticipationEventId,
     ParticipationEventStatus,
     ParticipationEventType,
-    ParticipationEventWithNodes, ParticipationEventRegistrationOptions, ParticipationEventMap,
+    ParticipationEventWithNodes,
+    ParticipationEventRegistrationOptions,
+    ParticipationEventMap,
 } from '../types';
 import type { SignedTransactionEssence } from '../types/signedTransactionEssence';
 import type {
@@ -1137,11 +1139,21 @@ export class Account {
         return JSON.parse(resp).payload;
     }
 
-    async getParticipationOverview(): Promise<ParticipationOverview> {
+    /**
+     * Calculates the voting overview of an account.
+     * @param eventIds Optional, filters participations only for provided events.
+     * @returns ParticipationOverview
+     */
+    async getParticipationOverview(
+        eventIds?: ParticipationEventId[],
+    ): Promise<ParticipationOverview> {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
                 name: 'getParticipationOverview',
+                data: {
+                    eventIds,
+                },
             },
         );
         return JSON.parse(resp).payload;

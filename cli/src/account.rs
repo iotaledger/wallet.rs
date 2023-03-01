@@ -143,7 +143,9 @@ pub async fn account_prompt_internal(account_handle: AccountHandle) -> Result<bo
                 AccountCommand::StopParticipating { event_id } => {
                     stop_participating_command(&account_handle, event_id).await
                 }
-                AccountCommand::ParticipationOverview => participation_overview_command(&account_handle).await,
+                AccountCommand::ParticipationOverview { event_id } => {
+                    participation_overview_command(&account_handle, event_id).await
+                }
                 AccountCommand::VotingPower => voting_power_command(&account_handle).await,
                 AccountCommand::IncreaseVotingPower { amount } => {
                     increase_voting_power_command(&account_handle, amount).await

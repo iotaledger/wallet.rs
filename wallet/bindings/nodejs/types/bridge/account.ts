@@ -374,6 +374,9 @@ export type __GetVotingPowerMethod__ = {
 
 export type __GetParticipationOverviewMethod__ = {
     name: 'getParticipationOverview';
+    data: {
+        eventIds?: ParticipationEventId[];
+    };
 };
 
 export type __IncreaseVotingPowerMethod__ = {
@@ -393,7 +396,7 @@ export type __GetParticipationEventMethod__ = {
 export type __GetParticipationEventIdsMethod__ = {
     name: 'getParticipationEventIds';
     data: {
-        node: Node,
+        node: Node;
         eventType?: ParticipationEventType;
     };
 };

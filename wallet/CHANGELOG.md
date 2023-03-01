@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `ParticipationEventRegistrationOptions` type;
 - `AccountManager::update_node_auth()`;
 - `Message::UpdateNodeAuth`;
+- `event_ids` parameter to `Account::get_participation_overview()`;
 
 ### Changed
 
