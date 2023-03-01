@@ -133,7 +133,10 @@ pub enum AccountCommand {
     /// Stop participating to a given event
     StopParticipating { event_id: ParticipationEventId },
     /// Calculate the participation overview of the account
-    ParticipationOverview { event_id: Option<ParticipationEventId> },
+    ParticipationOverview {
+        #[clap(short, long, value_parser, num_args = 1.., value_delimiter = ' ')]
+        event_ids: Vec<ParticipationEventId>,
+    },
     /// Get the voting power of the account
     VotingPower,
     /// Increase the voting power of the account
@@ -646,11 +649,9 @@ pub async fn stop_participating_command(
 
 pub async fn participation_overview_command(
     account_handle: &AccountHandle,
-    event_id: Option<ParticipationEventId>,
+    event_ids: Option<Vec<ParticipationEventId>>,
 ) -> Result<(), Error> {
-    let participation_overview = account_handle
-        .get_participation_overview(event_id.map(|e| vec![e]))
-        .await?;
+    let participation_overview = account_handle.get_participation_overview(event_ids).await?;
 
     log::info!("Participation overview: {participation_overview:?}");
 

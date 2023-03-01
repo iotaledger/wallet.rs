@@ -374,9 +374,9 @@ Calculates the participation overview of the account.
 
 #### Parameters
 
-| Name       | Optional  | Default | Example                                                            |
-| ---------- | --------- | ------- | ------------------------------------------------------------------ |
-| `event_id` | ✓         | N/A     | 0x8d6ffcd8d6c9f049b5732adb8900bb6f6a28e282b15a2297405a28181eebd515 |
+| Name        | Optional  | Default | Example                                                            |
+| ----------- | --------- | ------- | ------------------------------------------------------------------ |
+| `event_ids` | ✓         | N/A     | 0x8d6ffcd8d6c9f049b5732adb8900bb6f6a28e282b15a2297405a28181eebd515 |
 
 #### Example
 
@@ -387,7 +387,7 @@ Get the participation overview for all events.
 
 Get the participation overview only for a specific event.
 ```sh
-> Account "main": participation-overview 0x8d6ffcd8d6c9f049b5732adb8900bb6f6a28e282b15a2297405a28181eebd515
+> Account "main": participation-overview -e 0x8d6ffcd8d6c9f049b5732adb8900bb6f6a28e282b15a2297405a28181eebd515
 ```
 
 ### `send`
