@@ -125,7 +125,7 @@ impl Serialize for Error {
         let kind_dbg = format!("{self:?}");
         // Split by whitespace for struct variants and split by `(` for tuple variants
         // Safe to unwrap because kind_dbg is never an empty string
-        let kind = kind_dbg.split_whitespace().next().unwrap().split('(').next().unwrap();
+        let kind = kind_dbg.split([' ','(']).next().unwrap();
         seq.serialize_entry("type", &(kind[0..1].to_lowercase() + &kind[1..]))?;
         seq.serialize_entry("error", &self.to_string())?;
         seq.end()
