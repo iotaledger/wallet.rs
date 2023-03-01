@@ -393,7 +393,7 @@ export type __GetParticipationEventMethod__ = {
 export type __GetParticipationEventIdsMethod__ = {
     name: 'getParticipationEventIds';
     data: {
-        node: Node,
+        node: Node;
         eventType?: ParticipationEventType;
     };
 };
