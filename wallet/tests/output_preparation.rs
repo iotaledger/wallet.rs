@@ -153,7 +153,7 @@ async fn output_preparation() -> Result<()> {
             None,
         )
         .await?;
-    assert_eq!(output.amount(), 48200);
+    assert_eq!(output.amount(), 54600);
     // address and storage deposit unlock condition, because of the metadata feature block, 12000 is not enough for the
     // required storage deposit
     assert_eq!(output.unlock_conditions().unwrap().len(), 2);
@@ -369,6 +369,52 @@ async fn output_preparation() -> Result<()> {
     assert_eq!(output.amount(), 53900);
     // address, sdr, expiration
     assert_eq!(output.unlock_conditions().unwrap().len(), 3);
+
+    let output = account
+        .prepare_output(
+            OutputOptions {
+                recipient_address: recipient_address.clone(),
+                amount: 8001,
+                assets: None,
+                features: None,
+                unlocks: None,
+                storage_deposit: None,
+            },
+            None,
+        )
+        .await?;
+    let rent_structure = account.client().get_rent_structure().await?;
+    let token_supply = account.client().get_token_supply().await?;
+    // Check if the output has enough amount to cover the storage deposit
+    output.verify_storage_deposit(rent_structure, token_supply)?;
+    assert_eq!(output.amount(), 50601);
+    // address and sdr unlock condition
+    assert_eq!(output.unlock_conditions().unwrap().len(), 2);
+    let sdr = output.unlock_conditions().unwrap().storage_deposit_return().unwrap();
+    assert_eq!(sdr.amount(), 42600);
+
+    let output = account
+        .prepare_output(
+            OutputOptions {
+                recipient_address: recipient_address.clone(),
+                amount: 42599,
+                assets: None,
+                features: None,
+                unlocks: None,
+                storage_deposit: None,
+            },
+            None,
+        )
+        .await?;
+    let rent_structure = account.client().get_rent_structure().await?;
+    let token_supply = account.client().get_token_supply().await?;
+    // Check if the output has enough amount to cover the storage deposit
+    output.verify_storage_deposit(rent_structure, token_supply)?;
+    assert_eq!(output.amount(), 85199);
+    // address and sdr unlock condition
+    assert_eq!(output.unlock_conditions().unwrap().len(), 2);
+    let sdr = output.unlock_conditions().unwrap().storage_deposit_return().unwrap();
+    assert_eq!(sdr.amount(), 42600);
 
     common::tear_down(storage_path)
 }

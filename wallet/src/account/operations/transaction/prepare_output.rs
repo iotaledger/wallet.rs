@@ -3,18 +3,21 @@
 
 use std::{cmp::Ordering, str::FromStr};
 
-use iota_client::block::{
-    address::Address,
-    output::{
-        dto::NativeTokenDto,
-        feature::{Feature, IssuerFeature, MetadataFeature, SenderFeature, TagFeature},
-        unlock_condition::{
-            AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition,
-            TimelockUnlockCondition, UnlockCondition,
+use iota_client::{
+    api::input_selection::minimum_storage_deposit_basic_output,
+    block::{
+        address::Address,
+        output::{
+            dto::NativeTokenDto,
+            feature::{Feature, IssuerFeature, MetadataFeature, SenderFeature, TagFeature},
+            unlock_condition::{
+                AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition,
+                TimelockUnlockCondition, UnlockCondition,
+            },
+            BasicOutputBuilder, NativeToken, NftId, NftOutput, NftOutputBuilder, Output, Rent,
         },
-        BasicOutputBuilder, NativeToken, NftId, NftOutput, NftOutputBuilder, Output, Rent,
+        DtoError,
     },
-    DtoError,
 };
 use serde::{Deserialize, Serialize};
 
@@ -116,12 +119,7 @@ impl AccountHandle {
 
                     // Calculate the minimum storage deposit to be returned
                     let min_storage_deposit_return_amount =
-                        BasicOutputBuilder::new_with_minimum_storage_deposit(rent_structure.clone())?
-                            .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                                Address::try_from_bech32(options.recipient_address.clone())?.1,
-                            )))
-                            .finish_output(token_supply)?
-                            .amount();
+                        minimum_storage_deposit_basic_output(&rent_structure, &None, token_supply)?;
 
                     second_output_builder = second_output_builder.add_unlock_condition(
                         UnlockCondition::StorageDepositReturn(StorageDepositReturnUnlockCondition::new(
@@ -142,12 +140,7 @@ impl AccountHandle {
                         let balance_minus_output = balance.base_coin.available - first_output.amount();
                         // Calculate the amount for a basic output
                         let minimum_required_storage_deposit =
-                            BasicOutputBuilder::new_with_minimum_storage_deposit(rent_structure.clone())?
-                                .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                                    Address::try_from_bech32(options.recipient_address)?.1,
-                                )))
-                                .finish_output(token_supply)?
-                                .amount();
+                            minimum_storage_deposit_basic_output(&rent_structure, &None, token_supply)?;
 
                         if balance_minus_output < minimum_required_storage_deposit {
                             second_output_builder =
@@ -167,9 +160,19 @@ impl AccountHandle {
         // We might have added more unlock conditions, so we check the minimum storage deposit again and update the
         // amounts if needed
         if second_output.amount() < required_storage_deposit {
-            third_output_builder = third_output_builder.with_amount(required_storage_deposit)?;
+            let mut new_sdr_amount = required_storage_deposit - options.amount;
+            let minimum_storage_deposit = minimum_storage_deposit_basic_output(&rent_structure, &None, token_supply)?;
+            let mut final_output_amount = required_storage_deposit;
+            if required_storage_deposit - options.amount < minimum_storage_deposit {
+                // return amount must be >= minimum_storage_deposit
+                new_sdr_amount = minimum_storage_deposit;
+
+                // increase the output amount by the additional required amount for the SDR
+                final_output_amount += minimum_storage_deposit - (required_storage_deposit - options.amount);
+            }
+            third_output_builder = third_output_builder.with_amount(final_output_amount)?;
+
             // add newly added amount also to the storage deposit return unlock condition, if that was added
-            let new_sdr_amount = required_storage_deposit - options.amount;
             if let Some(sdr) = second_output.unlock_conditions().storage_deposit_return() {
                 // create a new sdr unlock_condition with the updated amount and replace it
                 let new_sdr_unlock_condition = UnlockCondition::StorageDepositReturn(
@@ -294,12 +297,7 @@ impl AccountHandle {
 
                     // Calculate the amount to be returned
                     let min_storage_deposit_return_amount =
-                        BasicOutputBuilder::new_with_minimum_storage_deposit(rent_structure.clone())?
-                            .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                                Address::try_from_bech32(options.recipient_address.clone())?.1,
-                            )))
-                            .finish_output(token_supply)?
-                            .amount();
+                        minimum_storage_deposit_basic_output(&rent_structure, &None, token_supply)?;
 
                     second_output_builder = second_output_builder.add_unlock_condition(
                         UnlockCondition::StorageDepositReturn(StorageDepositReturnUnlockCondition::new(
@@ -320,12 +318,7 @@ impl AccountHandle {
                         let balance_minus_output = balance.base_coin.available - first_output.amount();
                         // Calculate the amount for a basic output
                         let minimum_required_storage_deposit =
-                            BasicOutputBuilder::new_with_minimum_storage_deposit(rent_structure.clone())?
-                                .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                                    Address::try_from_bech32(options.recipient_address)?.1,
-                                )))
-                                .finish_output(token_supply)?
-                                .amount();
+                            minimum_storage_deposit_basic_output(&rent_structure, &None, token_supply)?;
 
                         if balance_minus_output < minimum_required_storage_deposit {
                             second_output_builder =
@@ -345,8 +338,19 @@ impl AccountHandle {
         // We might have added more unlock conditions, so we check the minimum storage deposit again and update the
         // amounts if needed
         if second_output.amount() < required_storage_deposit {
-            third_output_builder = third_output_builder.with_amount(required_storage_deposit)?;
-            let new_sdr_amount = required_storage_deposit - options.amount;
+            let mut new_sdr_amount = required_storage_deposit - options.amount;
+            let minimum_storage_deposit = minimum_storage_deposit_basic_output(&rent_structure, &None, token_supply)?;
+            let mut final_output_amount = required_storage_deposit;
+            if required_storage_deposit - options.amount < minimum_storage_deposit {
+                // return amount must be >= minimum_storage_deposit
+                new_sdr_amount = minimum_storage_deposit;
+
+                // increase the output amount by the additional required amount for the SDR
+                final_output_amount += minimum_storage_deposit - (required_storage_deposit - options.amount);
+            }
+            third_output_builder = third_output_builder.with_amount(final_output_amount)?;
+
+            // add newly added amount also to the storage deposit return unlock condition, if that was added
             if let Some(sdr) = second_output.unlock_conditions().storage_deposit_return() {
                 // create a new sdr unlock_condition with the updated amount and replace it
                 let new_sdr_unlock_condition = UnlockCondition::StorageDepositReturn(
