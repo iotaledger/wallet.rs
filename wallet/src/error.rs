@@ -122,11 +122,15 @@ impl Serialize for Error {
         S: Serializer,
     {
         let mut seq = serializer.serialize_map(Some(2))?;
-        let kind_dbg = format!("{self:?}");
+        let mut kind_dbg = format!("{self:?}");
+        // Convert first char to lowercase
+        if let Some(r) = kind_dbg.get_mut(0..1) {
+            r.make_ascii_lowercase();
+        }
         // Split by whitespace for struct variants and split by `(` for tuple variants
         // Safe to unwrap because kind_dbg is never an empty string
         let kind = kind_dbg.split([' ', '(']).next().unwrap();
-        seq.serialize_entry("type", &(kind[0..1].to_lowercase() + &kind[1..]))?;
+        seq.serialize_entry("type", &kind)?;
         seq.serialize_entry("error", &self.to_string())?;
         seq.end()
     }
