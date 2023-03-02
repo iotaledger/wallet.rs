@@ -146,24 +146,30 @@ public class IotaWalletMobile extends Plugin {
 
     @PluginMethod(returnType = PluginMethod.RETURN_CALLBACK)
     public void listen(final PluginCall call) throws WalletException, JSONException {
-        // if (!call.getData().has("eventTypes")) {
-        //     call.reject("eventTypes and event are required");
-        // }
-        // JSArray eventTypes = call.getArray("eventTypes");
-        // try {
-        //     wallet.listen(new EventListener() {
-        //         @Override
-        //         public void receive(Event event) {
-        //             JSObject walletResponse = new JSObject();
-        //             walletResponse.put("result", event.getEvent().toString());
-        //             call.resolve(walletResponse);
-        //         }
-        //     }, WalletEventType.valueOf(eventTypes.getString(0)));
-        // } catch (WalletException e) {
-        //     e.printStackTrace();
-        // }
-        // call.setKeepAlive(true);
-        call.resolve();
+        if (!call.getData().has("eventTypes")) {
+            call.reject("eventTypes are required");
+        }
+
+        JSArray eventTypes = call.getArray("eventTypes");
+        WalletEventType[] types = new WalletEventType[eventTypes.length()];
+        for (int i = 0; i < eventTypes.length(); i++) {
+            types[i] = WalletEventType.valueOf(eventTypes.getString(i));
+        }
+
+        try {
+            wallet.listen(new EventListener() {
+                @Override
+                public void receive(Event event) {
+                    Log.d("listen", "Received event " + event.toString());
+                    JSObject walletResponse = new JSObject();
+                    walletResponse.put("result", event.getEvent().toString());
+                    call.resolve(walletResponse);
+                }
+            }, types);
+        } catch (WalletException ex) {
+            call.reject(ex.getMessage() + Arrays.toString(ex.getStackTrace()));
+        }
+        call.setKeepAlive(true);
     }
 
 

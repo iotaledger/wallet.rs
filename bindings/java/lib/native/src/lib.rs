@@ -1,18 +1,30 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+#[cfg(target_os = "android")]
+#[macro_use]
+extern crate log;
+#[cfg(target_os = "android")]
+extern crate android_logger;
+
 use std::{convert::TryFrom, sync::Mutex};
 
+#[cfg(target_os = "android")]
+use android_logger::Config;
 use iota_wallet::{
     events::types::{Event, WalletEventType},
-    message_interface::{create_message_handler, init_logger, send_message, ManagerOptions, Message, WalletMessageHandler},
+    message_interface::{
+        create_message_handler, init_logger, send_message, ManagerOptions, Message, WalletMessageHandler,
+    },
 };
 use jni::{
     objects::{GlobalRef, JClass, JObject, JStaticMethodID, JString, JValue},
-    signature::ReturnType,
+    signature::{Primitive, ReturnType},
     sys::{jclass, jobject, jobjectArray, jstring},
     JNIEnv, JavaVM,
 };
+#[cfg(target_os = "android")]
+use log::LevelFilter;
 use once_cell::sync::OnceCell;
 use tokio::runtime::Runtime;
 
@@ -21,6 +33,7 @@ lazy_static::lazy_static! {
 
     // Cache VM ref for callback
     static ref VM: Mutex<Option<JavaVM>> = Mutex::new(None);
+
     // Cache Method for unchecked method call
     static ref METHOD_CACHE: Mutex<Option<JStaticMethodID>> = Mutex::new(None);
 }
@@ -28,12 +41,13 @@ lazy_static::lazy_static! {
 // A macro that checks if the result is an error and throws an exception if it is.
 macro_rules! jni_err_assert {
     ($env:ident, $result:expr, $ret:expr ) => {{
-        if let Err(err) = $result {
-            throw_exception(&$env, err.to_string());
-            return $ret;
+        match $result {
+            Err(err) => {
+                throw_exception(&$env, err.to_string());
+                return $ret;
+            }
+            Ok(res) => res,
         }
-        // Can unwrap as we just checked and returned if its an error
-        $result.unwrap()
     }};
 }
 
@@ -45,7 +59,6 @@ macro_rules! string_from_jni {
         String::from(jni_err_assert!($env, string, $r))
     }};
 }
-
 
 /// A macro that takes in a JNIEnv, a JString, a type, and a return value. It then gets the string from
 /// the JNIEnv, and checks if it is an error. If it is an error, it throws an exception and returns
@@ -72,8 +85,9 @@ macro_rules! env_assert {
 #[no_mangle]
 pub extern "system" fn Java_org_iota_api_NativeApi_initLogger(env: JNIEnv, _class: JClass, command: JString) {
     // This is a safety check to make sure that the JNIEnv is not in an exception state.
-    env_assert!(env,());
-    jni_err_assert!(env, init_logger(string_from_jni!(env, command, ())), ());
+    env_assert!(env, ());
+    let ret = init_logger(string_from_jni!(env, command, ()));
+    jni_err_assert!(env, ret, ());
 }
 
 // This keeps rust from "mangling" the name and making it unique for this crate.
@@ -89,12 +103,22 @@ pub extern "system" fn Java_org_iota_api_NativeApi_createMessageHandler(
 ) {
     env_assert!(env, ());
 
+    #[cfg(target_os = "android")]
+    android_logger::init_once(
+        Config::default()
+            .with_tag("lib_wallet")
+            .with_max_level(LevelFilter::Trace),
+    );
+
     if let Ok(mut message_handler_store) = MESSAGE_HANDLER.lock() {
         message_handler_store.replace(jni_err_assert!(
             env,
-            crate::block_on(create_message_handler(Some(
-                jni_from_json_make!(env, config, ManagerOptions, ()),
-            ))),
+            crate::block_on(create_message_handler(Some(jni_from_json_make!(
+                env,
+                config,
+                ManagerOptions,
+                ()
+            ),))),
             ()
         ));
     };
@@ -190,11 +214,14 @@ pub unsafe extern "system" fn Java_org_iota_api_NativeApi_listen(
         std::ptr::null_mut()
     );
 
+    // Allocate callback class to not lose the class in native threads
+    let global_obj_class = jni_err_assert!(env, env.new_global_ref(JObject::from_raw(_class)), std::ptr::null_mut());
+
     match MESSAGE_HANDLER.lock() {
         Ok(message_handler_store) => match message_handler_store.as_ref() {
-            Some(message_handler) => {
-                crate::block_on(message_handler.listen(events_list, move |e| event_handle(global_obj.clone(), e)))
-            }
+            Some(message_handler) => crate::block_on(message_handler.listen(events_list, move |e| {
+                event_handle(global_obj_class.clone(), global_obj.clone(), e.clone());
+            })),
             _ => throw_nullpointer(&env, "Wallet not initialised."),
         },
         Err(err) => throw_exception(&env, err.to_string()),
@@ -204,7 +231,7 @@ pub unsafe extern "system" fn Java_org_iota_api_NativeApi_listen(
     make_jni_string(&env, "{\"type\": \"success\", \"payload\": \"success\"}".to_string())
 }
 
-fn event_handle(callback_ref: GlobalRef, e: &Event) {
+unsafe fn event_handle(clazz: GlobalRef, callback_ref: GlobalRef, event: Event) {
     // Grab env from VM.
     // If we cant get a lock, we cant handle the event
     let vm_guard = match VM.lock() {
@@ -212,22 +239,19 @@ fn event_handle(callback_ref: GlobalRef, e: &Event) {
         Err(_) => return,
     };
 
-    // Generate link back to the java env
-    let env = {
-        let vm = vm_guard
-            .as_ref()
-            .expect("Wallet not initialised, but an event was called");
+    let vm = vm_guard
+        .as_ref()
+        .expect("Wallet not initialised, but an event was called");
 
-        let mut env = vm.get_env();
-        if env.is_err() {
-            env = vm.attach_current_thread().map(|e| *e);
-        }
-        env.expect("Failed to get Java env for event callback")
-    };
+    // Generate link back to the java env
+    let env = vm
+        .attach_current_thread()
+        .expect("Failed to get Java env for event callback");
 
     // Make sure env is ok
     env_assert!(env, ());
-    let ev_ser = jni_err_assert!(env, serde_json::to_string(&e), ());
+
+    let ev_ser = jni_err_assert!(env, serde_json::to_string(&event), ());
 
     // Make the Jni object to send back
     let event = jni::sys::jvalue {
@@ -236,14 +260,20 @@ fn event_handle(callback_ref: GlobalRef, e: &Event) {
 
     // Get a ref back to the callback we call on the java side
     let cb = JValue::Object(callback_ref.as_obj()).to_jni();
+    let clazz = JClass::from_raw(*clazz.as_obj());
 
     // Call NativeApi, METHOD_CACHE assumed initialised if we received a VM
-    jni_err_assert!(env, env.call_static_method_unchecked(
-        "org/iota/api/NativeApi",
+    let res = env.call_static_method_unchecked(
+        clazz,
         METHOD_CACHE.lock().unwrap().unwrap(),
-        ReturnType::Object,
+        ReturnType::Primitive(Primitive::Void),
         &[event, cb],
-    ), ());
+    );
+
+    if let Err(e) = res {
+        error!("Error calling method {}", e);
+        jni_err_assert!(env, env.exception_clear(), ());
+    };
 }
 
 pub(crate) fn block_on<C: futures::Future>(cb: C) -> C::Output {
