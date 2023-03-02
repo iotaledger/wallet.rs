@@ -48,8 +48,9 @@ pub use self::{
             SyncOptions,
         },
         transaction::{
-            prepare_output::{Assets, Features, OutputOptions, StorageDeposit, Unlocks},
-            RemainderValueStrategy, TransactionOptions,
+            high_level::minting::mint_native_token::MintTokenTransactionDto,
+            prepare_output::{Assets, Features, OutputOptions, ReturnStrategy, StorageDeposit, Unlocks},
+            RemainderValueStrategy, TransactionOptions, TransactionOptionsDto,
         },
     },
     types::OutputDataDto,

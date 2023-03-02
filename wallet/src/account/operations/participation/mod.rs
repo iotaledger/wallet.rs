@@ -8,9 +8,9 @@
 // address.
 // If the user has designated funds to vote with, the resulting output MUST NOT be used for input selection.
 
-pub mod event;
-pub mod voting;
-pub mod voting_power;
+pub(crate) mod event;
+pub(crate) mod voting;
+pub(crate) mod voting_power;
 
 use std::collections::{hash_map::Entry, HashMap};
 

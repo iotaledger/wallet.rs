@@ -36,7 +36,7 @@ pub struct AccountManagerBuilder {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg(feature = "storage")]
 #[cfg_attr(docsrs, doc(cfg(feature = "storage")))]
-pub struct StorageOptions {
+pub(crate) struct StorageOptions {
     pub(crate) storage_path: PathBuf,
     pub(crate) storage_file_name: Option<String>,
     pub(crate) storage_encryption_key: Option<[u8; 32]>,
