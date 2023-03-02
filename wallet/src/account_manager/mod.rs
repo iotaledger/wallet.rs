@@ -81,9 +81,10 @@ impl AccountManager {
 
     /// Removes the latest account (account with the largest account index).
     pub async fn remove_latest_account(&self) -> crate::Result<()> {
+        let mut largest_account_index_opt = None;
         let mut accounts = self.accounts.write().await;
 
-        let mut largest_account_index_opt = None;
+        #[allow(clippy::significant_drop_in_scrutinee)]
         for account in accounts.iter() {
             let account_index = *account.read().await.index();
             if let Some(largest_account_index) = largest_account_index_opt {
@@ -124,32 +125,32 @@ impl AccountManager {
 
     /// Get the balance of all accounts added together
     pub async fn balance(&self) -> crate::Result<AccountBalance> {
+        let mut balances = Vec::new();
         let accounts = self.accounts.read().await;
 
-        let mut balances = Vec::new();
+        #[allow(clippy::significant_drop_in_scrutinee)]
         for account in accounts.iter() {
-            let account_balance = account.balance().await?;
-            balances.push(account_balance);
+            balances.push(account.balance().await?);
         }
 
-        let balance = add_balances(balances)?;
+        drop(accounts);
 
-        Ok(balance)
+        add_balances(balances)
     }
 
     /// Sync all accounts
     pub async fn sync(&self, options: Option<SyncOptions>) -> crate::Result<AccountBalance> {
+        let mut balances = Vec::new();
         let accounts = self.accounts.read().await;
 
-        let mut balances = Vec::new();
+        #[allow(clippy::significant_drop_in_scrutinee)]
         for account in accounts.iter() {
-            let account_balance = account.sync(options.clone()).await?;
-            balances.push(account_balance);
+            balances.push(account.sync(options.clone()).await?);
         }
 
-        let balance = add_balances(balances)?;
+        drop(accounts);
 
-        Ok(balance)
+        add_balances(balances)
     }
 
     /// Listen to wallet events, empty vec will listen to all events

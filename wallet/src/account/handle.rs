@@ -98,16 +98,16 @@ impl AccountHandle {
     /// Get the [`Output`] that minted a native token by the token ID. First try to get it
     /// from the account, if it isn't in the account try to get it from the node
     pub async fn get_foundry_output(&self, native_token_id: TokenId) -> Result<Output> {
-        let account = self.read().await;
         let foundry_id = FoundryId::from(native_token_id);
-        for output_data in account.outputs().values() {
+
+        #[allow(clippy::significant_drop_in_scrutinee)]
+        for output_data in self.read().await.outputs().values() {
             if let Output::Foundry(foundry_output) = &output_data.output {
                 if foundry_output.id() == foundry_id {
                     return Ok(output_data.output.clone());
                 }
             }
         }
-        drop(account);
 
         // Foundry was not found in the account, try to get it from the node
         let foundry_output_id = self.client.foundry_output_id(foundry_id).await?;
@@ -154,9 +154,10 @@ impl AccountHandle {
 
     /// Returns outputs of the account
     pub async fn outputs(&self, filter: Option<FilterOptions>) -> Result<Vec<OutputData>> {
-        let account = self.read().await;
         let mut outputs = Vec::new();
-        for output in account.outputs.values() {
+
+        #[allow(clippy::significant_drop_in_scrutinee)]
+        for output in self.read().await.outputs.values() {
             if let Some(filter_options) = &filter {
                 if let Some(lower_bound_booked_timestamp) = filter_options.lower_bound_booked_timestamp {
                     if output.metadata.milestone_timestamp_booked < lower_bound_booked_timestamp {
@@ -176,14 +177,16 @@ impl AccountHandle {
             }
             outputs.push(output.clone());
         }
+
         Ok(outputs)
     }
 
     /// Returns unspent outputs of the account
     pub async fn unspent_outputs(&self, filter: Option<FilterOptions>) -> Result<Vec<OutputData>> {
-        let account = self.read().await;
         let mut outputs = Vec::new();
-        for output in account.unspent_outputs.values() {
+
+        #[allow(clippy::significant_drop_in_scrutinee)]
+        for output in self.read().await.unspent_outputs.values() {
             if let Some(filter_options) = &filter {
                 if let Some(lower_bound_booked_timestamp) = filter_options.lower_bound_booked_timestamp {
                     if output.metadata.milestone_timestamp_booked < lower_bound_booked_timestamp {
@@ -203,34 +206,39 @@ impl AccountHandle {
             }
             outputs.push(output.clone());
         }
+
         Ok(outputs)
     }
 
     /// Returns all incoming transactions of the account
     pub async fn incoming_transactions(&self) -> Result<HashMap<TransactionId, Transaction>> {
-        let account = self.read().await;
-        Ok(account.incoming_transactions.clone())
+        Ok(self.read().await.incoming_transactions.clone())
     }
 
     /// Returns all transactions of the account
     pub async fn transactions(&self) -> Result<Vec<Transaction>> {
-        let account = self.read().await;
         let mut transactions = Vec::new();
-        for transaction in account.transactions.values() {
+
+        #[allow(clippy::significant_drop_in_scrutinee)]
+        for transaction in self.read().await.transactions.values() {
             transactions.push(transaction.clone());
         }
+
         Ok(transactions)
     }
 
     /// Returns all pending transactions of the account
     pub async fn pending_transactions(&self) -> Result<Vec<Transaction>> {
-        let account = self.read().await;
         let mut transactions = Vec::new();
+        let account = self.read().await;
+
+        #[allow(clippy::significant_drop_in_scrutinee)]
         for transaction_id in &account.pending_transactions {
             if let Some(transaction) = account.transactions.get(transaction_id) {
                 transactions.push(transaction.clone());
             }
         }
+
         Ok(transactions)
     }
 

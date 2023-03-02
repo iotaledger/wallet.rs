@@ -11,12 +11,13 @@ impl AccountManager {
         log::debug!("[verify_integrity]");
 
         let accounts = self.accounts.read().await;
+
         // check that no account is missing and they're ordered
-        for index in 0..accounts.len() {
-            assert_eq!(accounts[index].read().await.index(), &(index as u32));
-        }
         // check that no address is missing and they're ordered
-        for account_handle in accounts.iter() {
+        #[allow(clippy::significant_drop_in_scrutinee)]
+        for (account_index, account_handle) in accounts.iter().enumerate() {
+            assert_eq!(accounts[account_index].read().await.index(), &(account_index as u32));
+
             let account = account_handle.read().await;
             let public_addresses = account.public_addresses();
             for (index, public_address) in public_addresses.iter().enumerate() {
@@ -27,6 +28,7 @@ impl AccountManager {
                 assert_eq!(internal_address.key_index, index as u32);
             }
         }
+
         Ok(())
     }
 }

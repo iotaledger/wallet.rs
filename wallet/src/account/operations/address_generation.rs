@@ -58,6 +58,7 @@ impl AccountHandle {
 
         // get bech32_hrp
         let bech32_hrp = {
+            #[allow(clippy::significant_drop_in_scrutinee)]
             match account.public_addresses.first() {
                 Some(address) => address.address.bech32_hrp.to_string(),
                 None => self.client.get_bech32_hrp().await?,
@@ -151,6 +152,8 @@ impl AccountHandle {
             SecretManager::Placeholder(_) => vec![],
         };
 
+        drop(account);
+
         let generate_addresses: Vec<AccountAddress> = addresses
             .into_iter()
             .enumerate()
@@ -162,7 +165,6 @@ impl AccountHandle {
             })
             .collect();
 
-        drop(account);
         self.update_account_addresses(options.internal, generate_addresses.clone())
             .await?;
 

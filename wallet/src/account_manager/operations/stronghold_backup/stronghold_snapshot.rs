@@ -49,9 +49,11 @@ pub(crate) async fn store_data_to_stronghold(
     }
 
     let mut serialized_accounts = Vec::new();
+    #[allow(clippy::significant_drop_in_scrutinee)]
     for account in account_manager.accounts.read().await.iter() {
         serialized_accounts.push(serde_json::to_string(&*account.read().await)?);
     }
+
     stronghold
         .insert(
             ACCOUNTS_KEY.as_bytes(),

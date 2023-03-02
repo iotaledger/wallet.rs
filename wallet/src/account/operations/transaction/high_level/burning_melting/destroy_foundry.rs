@@ -79,21 +79,20 @@ impl AccountHandle {
         alias_id: AliasId,
         foundry_id: FoundryId,
     ) -> crate::Result<(OutputData, OutputData)> {
-        let account = self.read().await;
-
         let mut existing_alias_output_data = None;
         let mut existing_foundry_output = None;
 
-        for (output_id, output_data) in account.unspent_outputs().iter() {
+        #[allow(clippy::significant_drop_in_scrutinee)]
+        for (output_id, output_data) in self.read().await.unspent_outputs().iter() {
             match &output_data.output {
                 Output::Alias(output) => {
                     if output.alias_id_non_null(output_id) == alias_id {
-                        existing_alias_output_data = Some(output_data);
+                        existing_alias_output_data = Some(output_data.clone());
                     }
                 }
                 Output::Foundry(output) => {
                     if output.id() == foundry_id {
-                        existing_foundry_output = Some(output_data);
+                        existing_foundry_output = Some(output_data.clone());
                     }
                 }
                 // Not interested in these outputs here
@@ -106,12 +105,10 @@ impl AccountHandle {
         }
 
         let existing_alias_output_data = existing_alias_output_data
-            .ok_or_else(|| Error::BurningOrMeltingFailed("required alias output for foundry not found".to_string()))?
-            .clone();
+            .ok_or_else(|| Error::BurningOrMeltingFailed("required alias output for foundry not found".to_string()))?;
 
         let existing_foundry_output_data = existing_foundry_output
-            .ok_or_else(|| Error::BurningOrMeltingFailed("required foundry output not found".to_string()))?
-            .clone();
+            .ok_or_else(|| Error::BurningOrMeltingFailed("required foundry output not found".to_string()))?;
 
         Ok((existing_alias_output_data, existing_foundry_output_data))
     }

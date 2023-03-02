@@ -22,7 +22,6 @@ impl AccountHandle {
             .await?;
 
         let account_addresses = self.addresses().await?;
-        let account = self.read().await;
 
         let network_id = self.client.get_network_id().await?;
         let rent_structure = self.client.get_rent_structure().await?;
@@ -38,6 +37,9 @@ impl AccountHandle {
         let mut foundries = Vec::new();
         let mut nfts = Vec::new();
 
+        let account = self.read().await;
+
+        #[allow(clippy::significant_drop_in_scrutinee)]
         for output_data in account.unspent_outputs.values() {
             // Check if output is from the network we're currently connected to
             if output_data.network_id != network_id {

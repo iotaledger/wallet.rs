@@ -44,8 +44,8 @@ impl AccountManager {
             runtime.block_on(async {
                 'outer: loop {
                     log::debug!("[background_syncing]: syncing accounts");
-                    let accounts = accounts.read().await;
-                    for account in accounts.iter() {
+                    #[allow(clippy::significant_drop_in_scrutinee)]
+                    for account in accounts.read().await.iter() {
                         // Check if the process should stop before syncing each account so it stops faster
                         if background_syncing_status.load(Ordering::Relaxed) == 2 {
                             log::debug!("[background_syncing]: stopping");

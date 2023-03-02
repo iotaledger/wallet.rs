@@ -13,7 +13,9 @@ impl AccountManager {
         let accounts = self.accounts.read().await;
 
         match &account_id {
-            AccountIdentifier::Index(index) => {
+            AccountIdentifier::Index(index) =>
+            {
+                #[allow(clippy::significant_drop_in_scrutinee)]
                 for account_handle in accounts.iter() {
                     let account = account_handle.read().await;
                     if account.index() == index {
@@ -21,7 +23,9 @@ impl AccountManager {
                     }
                 }
             }
-            AccountIdentifier::Alias(alias) => {
+            AccountIdentifier::Alias(alias) =>
+            {
+                #[allow(clippy::significant_drop_in_scrutinee)]
                 for account_handle in accounts.iter() {
                     let account = account_handle.read().await;
                     if account.alias() == alias {
@@ -30,6 +34,7 @@ impl AccountManager {
                 }
             }
         };
+
         Err(crate::Error::AccountNotFound(serde_json::to_string(&account_id)?))
     }
 }
