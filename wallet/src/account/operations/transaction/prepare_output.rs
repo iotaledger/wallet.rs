@@ -163,7 +163,7 @@ impl AccountHandle {
             let mut new_sdr_amount = required_storage_deposit - options.amount;
             let minimum_storage_deposit = minimum_storage_deposit_basic_output(&rent_structure, &None, token_supply)?;
             let mut final_output_amount = required_storage_deposit;
-            if required_storage_deposit - options.amount < minimum_storage_deposit {
+            if required_storage_deposit < options.amount + minimum_storage_deposit {
                 // return amount must be >= minimum_storage_deposit
                 new_sdr_amount = minimum_storage_deposit;
 
@@ -341,7 +341,7 @@ impl AccountHandle {
             let mut new_sdr_amount = required_storage_deposit - options.amount;
             let minimum_storage_deposit = minimum_storage_deposit_basic_output(&rent_structure, &None, token_supply)?;
             let mut final_output_amount = required_storage_deposit;
-            if required_storage_deposit - options.amount < minimum_storage_deposit {
+            if required_storage_deposit < options.amount + minimum_storage_deposit {
                 // return amount must be >= minimum_storage_deposit
                 new_sdr_amount = minimum_storage_deposit;
 
