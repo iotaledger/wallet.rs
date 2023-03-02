@@ -50,7 +50,8 @@ import type {
 } from '@iota/types'
 type MessageHandler = Awaited<ReturnType<typeof MessageHandler>>
 
-/** The Account factory function. */
+/** createAccount is a factory function, because the methods become part of the object instead of the prototype chain.
+This is beneficial, since the prototype chain is bound to a context and can be sanitized.**/
 export function createAccount(accountMeta: AccountMeta, messageHandler: MessageHandler) {
     
     return {
