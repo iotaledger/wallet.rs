@@ -3,7 +3,7 @@ name: Create Java release
 on: workflow_dispatch
 
 jobs:
-  release-java:
+  release-desktop:
     name: Create Java release
     runs-on: ${{ matrix.os }}
     strategy:
@@ -11,6 +11,8 @@ jobs:
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
         java: ["11"]
+    outputs:
+      tag: ${{ steps.construct-tag.outputs.tag }}
 
     steps:
       - uses: actions/checkout@v3
@@ -74,9 +76,32 @@ jobs:
           java-version: ${{ matrix.java }}
           distribution: 'temurin'
 
+      - name: Read build.gradle
+        shell: bash
+        id: read-build-gradle
+        working-directory: wallet/bindings/java/
+        run: |
+          buildGradle="$(cat build.gradle)"
+          buildGradle=$(echo $buildGradle | tr '\n' ' ')
+          echo "build-gradle=$buildGradle" >> $GITHUB_OUTPUT   
+
+      - name: Extract version from build.gradle
+        uses: actions-ecosystem/action-regex-match@v2
+        id: prepare-tag
+        with:
+          text: ${{ steps.read-build-gradle.outputs.build-gradle }}
+          regex: "version = '(.*?)'"
+          flags: m
+
+      - name: Construct tag
+        shell: bash
+        id: construct-tag
+        run: |
+          echo "tag=iota-wallet-java-${{ steps.prepare-tag.outputs.group1 }}-new" >> $GITHUB_OUTPUT
+
       - name: Build JAR for default target and an additional JAR that does not contain the native library
         shell: bash
-        working-directory: bindings/java/
+        working-directory: wallet/bindings/java/
         run: |
           chmod +x gradlew
           ./gradlew build jarWithoutNativeLibs
@@ -84,7 +109,7 @@ jobs:
       - name: Build JAR for aarch64-apple-darwin target
         if: matrix.os == 'macos-latest'
         shell: bash
-        working-directory: bindings/java/
+        working-directory: wallet/bindings/java/
         run: |
           rustup target add aarch64-apple-darwin
           ./gradlew build -PbuildTarget=aarch64-apple-darwin
@@ -92,27 +117,19 @@ jobs:
       - name: Get filename for tag construction
         shell: bash
         id: filename
-        working-directory: bindings/java/
+        working-directory: wallet/bindings/java/
         run: |
           cd lib/build/libs/
           fileName="$(ls | grep -m 1 jar)"
           echo "FILE_NAME=$fileName" >> $GITHUB_OUTPUT
-
-      - name: Construct tag
-        uses: actions-ecosystem/action-regex-match@v2
-        id: prepare-tag
-        with:
-          text: ${{ steps.filename.outputs.FILE_NAME }}
-          regex: '(.*)(\d.\d.\d(-rc.\d)?)'
-          flags: m
 
       - name: Upload JAR to Github
         uses: softprops/action-gh-release@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
-            bindings/java/lib/build/libs/*.jar
-          tag_name: ${{ steps.prepare-tag.outputs.group1 }}java-${{ steps.prepare-tag.outputs.group2 }}-new
+            wallet/bindings/java/lib/build/libs/*.jar
+          tag_name: ${{ steps.construct-tag.outputs.tag }}
           append_body: true
           prerelease: true
 
@@ -123,9 +140,144 @@ jobs:
           ORG_GRADLE_PROJECT_base64EncodedAsciiArmoredSigningKey: ${{ secrets.ORG_GRADLE_PROJECT_BASE64_ENCODED_ASCII_ARMORED_SIGNING_KEY }}
           ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.ORG_GRADLE_PROJECT_SIGNING_PASSWORD }}
         shell: bash
-        working-directory: bindings/java/
+        working-directory: wallet/bindings/java/
         run: |
           ./gradlew publishToSonatype
           if [ "$RUNNER_OS" == "macOS" ];
           then ./gradlew publishToSonatype -PbuildTarget=aarch64-apple-darwin
           fi
+
+  release-android:
+    name: Create Android releases
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: rocksdb-v18
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Install LLVM and Clang (Windows) # required for bindgen to work, see https://github.com/rust-lang/rust-bindgen/issues/1797
+        uses: KyleMayes/install-llvm-action@32c4866ebb71e0949e8833eb49beeebed48532bd
+        if: matrix.os == 'windows-2019'
+        with:
+          version: "11.0"
+          directory: ${{ runner.temp }}/llvm
+
+      - name: Set LIBCLANG_PATH (Windows)
+        run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
+        if: matrix.os == 'windows-2019'
+
+      - name: Get current date
+        run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+        if: matrix.os == 'macos-latest' || ${{ startsWith(matrix.os, 'ubuntu') }}
+
+      - name: Get current date
+        if: matrix.os == 'windows-2019'
+        run: echo "CURRENT_DATE=$(Get-Date -Format "yyyy-MM-dd")" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Install required packages (Ubuntu)
+        if: ${{ startsWith(matrix.os, 'ubuntu') }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install libudev-dev libusb-1.0-0-dev
+
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          # Add date to the cache to keep it up to date
+          key: ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
+          # Restore from outdated cache for speed
+          restore-keys: |
+            ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+            ${{ matrix.os }}-stable-cargo-registry-
+
+      - name: Cache cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          # Add date to the cache to keep it up to date
+          key: ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
+          # Restore from outdated cache for speed
+          restore-keys: |
+            ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+            ${{ matrix.os }}-stable-cargo-index-
+
+      - name: Install cargo-ndk
+        shell: bash
+        working-directory: wallet/bindings/java/
+        run: |
+          cargo install cargo-ndk@2.12.4
+
+      - name: Add the Android targets
+        shell: bash
+        working-directory: wallet/bindings/java/
+        run: |
+          rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android
+
+      - name: Read build.gradle
+        shell: bash
+        id: read-build-gradle
+        working-directory: wallet/bindings/java/
+        run: |
+          buildGradle="$(cat build.gradle)"
+          buildGradle=$(echo $buildGradle | tr '\n' ' ')
+          echo "build-gradle=$buildGradle" >> $GITHUB_OUTPUT 
+
+      - name: Extract version from build.gradle
+        uses: actions-ecosystem/action-regex-match@v2
+        id: prepare-tag
+        with:
+          text: ${{ steps.read-build-gradle.outputs.build-gradle }}
+          regex: "version = '(.*?)'"
+          flags: m
+
+      - name: Construct tag
+        shell: bash
+        id: construct-tag
+        run: |
+          echo "tag=iota-wallet-java-${{ steps.prepare-tag.outputs.group1 }}-new" >> $GITHUB_OUTPUT
+
+      - name: Build for the Android targets
+        shell: bash
+        working-directory: wallet/bindings/java/
+        run: |
+          cd lib/native
+          cargo ndk -t arm64-v8a -t armeabi-v7a -t x86 -t x86_64 -o ./cargo-ndk/jniLibs build --release
+
+      - name: Copy libc++_shared.so to the correct location
+        shell: bash
+        working-directory: wallet/bindings/java/lib/native/cargo-ndk/jniLibs
+        run: |
+          echo $ANDROID_NDK_HOME
+          cp $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so arm64-v8a/libc++_shared.so
+          cp $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/arm-linux-androideabi/libc++_shared.so armeabi-v7a/libc++_shared.so
+          cp $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so x86_64/libc++_shared.so
+          cp $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/i686-linux-android/libc++_shared.so x86/libc++_shared.so
+          
+      - name: Archive Release
+        uses: thedoctor0/zip-release@0.7.0
+        with:
+          type: 'zip'
+          filename: 'jniLibs.zip'
+          directory: wallet/bindings/java/lib/native/cargo-ndk
+
+      - name: Upload ZIP to Github
+        uses: softprops/action-gh-release@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: |
+            wallet/bindings/java/lib/native/cargo-ndk/jniLibs.zip
+          tag_name: ${{ steps.construct-tag.outputs.tag }}
+          append_body: true
+          prerelease: true

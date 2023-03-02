@@ -34,6 +34,7 @@ The AccountManager class.
 - [stopBackgroundSync](AccountManager.md#stopbackgroundsync)
 - [storeMnemonic](AccountManager.md#storemnemonic)
 - [verifyMnemonic](AccountManager.md#verifymnemonic)
+- [updateNodeAuth](AccountManager.md#updatenodeauth)
 
 ## Methods
 
@@ -125,13 +126,13 @@ ___
 
 ### destroy
 
-▸ **destroy**(): `void`
+▸ **destroy**(): `Promise`<`void`\>
 
 Destroy the AccountManager and drop its database connection.
 
 #### Returns
 
-`void`
+`Promise`<`void`\>
 
 ___
 
@@ -387,7 +388,7 @@ ___
 
 ### setClientOptions
 
-▸ **setClientOptions**(`options`): `Promise`<`void`\>
+▸ **setClientOptions**(`clientOptions`): `Promise`<`void`\>
 
 Set ClientOptions.
 
@@ -395,7 +396,7 @@ Set ClientOptions.
 
 | Name | Type |
 | :------ | :------ |
-| `options` | [`ClientOptions`](../interfaces/ClientOptions.md) |
+| `clientOptions` | [`ClientOptions`](../interfaces/ClientOptions.md) |
 
 #### Returns
 
@@ -499,6 +500,25 @@ Verify if a mnemonic is a valid BIP39 mnemonic.
 | Name | Type |
 | :------ | :------ |
 | `mnemonic` | `string` |
+
+#### Returns
+
+`Promise`<`void`\>
+
+___
+
+### updateNodeAuth
+
+▸ **updateNodeAuth**(`url`, `auth?`): `Promise`<`void`\>
+
+Update the authentication for the provided node.
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `url` | `string` |
+| `auth?` | [`Auth`](../api_ref.md#auth) |
 
 #### Returns
 

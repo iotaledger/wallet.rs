@@ -7,7 +7,7 @@ mkdir coverage
 
 # Run tests with profiling instrumentation
 echo "Running instrumented unit tests..."
-RUSTFLAGS="-Zinstrument-coverage" LLVM_PROFILE_FILE="iota-wallet-%m.profraw" cargo +nightly test --tests --all --all-features
+RUSTFLAGS="-C instrument-coverage" LLVM_PROFILE_FILE="iota-wallet-%m.profraw" cargo +nightly test --tests --all-features --manifest-path wallet/Cargo.toml -- --include-ignored
 
 # Merge all .profraw files into "iota-wallet.profdata"
 echo "Merging coverage data..."
@@ -19,8 +19,8 @@ BINARIES=""
 
 for file in \
   $( \
-    RUSTFLAGS="-Zinstrument-coverage" \
-      cargo +nightly test --tests --all --all-features --no-run --message-format=json \
+    RUSTFLAGS="-C instrument-coverage" \
+      cargo +nightly test --tests --all --all-features --no-run --message-format=json --manifest-path wallet/Cargo.toml -- --include-ignored \
         | jq -r "select(.profile.test == true) | .filenames[]" \
         | grep -v dSYM - \
   ); \
@@ -38,7 +38,7 @@ cargo +nightly cov -- export ${BINARIES} \
   >> coverage/coverage.info
   
 
-# Ensure intermediate coverage files are deleted
+# Ensure intermediate coverage files are deleted, ignore errors
 echo "Removing intermediate files..."
-find . -name "*.profraw" -type f -delete
-find . -name "*.profdata" -type f -delete
+find . -name "*.profraw" -type f -delete &> /dev/null || true
+find . -name "*.profdata" -type f -delete &> /dev/null || true

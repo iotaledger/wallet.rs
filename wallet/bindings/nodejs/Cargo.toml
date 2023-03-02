@@ -1,0 +1,30 @@
+[workspace]
+
+[package]
+# NOTE: cargo-cp-artifact reads the name of crate for artifacts, so the name of
+# this crate stays the same as the one specified in `package.json`.
+name = "wallet"
+version = "0.2.0"
+authors = [ "IOTA Stiftung" ]
+edition = "2021"
+description = "Node.js bindings for the IOTA wallet library"
+documentation = "https://wiki.iota.org/wallet.rs/welcome"
+homepage = "https://www.iota.org/"
+repository = "https://github.com/iotaledger/wallet.rs"
+license = "Apache-2.0"
+keywords = [ "iota", "wallet", "transaction", "nodejs" ]
+categories = [ "cryptography::cryptocurrencies" ]
+exclude = [ "index.node" ]
+
+[lib]
+crate-type = [ "cdylib" ]
+
+[dependencies]
+iota-wallet = { path = "../../", default-features = false, features = [ "events", "ledger_nano", "storage", "stronghold", "message_interface", "participation", "rocksdb" ] }
+
+log = { version = "0.4.17", default-features = false }
+neon = { version = "0.10.1", default-features = false, features = [ "napi-6", "event-queue-api", "promise-api" ] }
+once_cell = { version = "1.17.0", default-features = false }
+serde = { version = "1.0.152", default-features = false }
+serde_json = { version = "1.0.93", default-features = false }
+tokio = { version = "1.25.0", default-features = false }

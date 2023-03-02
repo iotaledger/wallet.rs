@@ -1,0 +1,70 @@
+---
+title: Destroy an Alias Output
+description: 'How to destroy an alias output using wallet.rs'
+image: /img/logo/iota_mark_light.png
+keywords:
+- how to
+- outputs
+- destroy
+- destroy alias output
+- nodejs
+- python
+- java
+- rust
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import NodejsCode from "../../_admonitions/_guide_coming_soon.md";
+import NodejsOutput from "../../_admonitions/_guide_coming_soon.md";
+import PythonCode from "../../_admonitions/_guide_coming_soon.md";
+import PythonOutput from "../../_admonitions/_guide_coming_soon.md";
+import JavaCode from "../../libraries/java/how_to/outputs_and_transactions/_06_destroy_alias_output/_code_sample.mdx";
+import JavaOutput from "../../libraries/java/how_to/outputs_and_transactions/_06_destroy_alias_output/_expected_output.md";
+import RustCode from "../../libraries/rust/how_to/outputs_and_transactions/_16_destroy_alias_output/_code_sample.mdx";
+import RustOutput from "../../libraries/rust/how_to/outputs_and_transactions/_16_destroy_alias_output/_expected_output.md";
+
+You can destroy an alias output by ID using the `Account.destroy_alias(alias_id, options)` function. If the alias still owns any outputs when you try to destroy it, you will get an error.
+
+## Code Example
+
+The following example will:
+
+1. Create an account manager.
+2. Get Alice's account which was [created in the first guide](../accounts_and_addresses/01_create_a_wallet_account.mdx).
+3. [Get the account's balance](./../accounts_and_addresses/04_check_balance.mdx).
+4. Destroy an [alias output](https://wiki.iota.org/shimmer/introduction/explanations/ledger/alias) by id.
+5. Get the account's balance again to show the difference after step 4.
+
+<Tabs groupId="language">
+    <TabItem value="rust" label="Rust">
+        <RustCode/>
+    </TabItem>
+    <TabItem value="nodejs" label="Nodejs">
+        <NodejsCode/>
+    </TabItem>
+    <TabItem value="python" label="Python">
+        <PythonCode/>
+    </TabItem>
+    <TabItem value="java" label="Java">
+        <JavaCode/>
+    </TabItem>
+</Tabs>
+
+## Expected Output
+
+<Tabs groupId="language">
+    <TabItem value="rust" label="Rust">
+        <RustOutput/>
+    </TabItem>
+    <TabItem value="nodejs" label="Nodejs">
+        <NodejsOutput/>
+    </TabItem>
+    <TabItem value="python" label="Python">
+        <PythonOutput/>
+    </TabItem>
+    <TabItem value="java" label="Java">
+        <JavaOutput/>
+    </TabItem>
+</Tabs>
+

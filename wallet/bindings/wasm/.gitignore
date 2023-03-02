@@ -1,0 +1,12 @@
+target/
+**/*~
+**/node_modules
+**/.DS_Store
+build/
+out/
+**/dist
+stronghold
+package-lock.json
+web/
+node/
+lib/bindings.js

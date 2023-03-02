@@ -116,8 +116,7 @@ Basic Auth or JWT
 | Name | Type |
 | :------ | :------ |
 | `jwt?` | `string` |
-| `username?` | `string` |
-| `password?` | `string` |
+| `basicAuthNamePwd?` | [`string`, `string`] |
 
 ___
 

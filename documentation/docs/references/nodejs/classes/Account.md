@@ -48,6 +48,7 @@ The Account class.
 - [sendNativeTokens](Account.md#sendnativetokens)
 - [sendNft](Account.md#sendnft)
 - [sendOutputs](Account.md#sendoutputs)
+- [setAlias](Account.md#setalias)
 - [signTransactionEssence](Account.md#signtransactionessence)
 - [submitAndStoreTransaction](Account.md#submitandstoretransaction)
 - [sync](Account.md#sync)
@@ -885,6 +886,24 @@ Send outputs in a transaction.
 `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
 The sent transaction.
+
+___
+
+### setAlias
+
+▸ **setAlias**(`alias`): `Promise`<`void`\>
+
+Set the alias for the account
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `alias` | `string` | The account alias to set. |
+
+#### Returns
+
+`Promise`<`void`\>
 
 ___
 

@@ -1,0 +1,6 @@
+/target
+/stardust-cli-wallet-db
+*.stronghold
+archive.log
+mnemonic.txt
+wallet

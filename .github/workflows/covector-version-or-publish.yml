@@ -101,7 +101,7 @@ jobs:
         if: matrix.os == 'windows-2019'
 
       - name: Set deployment target (macOS)
-        run: echo "MACOSX_DEPLOYMENT_TARGET=10.14" >> $GITHUB_ENV #  10.12 should be supported, but waiting for new rocksDB to test this
+        run: echo "MACOSX_DEPLOYMENT_TARGET=10.14" >> $GITHUB_ENV # 10.12 should be supported, but waiting for new rocksDB to test this
         if: matrix.os == 'macos-11'
 
       - name: Get current date
@@ -141,17 +141,13 @@ jobs:
 
       - name: Install dependencies
         run: npm install typescript && npm ci
-        working-directory: bindings/nodejs
+        working-directory: wallet/bindings/nodejs
       
-      - name: Build Node.js prebuild (x64)
-        run: npm run prebuild-x64
-        working-directory: bindings/nodejs
-
-      - name: Build Node.js prebuild (arm64)
-        run: npm run prebuild-arm64
-        working-directory: bindings/nodejs
+      - name: Build Node.js prebuild
+        run: npm run prebuild
+        working-directory: wallet/bindings/nodejs
       
       - name: Upload prebuild to GitHub release
         run: npx prebuild --upload-all ${{ secrets.GITHUB_TOKEN }} --tag-prefix nodejs-binding-v
-        working-directory: bindings/nodejs
+        working-directory: wallet/bindings/nodejs
   
