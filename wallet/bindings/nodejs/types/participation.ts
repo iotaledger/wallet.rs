@@ -39,8 +39,8 @@ export interface ParticipationEventWithNodes {
 export type ParticipationEventId = string;
 
 export type ParticipationEventMap = {
-    [id: ParticipationEventId]: ParticipationEventWithNodes
-}
+    [id: ParticipationEventId]: ParticipationEventWithNodes;
+};
 
 export interface ParticipationEventStatus {
     milestoneIndex: number;

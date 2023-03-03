@@ -400,12 +400,16 @@ pub enum AccountMethod {
     #[cfg(feature = "participation")]
     #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
     GetVotingPower,
-    /// Calculates a participation overview for an account.
+    /// Calculates a participation overview for an account. If event_ids are provided, only return outputs and tracked
+    /// participations for them.
     /// Expected response:
     /// [`AccountParticipationOverview`](crate::message_interface::Response::AccountParticipationOverview)
     #[cfg(feature = "participation")]
     #[cfg_attr(docsrs, doc(cfg(feature = "participation")))]
-    GetParticipationOverview,
+    GetParticipationOverview {
+        #[serde(rename = "eventIds")]
+        event_ids: Option<Vec<ParticipationEventId>>,
+    },
     /// Designates a given amount of tokens towards an account's "voting power" by creating a
     /// special output, which is really a basic one with some metadata.
     /// This will stop voting in most cases (if there is a remainder output), but the voting data isn't lost and

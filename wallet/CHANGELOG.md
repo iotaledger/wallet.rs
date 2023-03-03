@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `ParticipationEventRegistrationOptions` type;
 - `AccountManager::update_node_auth()`;
 - `Message::UpdateNodeAuth`;
+- `event_ids` parameter to `Account::get_participation_overview()`;
 
 ### Changed
 
@@ -40,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `AccountMethod::GetParticipationEventIds` now also contains a `Node`;
 - Custom `Serialize` implementation for `Error`;
 - Reduced `MIN_SYNC_INTERVAL`;
+- Made `TransactionOptionsDto`, `ReturnStrategy` and `MintTokenTransactionDto` pub reachable;
 
 ### Removed
 
@@ -51,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Account::get_participation_overview()` with multiple events and different nodes;
 - `prepare_nft_output` uses newly provided tag/metadata instead of previous ones from unspent output;
 - `Account::claim_outputs()` when the account has no basic outputs available;
+- SDR amount in `Account::prepare_output()`;
 
 ## 1.0.0-rc.5 - 2023-02-09
 

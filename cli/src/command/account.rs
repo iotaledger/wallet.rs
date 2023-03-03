@@ -126,11 +126,17 @@ pub enum AccountCommand {
     /// List the unspent outputs.
     UnspentOutputs,
     /// Cast given votes for a given event
-    Vote { event_id: String, answers: Vec<u8> },
+    Vote {
+        event_id: ParticipationEventId,
+        answers: Vec<u8>,
+    },
     /// Stop participating to a given event
-    StopParticipating { event_id: String },
+    StopParticipating { event_id: ParticipationEventId },
     /// Calculate the participation overview of the account
-    ParticipationOverview,
+    ParticipationOverview {
+        #[clap(short, long, value_parser, num_args = 1.., value_delimiter = ' ')]
+        event_ids: Vec<ParticipationEventId>,
+    },
     /// Get the voting power of the account
     VotingPower,
     /// Increase the voting power of the account
@@ -610,10 +616,12 @@ pub async fn unspent_outputs_command(account_handle: &AccountHandle) -> Result<(
     Ok(())
 }
 
-pub async fn vote_command(account_handle: &AccountHandle, event_id: String, answers: Vec<u8>) -> Result<(), Error> {
-    let transaction = account_handle
-        .vote(Some(ParticipationEventId::from_str(&event_id)?), Some(answers))
-        .await?;
+pub async fn vote_command(
+    account_handle: &AccountHandle,
+    event_id: ParticipationEventId,
+    answers: Vec<u8>,
+) -> Result<(), Error> {
+    let transaction = account_handle.vote(Some(event_id), Some(answers)).await?;
 
     log::info!(
         "Voting transaction sent:\n{:?}\n{:?}",
@@ -624,10 +632,11 @@ pub async fn vote_command(account_handle: &AccountHandle, event_id: String, answ
     Ok(())
 }
 
-pub async fn stop_participating_command(account_handle: &AccountHandle, event_id: String) -> Result<(), Error> {
-    let transaction = account_handle
-        .stop_participating(ParticipationEventId::from_str(&event_id)?)
-        .await?;
+pub async fn stop_participating_command(
+    account_handle: &AccountHandle,
+    event_id: ParticipationEventId,
+) -> Result<(), Error> {
+    let transaction = account_handle.stop_participating(event_id).await?;
 
     log::info!(
         "Stop participating transaction sent:\n{:?}\n{:?}",
@@ -638,8 +647,11 @@ pub async fn stop_participating_command(account_handle: &AccountHandle, event_id
     Ok(())
 }
 
-pub async fn participation_overview_command(account_handle: &AccountHandle) -> Result<(), Error> {
-    let participation_overview = account_handle.get_participation_overview().await?;
+pub async fn participation_overview_command(
+    account_handle: &AccountHandle,
+    event_ids: Option<Vec<ParticipationEventId>>,
+) -> Result<(), Error> {
+    let participation_overview = account_handle.get_participation_overview(event_ids).await?;
 
     log::info!("Participation overview: {participation_overview:?}");
 

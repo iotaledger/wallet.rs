@@ -4,7 +4,7 @@
 //! The IOTA Wallet Library
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
-#![deny(clippy::nursery, rust_2018_idioms, warnings)]
+#![deny(clippy::nursery, rust_2018_idioms, warnings, unreachable_pub)]
 #![allow(
     clippy::redundant_pub_crate,
     clippy::module_name_repetitions,

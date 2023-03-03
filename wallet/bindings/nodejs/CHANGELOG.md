@@ -1,5 +1,12 @@
 # Changelog
 
+## \[2.0.3-rc.23]
+
+- `Account::getParticipationOverview` optional accepts eventIds to filter.
+  - [cacde454](https://github.com/iotaledger/wallet.rs/commit/cacde454c9c27435622f16b15f97649c2fc52672) Add optional event_ids to get_participation_overview() ([#1904](https://github.com/iotaledger/wallet.rs/pull/1904)) on 2023-03-02
+- Fix SDR amount in `Account::prepareOutput()`;
+  - [24fc6e53](https://github.com/iotaledger/wallet.rs/commit/24fc6e538e49de154799248ea62d3b95e37cfc0f) Fix SDR amount in prepare output ([#1907](https://github.com/iotaledger/wallet.rs/pull/1907)) on 2023-03-02
+
 ## \[2.0.3-rc.22]
 
 - Change `Auth::{username, password}` to `Auth::basicAuthNamePwd`;

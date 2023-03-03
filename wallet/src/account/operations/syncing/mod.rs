@@ -3,7 +3,7 @@
 
 pub(crate) mod addresses;
 pub(crate) mod foundries;
-pub mod options;
+pub(crate) mod options;
 pub(crate) mod outputs;
 pub(crate) mod transactions;
 
