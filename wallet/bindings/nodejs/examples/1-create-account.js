@@ -1,8 +1,8 @@
 /**
  * This example creates a new database and account
  */
-
-require('dotenv').config({ path: '../.env' });
+const path = require('path')
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 const { AccountManager, CoinType } = require('@iota/wallet');
 
 async function run() {
@@ -39,7 +39,7 @@ async function createAccountManager() {
             },
         },
     };
-
+    console.log('Clietnt options: ', accountManagerOptions.clientOptions);
     const manager = new AccountManager(accountManagerOptions);
     await manager.storeMnemonic(process.env.MNEMONIC);
     return manager;

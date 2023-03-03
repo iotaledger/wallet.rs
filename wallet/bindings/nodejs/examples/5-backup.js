@@ -2,8 +2,8 @@
  * This example backups your data in a secure file.
  * You can move this file to another app or device and restore it.
  */
-
-require('dotenv').config({ path: '../.env' });
+const path = require('path')
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 const getUnlockedManager = require('./account-manager');
 
 async function run() {
