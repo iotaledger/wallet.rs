@@ -13,7 +13,6 @@ categories = [ "cryptography::cryptocurrencies" ]
 
 [package.metadata.maturin]
 name = "iota-wallet"
-python-source = "lib"
 
 [lib]
 name = "iota_wallet"
