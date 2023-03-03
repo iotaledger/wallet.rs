@@ -10,6 +10,7 @@ repository = "https://github.com/iotaledger/wallet.rs"
 license = "Apache-2.0"
 keywords = [ "iota", "wallet", "transaction", "python" ]
 categories = [ "cryptography::cryptocurrencies" ]
+publish = false
 
 [package.metadata.maturin]
 name = "iota-wallet"
