@@ -7,7 +7,7 @@ use std::str::FromStr;
 
 use iota_client::block::address::Address;
 use iota_wallet::{
-    account::{Assets, Features, OutputOptions, Unlocks},
+    account::{Assets, Features, OutputOptions, ReturnStrategy, StorageDeposit, Unlocks},
     iota_client::block::output::{NativeToken, NftId, TokenId},
     NftOptions, Result, U256,
 };
@@ -153,7 +153,7 @@ async fn output_preparation() -> Result<()> {
             None,
         )
         .await?;
-    assert_eq!(output.amount(), 48200);
+    assert_eq!(output.amount(), 54600);
     // address and storage deposit unlock condition, because of the metadata feature block, 12000 is not enough for the
     // required storage deposit
     assert_eq!(output.unlock_conditions().unwrap().len(), 2);
@@ -359,7 +359,6 @@ async fn output_preparation() -> Result<()> {
                     expiration_unix_time: Some(1),
                     timelock_unix_time: None,
                 }),
-                // unlocks: None,
                 storage_deposit: None,
             },
             None,
@@ -369,6 +368,113 @@ async fn output_preparation() -> Result<()> {
     assert_eq!(output.amount(), 53900);
     // address, sdr, expiration
     assert_eq!(output.unlock_conditions().unwrap().len(), 3);
+
+    common::tear_down(storage_path)
+}
+
+#[tokio::test]
+async fn output_preparation_sdr() -> Result<()> {
+    let storage_path = "test-storage/output_preparation_sdr";
+    common::setup(storage_path)?;
+
+    let manager = common::make_manager(storage_path, None, None).await?;
+    let account = manager.create_account().finish().await?;
+
+    let rent_structure = account.client().get_rent_structure().await?;
+    let token_supply = account.client().get_token_supply().await?;
+
+    let recipient_address = String::from("rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu");
+
+    let output = account
+        .prepare_output(
+            OutputOptions {
+                recipient_address: recipient_address.clone(),
+                amount: 8001,
+                assets: None,
+                features: None,
+                unlocks: None,
+                storage_deposit: None,
+            },
+            None,
+        )
+        .await?;
+    // Check if the output has enough amount to cover the storage deposit
+    output.verify_storage_deposit(rent_structure.clone(), token_supply)?;
+    assert_eq!(output.amount(), 50601);
+    // address and sdr unlock condition
+    assert_eq!(output.unlock_conditions().unwrap().len(), 2);
+    let sdr = output.unlock_conditions().unwrap().storage_deposit_return().unwrap();
+    assert_eq!(sdr.amount(), 42600);
+
+    let output = account
+        .prepare_output(
+            OutputOptions {
+                recipient_address: recipient_address.clone(),
+                amount: 42599,
+                assets: None,
+                features: None,
+                unlocks: None,
+                storage_deposit: None,
+            },
+            None,
+        )
+        .await?;
+    // Check if the output has enough amount to cover the storage deposit
+    output.verify_storage_deposit(rent_structure.clone(), token_supply)?;
+    assert_eq!(output.amount(), 85199);
+    // address and sdr unlock condition
+    assert_eq!(output.unlock_conditions().unwrap().len(), 2);
+    let sdr = output.unlock_conditions().unwrap().storage_deposit_return().unwrap();
+    assert_eq!(sdr.amount(), 42600);
+
+    // ReturnStrategy::Return provided
+    let output = account
+        .prepare_output(
+            OutputOptions {
+                recipient_address: recipient_address.clone(),
+                amount: 42599,
+                assets: None,
+                features: None,
+                unlocks: None,
+                storage_deposit: Some(StorageDeposit {
+                    return_strategy: Some(ReturnStrategy::Return),
+                    use_excess_if_low: None,
+                }),
+            },
+            None,
+        )
+        .await?;
+    // Check if the output has enough amount to cover the storage deposit
+    output.verify_storage_deposit(rent_structure.clone(), token_supply)?;
+    assert_eq!(output.amount(), 85199);
+    // address and sdr unlock condition
+    assert_eq!(output.unlock_conditions().unwrap().len(), 2);
+    let sdr = output.unlock_conditions().unwrap().storage_deposit_return().unwrap();
+    assert_eq!(sdr.amount(), 42600);
+
+    // ReturnStrategy::Gift provided
+    let output = account
+        .prepare_output(
+            OutputOptions {
+                recipient_address: recipient_address.clone(),
+                amount: 42599,
+                assets: None,
+                features: None,
+                unlocks: None,
+                storage_deposit: Some(StorageDeposit {
+                    return_strategy: Some(ReturnStrategy::Gift),
+                    use_excess_if_low: None,
+                }),
+            },
+            None,
+        )
+        .await?;
+    // Check if the output has enough amount to cover the storage deposit
+    output.verify_storage_deposit(rent_structure, token_supply)?;
+    // The additional 1 amount will be added, because the storage deposit should be gifted and not returned
+    assert_eq!(output.amount(), 42600);
+    // storage deposit gifted, only address unlock condition
+    assert_eq!(output.unlock_conditions().unwrap().len(), 1);
 
     common::tear_down(storage_path)
 }

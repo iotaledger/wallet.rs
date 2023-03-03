@@ -374,6 +374,9 @@ export type __GetVotingPowerMethod__ = {
 
 export type __GetParticipationOverviewMethod__ = {
     name: 'getParticipationOverview';
+    data: {
+        eventIds?: ParticipationEventId[];
+    };
 };
 
 export type __IncreaseVotingPowerMethod__ = {

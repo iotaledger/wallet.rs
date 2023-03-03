@@ -52,6 +52,7 @@ The Account class.
 - [signTransactionEssence](Account.md#signtransactionessence)
 - [submitAndStoreTransaction](Account.md#submitandstoretransaction)
 - [sync](Account.md#sync)
+- [getParticipationOverview](Account.md#getparticipationoverview)
 
 ## Methods
 
@@ -965,3 +966,23 @@ Will also retry pending transactions if necessary.
 `Promise`<[`AccountBalance`](../interfaces/AccountBalance.md)\>
 
 The account balance.
+
+___
+
+### getParticipationOverview
+
+▸ **getParticipationOverview**(`eventIds?`): `Promise`<`ParticipationOverview`\>
+
+Calculates the voting overview of an account.
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `eventIds?` | `string`[] | Optional, filters participations only for provided events. |
+
+#### Returns
+
+`Promise`<`ParticipationOverview`\>
+
+ParticipationOverview
