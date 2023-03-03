@@ -296,7 +296,7 @@ jobs:
 
     # Set custom deployment target because of rocksdb
     - name: Set deployment target (macOS)
-      run: echo "MACOSX_DEPLOYMENT_TARGET=10.14" >> $GITHUB_ENV 
+      run: echo "MACOSX_DEPLOYMENT_TARGET=10.12" >> $GITHUB_ENV 
       if: matrix.os == 'macos-latest'
 
     - name: Get current date
