@@ -53,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `prepare_nft_output` uses newly provided tag/metadata instead of previous ones from unspent output;
 - `Account::claim_outputs()` when the account has no basic outputs available;
 - SDR amount in `Account::prepare_output()`;
+- Address for the amount of expired NFTs that get burned with `Account::burn_nft()`;
 
 ## 1.0.0-rc.5 - 2023-02-09
 
