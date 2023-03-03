@@ -19,33 +19,51 @@ import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 import NodejsGetCode from "../libraries/nodejs/how_to/_run_how_tos.mdx";
 import PythonGetCode from "../libraries/python/how_to/_run_how_tos.md";
-import RustGetCode from "../libraries/rust/how_to/_run_how_tos.md";
-import JavaGetCode from "../libraries/java/how_to/_run_how_tos.md";
+import RustGetCode from "../libraries/rust/how_to/_run_how_tos.mdx";
+import JavaGetCode from "../libraries/java/how_to/_run_how_tos.mdx";
+import WarningPasswordStorage from '../_admonitions/_password_storage.md';
 
-## Hornet Node
+
+# Run Code Examples
+
+You can use the following how-to guides to get acquainted with wallet.rs from creating an account to minting NFTs and
+native tokens.
+
+You can start anywhere, but since the guides may build on previous examples, if you are new to wallet.rs
+you should probably start by [creating a wallet account](accounts_and_addresses/create_a_wallet_account) and then
+carry on to the next guide.
+
+## Requirements
+
+### Hornet Node
 
 Most of the examples require a [Hornet Node](https://wiki.iota.org/shimmer/hornet/welcome) running the
-[Stardust](https://wiki.iota.org/shimmer/introduction/welcome) upgrade. You can connect to a node you trust, use the
-[public API](#public-api), [run your own node](#run-your-own-node) or [run a local private tangle](#run-a-local-private-tangle)
+[Stardust](https://wiki.iota.org/shimmer/introduction/welcome) upgrade. You can connect to the
+[Shimmer Testnet](#shimmer-testnet), a node you trust,
+[run your own node](https://wiki.iota.org/shimmer/hornet/how_tos/using_docker) or
+[run a local private tangle](https://wiki.iota.org/shimmer/hornet/how_tos/private_tangle).
 
-### Public API
+#### Shimmer Testnet
 
-You can use the [Shimmer Testnet](https://api.testnet.shimmer.network) as well as its
-[Faucet](https://faucet.testnet.shimmer.network/) to quickly run the examples.
+You can use the following public, load-balanced endpoint to run code examples:
 
-### Run Your Own Node
+#### Node URL
 
-If you want direct access to the Tangle, you can
-[set up a HORNET node using docker](https://wiki.iota.org/shimmer/hornet/how_tos/using_docker).
+```plaintext
+https://api.testnet.shimmer.network
+```
 
-### Run a Local Private Tangle
+#### Faucet URL
 
-If you want to run the examples locally,
-you can [set up a private tangle](https://wiki.iota.org/shimmer/hornet/how_tos/private_tangle) in a few simple steps.
+```plaintext
+https://faucet.testnet.shimmer.network/api/enqueue
+```
 
 ## Language Specific Instructions
 
 Each language has different set up instructions you need to follow to get the code examples up and running.
+
+<WarningPasswordStorage/>
 
 <Tabs groupId="language">
     <TabItem value="rust" label="Rust">
