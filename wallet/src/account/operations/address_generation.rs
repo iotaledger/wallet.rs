@@ -151,6 +151,8 @@ impl AccountHandle {
             SecretManager::Placeholder(_) => vec![],
         };
 
+        drop(account);
+
         let generate_addresses: Vec<AccountAddress> = addresses
             .into_iter()
             .enumerate()
@@ -162,7 +164,6 @@ impl AccountHandle {
             })
             .collect();
 
-        drop(account);
         self.update_account_addresses(options.internal, generate_addresses.clone())
             .await?;
 

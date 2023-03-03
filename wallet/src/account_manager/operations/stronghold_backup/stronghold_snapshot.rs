@@ -52,6 +52,7 @@ pub(crate) async fn store_data_to_stronghold(
     for account in account_manager.accounts.read().await.iter() {
         serialized_accounts.push(serde_json::to_string(&*account.read().await)?);
     }
+
     stronghold
         .insert(
             ACCOUNTS_KEY.as_bytes(),

@@ -30,6 +30,7 @@ impl AccountManager {
                 }
             }
         };
+
         Err(crate::Error::AccountNotFound(serde_json::to_string(&account_id)?))
     }
 }
