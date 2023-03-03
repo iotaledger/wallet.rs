@@ -6,8 +6,8 @@ the library.
 ## Set Up Your `.env` File
 
 The examples use variables from a `.env` file. Though you can create your own, for the examples you can simply copy the
-existing [`.env.example`](https://github.com/iotaledger/wallet.rs/blob/develop/bindings/nodejs/.env.example) file. You can
-do this running the following command from the `bindings/nodejs` directory:
+existing [`.env.example`](https://github.com/iotaledger/wallet.rs/blob/develop/bindings/nodejs/examples/.env.example) file. You can
+do this running the following command from the `bindings/nodejs/examples` directory:
 
 ```bash
 cp .env.example .env
@@ -34,7 +34,12 @@ npm run build
 ### Run the Examples
 
 The wallet.rs library has numerous examples you can run to get acquainted with the library.
-After you have followed the instructions to [build the library](#build-the-library), you can run any Node.js example.
+After you have followed the instructions to [build the library](#build-the-library), you have to run the following command in `bindings/nodejs/examples`:
+
+```bash
+npm install
+```
+
 You will need to select any of the
 [Node.js examples](https://github.com/iotaledger/wallet.rs/tree/develop/bindings/nodejs/examples) and run it with
 your local Node.js interpreter.
