@@ -160,9 +160,8 @@ impl AccountManager {
 
         let new_client = new_client_options.finish()?;
 
-        let mut accounts = self.accounts.write().await;
         #[allow(clippy::significant_drop_in_scrutinee)]
-        for account in accounts.iter_mut() {
+        for account in self.accounts.write().await.iter_mut() {
             account.update_account_with_new_client(new_client.clone()).await?;
         }
 

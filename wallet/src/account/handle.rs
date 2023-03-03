@@ -217,14 +217,7 @@ impl AccountHandle {
 
     /// Returns all transactions of the account
     pub async fn transactions(&self) -> Result<Vec<Transaction>> {
-        let mut transactions = Vec::new();
-
-        #[allow(clippy::significant_drop_in_scrutinee)]
-        for transaction in self.read().await.transactions.values() {
-            transactions.push(transaction.clone());
-        }
-
-        Ok(transactions)
+        Ok(self.read().await.transactions.values().cloned().collect())
     }
 
     /// Returns all pending transactions of the account

@@ -141,14 +141,11 @@ impl AccountManager {
     /// Sync all accounts
     pub async fn sync(&self, options: Option<SyncOptions>) -> crate::Result<AccountBalance> {
         let mut balances = Vec::new();
-        let accounts = self.accounts.read().await;
 
         #[allow(clippy::significant_drop_in_scrutinee)]
-        for account in accounts.iter() {
+        for account in self.accounts.read().await.iter() {
             balances.push(account.sync(options.clone()).await?);
         }
-
-        drop(accounts);
 
         add_balances(balances)
     }
