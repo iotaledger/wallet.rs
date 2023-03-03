@@ -267,7 +267,10 @@ unsafe fn event_handle(clazz: GlobalRef, callback_ref: GlobalRef, event: Event) 
     );
 
     if let Err(e) = res {
+        #[cfg(target_os = "android")]
         error!("Error calling method {}", e);
+        #[cfg(not(target_os = "android"))]
+        println!("Error calling method {}", e);
         jni_err_assert!(env, env.exception_clear(), ());
     };
 }
