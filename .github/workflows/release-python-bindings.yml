@@ -7,8 +7,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # using macos-11 because of rocksdb
-        os: [macos-11, ubuntu-latest, windows-latest]
+        os: [macos-latest, ubuntu-latest, windows-latest]
         python-version: ['3.8', '3.9', '3.10', '3.11']
 
     steps:
@@ -20,7 +19,7 @@ jobs:
 
       - name: Get current date
         run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-        if: matrix.os == 'macos-11' || matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'macos-latest' || matrix.os == 'ubuntu-latest'
 
       - name: Get current date
         if: matrix.os == 'windows-2019'
@@ -52,17 +51,17 @@ jobs:
         uses: KyleMayes/install-llvm-action@32c4866ebb71e0949e8833eb49beeebed48532bd
         if: matrix.os == 'windows-latest'
         with:
-         version: "11.0"
-         directory: ${{ runner.temp }}/llvm
-      
+          version: "11.0"
+          directory: ${{ runner.temp }}/llvm
+
       - name: Set LIBCLANG_PATH (Windows)
         if: matrix.os == 'windows-latest'
         run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
 
       # Set custom deployment target because of rocksdb
       - name: Set deployment target (macOS)
-        run: echo "MACOSX_DEPLOYMENT_TARGET=10.14" >> $GITHUB_ENV 
-        if: matrix.os == 'macos-11'
+        run: echo "MACOSX_DEPLOYMENT_TARGET=10.14" >> $GITHUB_ENV
+        if: matrix.os == 'macos-latest'
 
       - name: Install required packages (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
@@ -71,16 +70,16 @@ jobs:
           sudo apt-get install libudev-dev libusb-1.0-0-dev
 
       - name: Build wheels
-        if: matrix.os == 'macos-11' || matrix.os == 'windows-latest'
+        if: matrix.os == 'macos-latest' || matrix.os == 'windows-latest'
         uses: PyO3/maturin-action@v1
         with:
-          args: --release --out dist -m bindings/python/Cargo.toml -i python${{ matrix.python-version }}
+          args: --release --out dist -m wallet/bindings/python/Cargo.toml -i python${{ matrix.python-version }}
 
       - name: Build wheels for --target aarch64-apple-darwin
-        if: matrix.os == 'macos-11'
+        if: matrix.os == 'macos-latest'
         uses: PyO3/maturin-action@v1
         with:
-          args: --target aarch64-apple-darwin --release --out dist -m bindings/python/Cargo.toml -i python${{ matrix.python-version }}
+          args: --target aarch64-apple-darwin --release --out dist -m wallet/bindings/python/Cargo.toml -i python${{ matrix.python-version }}
 
       # Build without container on linux
       - name: Build wheels
@@ -89,7 +88,40 @@ jobs:
         with:
           manylinux: auto
           container: off
-          args: --release --out dist -m bindings/python/Cargo.toml -i python${{ matrix.python-version }}
+          args: --release --out dist -m wallet/bindings/python/Cargo.toml -i python${{ matrix.python-version }}
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v3
+        with:
+          name: wheels
+          path: dist
+
+  build-wheels-aarch64:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3 # Required to mount the Github Workspace to a volume
+      - uses: addnab/docker-run-action@v3
+        with:
+          image: python:3.9.12-slim-bullseye
+          options: -v ${{ github.workspace }}:/root
+          run: |
+            cd root
+
+            apt-get update 
+            apt-get install -y git curl build-essential libudev-dev libusb-1.0-0-dev pkg-config clang
+            curl https://sh.rustup.rs -sSf | sh -s -- -y 
+            . "$HOME/.cargo/env" 
+
+            cd wallet/bindings/python 
+            pip install -r requirements-dev.txt 
+            pip install patchelf
+            pip install maturin
+            maturin build --out ../../../dist --release
 
       - name: Upload wheels
         uses: actions/upload-artifact@v3
@@ -100,22 +132,22 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    needs: [ build-wheels ]
+    needs: [ build-wheels, build-wheels-aarch64 ]
     steps:
+      - uses: actions/checkout@v3
+      - name: Get tag name
+        id: tagname
+        run: |
+          cd wallet/bindings/python
+          tagName="iota-wallet-python-$(cargo read-manifest | jq -r '.version')"
+          echo $tagName
+          echo "TAG_NAME=$tagName" >> $GITHUB_OUTPUT
+
       - uses: actions/download-artifact@v3
         with:
           name: wheels
           path: wheels
-
       - run: ls -R
-
-      - name: Get tag name
-        shell: bash
-        id: tagname
-        run: |
-          cd wheels
-          tagName="$(ls | grep -m 1 win_amd64.whl | rev | cut -c 26- | rev)"
-          echo "TAG_NAME=$tagName" >> $GITHUB_OUTPUT
 
       - name: Upload Wheels to Github
         uses: softprops/action-gh-release@v1

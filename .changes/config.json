@@ -8,7 +8,7 @@
   },
   "packages": {
     "nodejs-binding": {
-      "path": "./bindings/nodejs",
+      "path": "./wallet/bindings/nodejs",
       "manager": "javascript",
       "getPublishedVersion": "npm view ${ pkgFile.pkg.name } version",
       "prepublish": [

@@ -1,0 +1,151 @@
+name: Publish cli wallet
+
+on: workflow_dispatch
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      RELEASE_UPLOAD_URL: ${{ steps.create_release.outputs.upload_url }}
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: set version env variable
+        run: echo "CRATE_VERSION=$(cat cli/Cargo.toml | sed -n 's/.*version = "\([^"]*\)".*/\1/p' | head -1)" >> $GITHUB_ENV
+      - name: create release
+        id: create_release
+        uses: actions/create-release@v1.1.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: "cli-wallet-${{ env.CRATE_VERSION }}"
+          release_name: "cli-wallet-${{ env.CRATE_VERSION }}"
+          body: |
+            # Changelog
+
+            <!---  ## Added -->
+
+            <!---  ## Changed -->
+
+            <!---  ## Deprecated -->
+
+            <!---  ## Removed -->
+
+            <!---  ## Fixed -->
+
+            # Checksums
+
+            |Asset|SHA-256 checksum|
+            |---|---|
+            |wallet-linux||
+            |wallet-macos||
+            |wallet-windows.exe||
+          draft: true
+          prerelease: false
+
+  create-and-upload-assets:
+    needs: create-release
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            identifier: linux
+            ext: ''
+          - os: macos-latest
+            identifier: macos
+            ext: ''
+          - os: windows-latest
+            identifier: windows
+            ext: .exe
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: install rust stable
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+
+      - name: Install required packages (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install libudev-dev libusb-1.0-0-dev
+
+      - name: Install gon (macOS)
+        # https://github.com/mitchellh/gon
+        run: brew install mitchellh/gon/gon
+        if: matrix.os == 'macos-latest'
+
+      - name: Install LLVM and Clang (Windows) # required for bindgen to work, see https://github.com/rust-lang/rust-bindgen/issues/1797
+        uses: KyleMayes/install-llvm-action@32c4866ebb71e0949e8833eb49beeebed48532bd
+        if: matrix.os == 'windows-latest'
+        with:
+          version: "11.0"
+          directory: ${{ runner.temp }}/llvm
+
+      - name: Set LIBCLANG_PATH (Windows)
+        run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
+        if: matrix.os == 'windows-latest'
+
+      # build the CLI
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args:  --manifest-path ./cli/Cargo.toml --profile production
+
+      - name: Import code signing assets (macOS)
+        # Based on https://github.com/Apple-Actions/import-codesign-certs/blob/master/src/security.ts
+        run: |
+          security create-keychain -p $KEYCHAIN_PASSWORD signing.keychain
+          security set-keychain-settings -lut 3600 signing.keychain
+          security unlock-keychain -p $KEYCHAIN_PASSWORD signing.keychain
+          echo $MAC_CERT_BASE64 | base64 -D -o signing.p12
+          security import signing.p12 -k signing.keychain -f pkcs12 -T "/usr/bin/codesign" -T "/usr/bin/security" -P $MAC_CERT_PASSWORD
+          rm signing.p12
+          security -q set-key-partition-list -S apple-tool:,apple: -k $KEYCHAIN_PASSWORD signing.keychain > /dev/null
+          security -v list-keychains -s signing.keychain
+          security find-identity -vp codesigning
+        env:
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+          MAC_CERT_BASE64: ${{ secrets.MAC_CERT_BASE64 }}
+          MAC_CERT_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
+        if: matrix.os == 'macos-latest'
+
+      - name: Sign and notarize Wallet CLI binary (macOS)
+        working-directory: cli
+        run: |
+          gon gon-config.json
+          unzip wallet.zip
+          mv -f wallet ../target/production/wallet
+        env:
+          AC_USERNAME: ${{ secrets.ASC_APPLE_ID }}
+          AC_PASSWORD: ${{ secrets.ASC_PASSWORD }}
+        if: matrix.os == 'macos-latest'
+
+      - name: Delete keychain (macOS)
+        run: security delete-keychain signing.keychain
+        # Run even if previous steps fail
+        if: ${{ matrix.os == 'macos-latest' && always() }}
+
+      # Computes SHA-256 checksum
+      - name: SHA-256 checksum
+        run: shasum -a 256 "./target/production/wallet${{ matrix.ext }}"
+
+      # upload binary to the GH release
+      - name: upload release asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.RELEASE_UPLOAD_URL }}
+          asset_path: ${{ format('./target/production/wallet{0}', matrix.ext ) }}
+          asset_name: ${{ format('wallet-{0}{1}', matrix.identifier, matrix.ext ) }}
+          asset_content_type: application/octet-stream

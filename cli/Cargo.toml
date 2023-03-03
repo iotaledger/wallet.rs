@@ -1,0 +1,23 @@
+[package]
+name = "cli-wallet"
+version = "1.0.0-rc.2"
+authors = [ "IOTA Stiftung" ]
+edition = "2021"
+homepage = "https://iota.org"
+description = "Command line interface application for the IOTA wallet library."
+license = "Apache-2.0"
+
+[[bin]]
+name = "wallet"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.1.6", default-features = false, features = [ "derive", "std" ] }
+dialoguer = { version = "0.10.3", default-features = false, features = [ "password" ] }
+fern-logger = { version = "0.5.0", default-features = false }
+iota-wallet = { version = "1.0.0-rc.5", path = "../wallet", default-features = false, features = [ "storage", "rocksdb", "stronghold", "participation" ] }
+log = { version = "0.4.17", default-features = false }
+prefix-hex = { version = "0.5.0", default-features = false, features = [ "std" ] }
+serde_json = { version = "1.0.93", default-features = false }
+thiserror = { version = "1.0.38", default-features = false }
+tokio = { version = "1.25.0", default-features = false, features = [ "fs" ] }

@@ -34,6 +34,7 @@ The AccountManager class.
 - [stopBackgroundSync](AccountManager.md#stopbackgroundsync)
 - [storeMnemonic](AccountManager.md#storemnemonic)
 - [verifyMnemonic](AccountManager.md#verifymnemonic)
+- [updateNodeAuth](AccountManager.md#updatenodeauth)
 
 ## Methods
 
@@ -499,6 +500,25 @@ Verify if a mnemonic is a valid BIP39 mnemonic.
 | Name | Type |
 | :------ | :------ |
 | `mnemonic` | `string` |
+
+#### Returns
+
+`Promise`<`void`\>
+
+___
+
+### updateNodeAuth
+
+▸ **updateNodeAuth**(`url`, `auth?`): `Promise`<`void`\>
+
+Update the authentication for the provided node.
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `url` | `string` |
+| `auth?` | [`Auth`](../api_ref.md#auth) |
 
 #### Returns
 

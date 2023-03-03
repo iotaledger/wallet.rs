@@ -48,9 +48,11 @@ The Account class.
 - [sendNativeTokens](Account.md#sendnativetokens)
 - [sendNft](Account.md#sendnft)
 - [sendOutputs](Account.md#sendoutputs)
+- [setAlias](Account.md#setalias)
 - [signTransactionEssence](Account.md#signtransactionessence)
 - [submitAndStoreTransaction](Account.md#submitandstoretransaction)
 - [sync](Account.md#sync)
+- [getParticipationOverview](Account.md#getparticipationoverview)
 
 ## Methods
 
@@ -888,6 +890,24 @@ The sent transaction.
 
 ___
 
+### setAlias
+
+▸ **setAlias**(`alias`): `Promise`<`void`\>
+
+Set the alias for the account
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `alias` | `string` | The account alias to set. |
+
+#### Returns
+
+`Promise`<`void`\>
+
+___
+
 ### signTransactionEssence
 
 ▸ **signTransactionEssence**(`preparedTransactionData`): `Promise`<[`SignedTransactionEssence`](../interfaces/SignedTransactionEssence.md)\>
@@ -946,3 +966,23 @@ Will also retry pending transactions if necessary.
 `Promise`<[`AccountBalance`](../interfaces/AccountBalance.md)\>
 
 The account balance.
+
+___
+
+### getParticipationOverview
+
+▸ **getParticipationOverview**(`eventIds?`): `Promise`<`ParticipationOverview`\>
+
+Calculates the voting overview of an account.
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `eventIds?` | `string`[] | Optional, filters participations only for provided events. |
+
+#### Returns
+
+`Promise`<`ParticipationOverview`\>
+
+ParticipationOverview
