@@ -80,7 +80,6 @@ impl AccountHandle {
         let account = self.read().await;
         let account_addresses = &account.addresses_with_unspent_outputs[..];
 
-        #[allow(clippy::significant_drop_in_scrutinee)]
         for (output_id, output_data) in account.unspent_outputs() {
             #[cfg(feature = "participation")]
             if let Some(ref voting_output) = voting_output {

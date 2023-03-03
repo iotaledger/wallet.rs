@@ -158,7 +158,6 @@ impl AccountManager {
                 .save_account_manager_data(&account_manager_builder)
                 .await?;
             // also save account to db
-            #[allow(clippy::significant_drop_in_scrutinee)]
             for account in accounts.iter() {
                 account.save(None).await?;
             }

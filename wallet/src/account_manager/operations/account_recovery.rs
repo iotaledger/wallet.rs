@@ -36,7 +36,6 @@ impl AccountManager {
         let mut max_account_index_to_keep = None;
 
         // Search for addresses in current accounts
-        #[allow(clippy::significant_drop_in_scrutinee)]
         for account_handle in self.accounts.read().await.iter() {
             // If the gap limit is 0, there is no need to search for funds
             if address_gap_limit > 0 {
@@ -76,7 +75,6 @@ impl AccountManager {
         let mut new_accounts = Vec::new();
         let mut accounts = self.accounts.write().await;
 
-        #[allow(clippy::significant_drop_in_scrutinee)]
         for account_handle in accounts.iter() {
             let account_index = *account_handle.read().await.index();
             let mut keep_account = false;

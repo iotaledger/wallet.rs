@@ -39,7 +39,6 @@ impl AccountHandle {
         let token_supply = self.client.get_token_supply().await?;
         let account = self.read().await;
 
-        #[allow(clippy::significant_drop_in_scrutinee)]
         for output_response in output_responses {
             let output = Output::try_from_dto(&output_response.output, token_supply)?;
             let transaction_id = TransactionId::from_str(&output_response.metadata.transaction_id)?;
@@ -87,7 +86,6 @@ impl AccountHandle {
         let mut unspent_outputs = Vec::new();
         let mut account = self.write().await;
 
-        #[allow(clippy::significant_drop_in_scrutinee)]
         for output_id in output_ids {
             match account.outputs.get_mut(&output_id) {
                 // set unspent

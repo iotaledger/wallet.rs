@@ -84,7 +84,6 @@ impl AccountManager {
         let mut largest_account_index_opt = None;
         let mut accounts = self.accounts.write().await;
 
-        #[allow(clippy::significant_drop_in_scrutinee)]
         for account in accounts.iter() {
             let account_index = *account.read().await.index();
             if let Some(largest_account_index) = largest_account_index_opt {
@@ -128,7 +127,6 @@ impl AccountManager {
         let mut balances = Vec::new();
         let accounts = self.accounts.read().await;
 
-        #[allow(clippy::significant_drop_in_scrutinee)]
         for account in accounts.iter() {
             balances.push(account.balance().await?);
         }
@@ -142,7 +140,6 @@ impl AccountManager {
     pub async fn sync(&self, options: Option<SyncOptions>) -> crate::Result<AccountBalance> {
         let mut balances = Vec::new();
 
-        #[allow(clippy::significant_drop_in_scrutinee)]
         for account in self.accounts.read().await.iter() {
             balances.push(account.sync(options.clone()).await?);
         }

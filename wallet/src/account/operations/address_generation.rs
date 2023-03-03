@@ -58,7 +58,6 @@ impl AccountHandle {
 
         // get bech32_hrp
         let bech32_hrp = {
-            #[allow(clippy::significant_drop_in_scrutinee)]
             match account.public_addresses.first() {
                 Some(address) => address.address.bech32_hrp.to_string(),
                 None => self.client.get_bech32_hrp().await?,

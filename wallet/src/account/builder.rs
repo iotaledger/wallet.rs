@@ -102,7 +102,6 @@ impl AccountBuilder {
 
         // Check that the alias isn't already used for another account and that the coin type is the same for new and
         // existing accounts
-        #[allow(clippy::significant_drop_in_scrutinee)]
         for account_handle in accounts.iter() {
             let account = account_handle.read().await;
             let existing_coin_type = account.coin_type;

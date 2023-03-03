@@ -100,7 +100,6 @@ impl AccountHandle {
     pub async fn get_foundry_output(&self, native_token_id: TokenId) -> Result<Output> {
         let foundry_id = FoundryId::from(native_token_id);
 
-        #[allow(clippy::significant_drop_in_scrutinee)]
         for output_data in self.read().await.outputs().values() {
             if let Output::Foundry(foundry_output) = &output_data.output {
                 if foundry_output.id() == foundry_id {
@@ -156,7 +155,6 @@ impl AccountHandle {
     pub async fn outputs(&self, filter: Option<FilterOptions>) -> Result<Vec<OutputData>> {
         let mut outputs = Vec::new();
 
-        #[allow(clippy::significant_drop_in_scrutinee)]
         for output in self.read().await.outputs.values() {
             if let Some(filter_options) = &filter {
                 if let Some(lower_bound_booked_timestamp) = filter_options.lower_bound_booked_timestamp {
@@ -185,7 +183,6 @@ impl AccountHandle {
     pub async fn unspent_outputs(&self, filter: Option<FilterOptions>) -> Result<Vec<OutputData>> {
         let mut outputs = Vec::new();
 
-        #[allow(clippy::significant_drop_in_scrutinee)]
         for output in self.read().await.unspent_outputs.values() {
             if let Some(filter_options) = &filter {
                 if let Some(lower_bound_booked_timestamp) = filter_options.lower_bound_booked_timestamp {
@@ -225,7 +222,6 @@ impl AccountHandle {
         let mut transactions = Vec::new();
         let account = self.read().await;
 
-        #[allow(clippy::significant_drop_in_scrutinee)]
         for transaction_id in &account.pending_transactions {
             if let Some(transaction) = account.transactions.get(transaction_id) {
                 transactions.push(transaction.clone());

@@ -24,7 +24,6 @@ impl AccountManager {
 
         let new_client = options.clone().finish()?;
 
-        #[allow(clippy::significant_drop_in_scrutinee)]
         for account in self.accounts.write().await.iter_mut() {
             account.update_account_with_new_client(new_client.clone()).await?;
         }
@@ -121,7 +120,6 @@ impl AccountManager {
         }
 
         let mut new_nodes = HashSet::new();
-        #[allow(clippy::significant_drop_in_scrutinee)]
         for node in client_options.node_manager_builder.nodes.iter() {
             let (node_url, disabled) = match &node {
                 NodeDto::Url(node_url) => (node_url, false),
@@ -160,7 +158,6 @@ impl AccountManager {
 
         let new_client = new_client_options.finish()?;
 
-        #[allow(clippy::significant_drop_in_scrutinee)]
         for account in self.accounts.write().await.iter_mut() {
             account.update_account_with_new_client(new_client.clone()).await?;
         }

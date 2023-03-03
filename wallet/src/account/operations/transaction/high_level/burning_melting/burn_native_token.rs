@@ -96,7 +96,6 @@ impl AccountHandle {
         let mut alias_selection = HashMap::new();
         let mut foundry_selection = Vec::new();
 
-        #[allow(clippy::significant_drop_in_scrutinee)]
         for (output_id, output_data) in self.read().await.unspent_outputs().iter() {
             match &output_data.output {
                 Output::Basic(_) | Output::Nft(_) => {
@@ -290,7 +289,6 @@ impl AccountHandle {
             }
             None => {
                 // Find controlling alias
-                #[allow(clippy::significant_drop_in_scrutinee)]
                 for (output_id, output_data) in self.read().await.unspent_outputs().iter() {
                     match &output_data.output {
                         Output::Alias(alias_output) => {

@@ -39,7 +39,6 @@ impl AccountHandle {
 
         let account = self.read().await;
 
-        #[allow(clippy::significant_drop_in_scrutinee)]
         for output_data in account.unspent_outputs.values() {
             // Check if output is from the network we're currently connected to
             if output_data.network_id != network_id {

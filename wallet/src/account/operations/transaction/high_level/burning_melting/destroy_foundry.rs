@@ -82,7 +82,6 @@ impl AccountHandle {
         let mut existing_alias_output_data = None;
         let mut existing_foundry_output = None;
 
-        #[allow(clippy::significant_drop_in_scrutinee)]
         for (output_id, output_data) in self.read().await.unspent_outputs().iter() {
             match &output_data.output {
                 Output::Alias(output) => {

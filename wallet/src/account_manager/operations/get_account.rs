@@ -13,9 +13,7 @@ impl AccountManager {
         let accounts = self.accounts.read().await;
 
         match &account_id {
-            AccountIdentifier::Index(index) =>
-            {
-                #[allow(clippy::significant_drop_in_scrutinee)]
+            AccountIdentifier::Index(index) => {
                 for account_handle in accounts.iter() {
                     let account = account_handle.read().await;
                     if account.index() == index {
@@ -23,9 +21,7 @@ impl AccountManager {
                     }
                 }
             }
-            AccountIdentifier::Alias(alias) =>
-            {
-                #[allow(clippy::significant_drop_in_scrutinee)]
+            AccountIdentifier::Alias(alias) => {
                 for account_handle in accounts.iter() {
                     let account = account_handle.read().await;
                     if account.alias() == alias {

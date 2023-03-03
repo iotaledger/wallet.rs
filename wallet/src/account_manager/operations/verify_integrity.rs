@@ -14,7 +14,6 @@ impl AccountManager {
 
         // check that no account is missing and they're ordered
         // check that no address is missing and they're ordered
-        #[allow(clippy::significant_drop_in_scrutinee)]
         for (account_index, account_handle) in accounts.iter().enumerate() {
             assert_eq!(accounts[account_index].read().await.index(), &(account_index as u32));
 
