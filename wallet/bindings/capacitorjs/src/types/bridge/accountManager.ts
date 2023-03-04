@@ -4,9 +4,8 @@ import type {
     CreateAccountPayload,
 } from '../account';
 import type { GenerateAddressOptions } from '../address';
-import type { WalletEvent } from '../event';
-import type { Auth, ClientOptions, Node } from '../network';
-import type { EventId } from '../participation';
+import type { EventType, WalletEvent } from '../event';
+import type { Auth, ClientOptions } from '../network';
 
 export type __BackupMessage__ = {
     cmd: 'backup';
@@ -18,7 +17,9 @@ export type __BackupMessage__ = {
 
 export type __Bech32ToHex__ = {
     cmd: 'bech32ToHex';
-    payload: string;
+    payload: {
+        bech32Address: string;
+    };
 };
 
 export type __ChangeStrongholdPasswordMessage__ = {
@@ -33,21 +34,19 @@ export type __ClearStrongholdPasswordMessage__ = {
     cmd: 'clearStrongholdPassword';
 };
 
+export type __ClearListenersMessage__ = {
+    cmd: 'clearListeners';
+    payload: { eventTypes: EventType[] };
+};
+
 export type __CreateAccountMessage__ = {
     cmd: 'createAccount';
     payload: CreateAccountPayload;
 };
 
-export type __DeregisterParticipationEvent__ = {
-    cmd: 'deregisterParticipationEvent';
-    payload: {
-        eventId: EventId;
-    };
-};
-
 export type __EmitTestEventMessage__ = {
     cmd: 'emitTestEvent';
-    payload: WalletEvent;
+    payload: { event: WalletEvent };
 };
 
 export type __GenerateMnemonicMessage__ = {
@@ -64,7 +63,7 @@ export type __GetAccountsMessage__ = {
 
 export type __GetAccountMessage__ = {
     cmd: 'getAccount';
-    payload: AccountId;
+    payload: { accountId: AccountId };
 };
 
 export type __GetLedgerNanoStatusMessage__ = {
@@ -90,24 +89,6 @@ export type __GetNodeInfoMessage__ = {
     };
 };
 
-export type __GetParticipationEventMessage__ = {
-    cmd: 'getParticipationEvent';
-    payload: {
-        eventId: EventId;
-    };
-};
-
-export type __GetParticipationEventsMessage__ = {
-    cmd: 'getParticipationEvents';
-};
-
-export type __GetParticipationEventStatusMessage__ = {
-    cmd: 'getParticipationEventStatus';
-    payload: {
-        eventId: EventId;
-    };
-};
-
 export type __HexToBech32__ = {
     cmd: 'hexToBech32';
     payload: {
@@ -130,14 +111,6 @@ export type __RecoverAccountsMessage__ = {
     };
 };
 
-export type __RegisterParticipationEventMessage__ = {
-    cmd: 'registerParticipationEvent';
-    payload: {
-        eventId: EventId;
-        nodes: Node[];
-    };
-};
-
 export type __RemoveLatestAccountMessage__ = {
     cmd: 'removeLatestAccount';
 };
@@ -152,17 +125,17 @@ export type __RestoreBackupMessage__ = {
 
 export type __SetClientOptionsMessage__ = {
     cmd: 'setClientOptions';
-    payload: ClientOptions;
+    payload: { clientOptions: ClientOptions };
 };
 
 export type __SetStrongholdPasswordMessage__ = {
     cmd: 'setStrongholdPassword';
-    payload: string;
+    payload: { password: string };
 };
 
 export type __SetStrongholdPasswordClearIntervalMessage__ = {
     cmd: 'setStrongholdPasswordClearInterval';
-    payload?: number;
+    payload?: { intervalInMilliseconds?: number };
 };
 
 export type __StartBackgroundSyncMessage__ = {
@@ -179,10 +152,15 @@ export type __StopBackgroundSyncMessage__ = {
 
 export type __StoreMnemonicMessage__ = {
     cmd: 'storeMnemonic';
-    payload: string;
+    payload: { mnemonic: string };
 };
 
 export type __VerifyMnemonicMessage__ = {
     cmd: 'verifyMnemonic';
-    payload: string;
+    payload: { mnemonic: string };
+};
+
+export type __UpdateNodeAuthMessage__ = {
+    cmd: 'updateNodeAuth';
+    payload: { url: string; auth?: Auth };
 };

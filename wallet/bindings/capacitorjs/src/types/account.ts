@@ -15,11 +15,7 @@ export type AccountId = number | string;
 
 /** The balance of an account */
 export interface AccountBalance {
-<<<<<<< HEAD
-    /**  The balance of the base coin */
-=======
     /** The balance of the base coin */
->>>>>>> 5d1939575223b8004d642a02018d3e65f2ec4dbf
     baseCoin: BaseCoinBalance;
     /** The required storage deposit for the outputs */
     requiredStorageDeposit: RequiredStorageDeposit;
@@ -57,20 +53,13 @@ export interface RequiredStorageDeposit {
 /** The balance of a native token */
 export interface NativeTokenBalance {
     tokenId: string;
-<<<<<<< HEAD
-=======
     metadata?: string;
->>>>>>> 5d1939575223b8004d642a02018d3e65f2ec4dbf
     total: HexEncodedAmount;
     available: HexEncodedAmount;
 }
 
 /** Sync options for an account */
-<<<<<<< HEAD
-export interface AccountSyncOptions {
-=======
 export interface SyncOptions {
->>>>>>> 5d1939575223b8004d642a02018d3e65f2ec4dbf
     /**
      * Specific Bech32 encoded addresses of the account to sync, if addresses are provided,
      * then `address_start_index` will be ignored
@@ -95,15 +84,6 @@ export interface SyncOptions {
     /// Try to sync transactions from incoming outputs with their inputs. Some data may not be obtained if it has been
     /// pruned.
     syncIncomingTransactions?: boolean;
-<<<<<<< HEAD
-    /** Checks pending transactions and promotes/reattaches them if necessary.  Default: true. */
-    syncPendingTransactions?: boolean;
-    /** Specifies if only basic outputs should be synced or also alias and nft outputs. Default: true. */
-    syncAliasesAndNfts?: boolean;
-    /** Specifies if only basic outputs with an AddressUnlockCondition alone should be synced, will overwrite
-     * `syncAliasesAndNfts`. Default: false. */
-    syncOnlyMostBasicOutputs?: boolean;
-=======
     /** Checks pending transactions and promotes/reattaches them if necessary. Default: true. */
     syncPendingTransactions?: boolean;
     /** Specifies what outputs should be synced for the ed25519 addresses from the account. */
@@ -138,7 +118,6 @@ export interface NftSyncOptions {
     basicOutputs?: boolean;
     aliasOutputs?: boolean;
     nftOutputs?: boolean;
->>>>>>> 5d1939575223b8004d642a02018d3e65f2ec4dbf
 }
 
 /** The account object */

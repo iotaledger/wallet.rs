@@ -20,8 +20,7 @@ import type {
 
 type Account = ReturnType<typeof createAccount>
 
-/** createAccountManager is a factory function, because the methods become part of the object instead of the prototype chain.
-This is beneficial, since the prototype chain is bound to a context and can be sanitized.**/
+/** The AccountManager class. */
 export async function createAccountManager(options: AccountManagerOptions) {
     
     let id: AccountId

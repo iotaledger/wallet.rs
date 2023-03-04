@@ -1,33 +1,3 @@
-<<<<<<< HEAD
-// import type { OutputId } from './output';
-
-export interface ParticipationOverview {
-    participations: {[eventId: string]: { [outputId: string]: TrackedParticipationOverview }};
-}
-
-export interface TrackedParticipationOverview {
-    blockId: string;
-    amount: string;
-    startMilestoneIndex: number;
-    endMilestoneIndex: number;
-}
-
-export interface Event {
-    id: EventId;
-    data: EventData;
-}
-
-export type EventId = string;
-
-export interface EventStatus {
-    milestoneIndex: number;
-    status: string;
-    questions?: Answer[];
-    checksum: string;
-}
-
-export interface EventData {
-=======
 import type { Node } from './network';
 import type { OutputId } from './output';
 
@@ -80,18 +50,10 @@ export interface ParticipationEventStatus {
 }
 
 export interface ParticipationEventData {
->>>>>>> 5d1939575223b8004d642a02018d3e65f2ec4dbf
     name: string;
     milestoneIndexCommence: number;
     milestoneIndexStart: number;
     milestoneIndexEnd: number;
-<<<<<<< HEAD
-    payload: EventPayload;
-    additionalInfo: string;
-}
-
-export type EventPayload = VotingEventPayload | StakingEventPayload;
-=======
     payload: ParticipationEventPayload;
     additionalInfo: string;
 }
@@ -99,7 +61,6 @@ export type EventPayload = VotingEventPayload | StakingEventPayload;
 export type ParticipationEventPayload =
     | VotingEventPayload
     | StakingEventPayload;
->>>>>>> 5d1939575223b8004d642a02018d3e65f2ec4dbf
 
 export interface VotingEventPayload {
     type: ParticipationEventType.Voting;
@@ -128,8 +89,6 @@ export interface Answer {
     additionalInfo: string;
 }
 
-<<<<<<< HEAD
-=======
 export interface QuestionStatus {
     answers: AnswerStatus[];
 }
@@ -140,7 +99,6 @@ export interface AnswerStatus {
     accumulated: number;
 }
 
->>>>>>> 5d1939575223b8004d642a02018d3e65f2ec4dbf
 export enum ParticipationEventType {
     Voting = 0,
     Staking = 1,

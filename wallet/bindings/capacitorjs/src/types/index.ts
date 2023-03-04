@@ -4,7 +4,6 @@ export * from './address';
 export * from './bridge/index';
 export * from './buildOutputData';
 export * from './event';
-export * from './incomingTransactionData';
 export * from './loggerConfig';
 export * from './network';
 export * from './output';

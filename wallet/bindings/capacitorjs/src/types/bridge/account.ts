@@ -1,9 +1,5 @@
 import type { OutputTypes, HexEncodedAmount } from '@iota/types';
-<<<<<<< HEAD
-import type { AccountSyncOptions, FilterOptions } from '../account';
-=======
 import type { SyncOptions, FilterOptions } from '../account';
->>>>>>> 5d1939575223b8004d642a02018d3e65f2ec4dbf
 import type {
     AddressWithAmount,
     AddressWithMicroAmount,
@@ -17,10 +13,7 @@ import type {
     BuildFoundryOutputData,
     BuildNftOutputData,
 } from '../buildOutputData';
-<<<<<<< HEAD
-=======
 import type { Node } from '../network';
->>>>>>> 5d1939575223b8004d642a02018d3e65f2ec4dbf
 import type { OutputOptions } from '../outputOptions';
 import type { OutputsToClaim } from '../output';
 import type { SignedTransactionEssence } from '../signedTransactionEssence';
@@ -32,14 +25,11 @@ import type {
     TransactionOptions,
     NftOptions,
 } from '../transactionOptions';
-<<<<<<< HEAD
-=======
 import type {
     ParticipationEventId,
     ParticipationEventRegistrationOptions,
     ParticipationEventType,
 } from '../participation';
->>>>>>> 5d1939575223b8004d642a02018d3e65f2ec4dbf
 
 export type __BuildAliasOutputMethod__ = {
     name: 'buildAliasOutput';
@@ -110,8 +100,6 @@ export type __DecreaseNativeTokenSupplyMethod__ = {
     };
 };
 
-<<<<<<< HEAD
-=======
 export type __DeregisterParticipationEventMethod__ = {
     name: 'deregisterParticipationEvent';
     data: {
@@ -119,7 +107,6 @@ export type __DeregisterParticipationEventMethod__ = {
     };
 };
 
->>>>>>> 5d1939575223b8004d642a02018d3e65f2ec4dbf
 export type __DestroyAliasMethod__ = {
     name: 'destroyAlias';
     data: {
@@ -274,8 +261,6 @@ export type __PrepareTransactionMethod__ = {
     };
 };
 
-<<<<<<< HEAD
-=======
 export type __RegisterParticipationEventsMethod__ = {
     name: 'registerParticipationEvents';
     data: {
@@ -291,7 +276,6 @@ export type __RequestFundsFromFaucetMethod__ = {
     };
 };
 
->>>>>>> 5d1939575223b8004d642a02018d3e65f2ec4dbf
 export type __RetryTransactionUntilIncludedMethod__ = {
     name: 'retryTransactionUntilIncluded';
     data: {
@@ -365,22 +349,14 @@ export type __SubmitAndStoreTransactionMethod__ = {
 export type __SyncAccountMethod__ = {
     name: 'syncAccount';
     data: {
-<<<<<<< HEAD
-        options?: AccountSyncOptions;
-=======
         options?: SyncOptions;
->>>>>>> 5d1939575223b8004d642a02018d3e65f2ec4dbf
     };
 };
 
 export type __VoteMethod__ = {
     name: 'vote';
     data: {
-<<<<<<< HEAD
-        eventId?: string;
-=======
         eventId?: ParticipationEventId;
->>>>>>> 5d1939575223b8004d642a02018d3e65f2ec4dbf
         answers?: number[];
     };
 };
@@ -388,11 +364,7 @@ export type __VoteMethod__ = {
 export type __StopParticipatingMethod__ = {
     name: 'stopParticipating';
     data: {
-<<<<<<< HEAD
-        eventId: string;
-=======
         eventId: ParticipationEventId;
->>>>>>> 5d1939575223b8004d642a02018d3e65f2ec4dbf
     };
 };
 
@@ -411,8 +383,6 @@ export type __IncreaseVotingPowerMethod__ = {
     };
 };
 
-<<<<<<< HEAD
-=======
 export type __GetParticipationEventMethod__ = {
     name: 'getParticipationEvent';
     data: {
@@ -439,7 +409,6 @@ export type __GetParticipationEventStatusMethod__ = {
     };
 };
 
->>>>>>> 5d1939575223b8004d642a02018d3e65f2ec4dbf
 export type __DecreaseVotingPowerMethod__ = {
     name: 'decreaseVotingPower';
     data: {

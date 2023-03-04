@@ -4,9 +4,9 @@
 import { internalInitLogger } from './bindings'
 import type { LoggerConfig } from '../types'
 
-export * from './AccountManager'
+export * from './createAccountManager'
 export * from './MessageHandler'
-export * from './Account'
+export * from './createAccount'
 export * from './WalletApi'
 export * from '../types/index'
 

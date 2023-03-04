@@ -1,4 +1,3 @@
-// import type { Network } from './network';
 import type { HexEncodedAmount } from '@iota/types';
 
 /** Address Types */
