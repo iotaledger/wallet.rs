@@ -39,7 +39,7 @@ async function createAccountManager() {
             },
         },
     };
-    console.log('Clietnt options: ', accountManagerOptions.clientOptions);
+
     const manager = new AccountManager(accountManagerOptions);
     await manager.storeMnemonic(process.env.MNEMONIC);
     return manager;
