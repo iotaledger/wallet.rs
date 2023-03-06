@@ -199,10 +199,10 @@ Requests funds from a faucet.
 
 #### Parameters
 
-| Name      | Optional  | Default                           | Example                                                         |
-| --------- | --------- | --------------------------------- | --------------------------------------------------------------- |
-| `url`     | ✓         | http://localhost:8091/api/enqueue | http://localhost:8091/api/enqueue                               |
-| `address` | ✓         | The latest address of the account | rms1qztwng6cty8cfm42nzvq099ev7udhrnk0rw8jt8vttf9kpqnxhpsx869vr3 |
+| Name      | Optional  | Default                                            | Example                                                         |
+| --------- | --------- | -------------------------------------------------- | --------------------------------------------------------------- |
+| `url`     | ✓         | https://faucet.testnet.shimmer.network/api/enqueue | http://localhost:8091/api/enqueue                               |
+| `address` | ✓         | The latest address of the account                  | rms1qztwng6cty8cfm42nzvq099ev7udhrnk0rw8jt8vttf9kpqnxhpsx869vr3 |
 
 #### Examples
 

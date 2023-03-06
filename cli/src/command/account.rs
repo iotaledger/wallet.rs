@@ -58,7 +58,7 @@ pub enum AccountCommand {
     DestroyFoundry { foundry_id: String },
     /// Exit from the account prompt.
     Exit,
-    /// Request funds from the faucet to the latest address, `url` is optional, default is `http://localhost:8091/api/enqueue`
+    /// Request funds from the faucet to the latest address, `url` is optional, default is `https://faucet.testnet.shimmer.network/api/enqueue`
     Faucet {
         url: Option<String>,
         address: Option<String>,
@@ -352,7 +352,7 @@ pub async fn faucet_command(
     };
     let faucet_url = match &url {
         Some(faucet_url) => faucet_url,
-        None => "http://localhost:8091/api/enqueue",
+        None => "https://faucet.testnet.shimmer.network/api/enqueue",
     };
 
     log::info!("{}", request_funds_from_faucet(faucet_url, &address).await?);
