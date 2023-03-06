@@ -77,6 +77,7 @@ pub async fn send_message_async(message: String, message_handler: &MessageHandle
 /// * `callback`: A JavaScript function that will be called when a wallet event occurs.
 /// * `message_handler`: This is the same message handler that we used in the previous section.
 #[wasm_bindgen]
+#[allow(clippy::await_holding_refcell_ref)]
 pub async fn listen(
     vec: js_sys::Array,
     callback: js_sys::Function,

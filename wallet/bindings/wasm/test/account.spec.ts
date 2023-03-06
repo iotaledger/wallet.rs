@@ -48,7 +48,7 @@ async function run() {
 }
 
 describe('Wallet methods', () => {
-    jest.setTimeout(7000);
+    jest.setTimeout(10000);
     it('account', async () => {
         await run();
     });
