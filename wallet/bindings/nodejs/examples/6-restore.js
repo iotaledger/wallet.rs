@@ -1,8 +1,8 @@
 /**
  * This example restores a secured backup file.
  */
-
-require('dotenv').config({ path: '../.env' });
+const path = require('path')
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 const { AccountManager, CoinType } = require('@iota/wallet');
 async function run() {
     try {

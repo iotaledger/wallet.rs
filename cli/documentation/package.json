@@ -25,6 +25,7 @@
         "@sideway/formula": "^3.0.1",
         "trim": "^0.0.3",
         "nth-check": "^2.0.1",
-        "terser": "^5.14.2"
+        "terser": "^5.14.2",
+        "dns-packet": "^5.4.0"
     }
 }

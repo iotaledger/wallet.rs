@@ -1,4 +1,5 @@
-require('dotenv').config({ path: '../.env' });
+const path = require('path')
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 const { AccountManager, CoinType } = require('@iota/wallet');
 
 // In this example we will create addresses with a ledger nano hardware wallet

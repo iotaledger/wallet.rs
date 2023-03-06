@@ -1,6 +1,7 @@
 {
     "name": "examples",
     "dependencies": {
-        "@iota/wallet": "../"
+        "@iota/wallet": "../",
+        "dotenv": "^16.0.1"
     }
 }
