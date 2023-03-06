@@ -83,8 +83,10 @@ pub async fn listen(
     message_handler: &MessageHandler,
 ) -> Result<JsValue, JsValue> {
     let mut event_types = vec![];
-    for i in 0..vec.length() {
-        let event_type = vec.get(i).as_string().unwrap();
+    for event_type in vec.keys() {
+        // We know the built-in iterator for set elements won't throw
+        // exceptions, so just unwrap the element.
+        let event_type = event_type.unwrap().as_string().unwrap();
         let wallet_event_type = WalletEventType::try_from(event_type.as_str()).map_err(JsValue::from)?;
         event_types.push(wallet_event_type);
     }
@@ -94,7 +96,7 @@ pub async fn listen(
         .handler
         .borrow()
         .as_ref()
-        .unwrap()
+        .expect("message handler not initialised")
         .listen(event_types, move |wallet_event| {
             tx.send(wallet_event.clone()).unwrap();
         })
