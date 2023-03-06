@@ -15,7 +15,6 @@ alice-database
 /walletdb
 /pingdb
 /pongdb
-!wallet/bindings/**/Cargo.lock
 offline_walletdb
 online_walletdb
 addresses.json
