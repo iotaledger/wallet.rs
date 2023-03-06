@@ -24,8 +24,7 @@ impl AccountManager {
 
         let new_client = options.clone().finish()?;
 
-        let mut accounts = self.accounts.write().await;
-        for account in accounts.iter_mut() {
+        for account in self.accounts.write().await.iter_mut() {
             account.update_account_with_new_client(new_client.clone()).await?;
         }
 
@@ -42,6 +41,7 @@ impl AccountManager {
                 .save_account_manager_data(&account_manager_builder)
                 .await?;
         }
+
         Ok(())
     }
 
@@ -158,8 +158,7 @@ impl AccountManager {
 
         let new_client = new_client_options.finish()?;
 
-        let mut accounts = self.accounts.write().await;
-        for account in accounts.iter_mut() {
+        for account in self.accounts.write().await.iter_mut() {
             account.update_account_with_new_client(new_client.clone()).await?;
         }
 

@@ -34,10 +34,10 @@ impl AccountHandle {
     ) -> crate::Result<Vec<OutputData>> {
         log::debug!("[SYNC] convert output_responses");
         // store outputs with network_id
-        let account = self.read().await;
         let network_id = self.client.get_network_id().await?;
         let mut outputs = Vec::new();
         let token_supply = self.client.get_token_supply().await?;
+        let account = self.read().await;
 
         for output_response in output_responses {
             let output = Output::try_from_dto(&output_response.output, token_supply)?;
@@ -69,6 +69,7 @@ impl AccountHandle {
                 chain: Some(chain),
             });
         }
+
         Ok(outputs)
     }
 
@@ -81,10 +82,10 @@ impl AccountHandle {
         log::debug!("[SYNC] start get_outputs");
         let get_outputs_start_time = Instant::now();
         let mut outputs = Vec::new();
-
         let mut unknown_outputs = Vec::new();
-        let mut account = self.write().await;
         let mut unspent_outputs = Vec::new();
+        let mut account = self.write().await;
+
         for output_id in output_ids {
             match account.outputs.get_mut(&output_id) {
                 // set unspent
@@ -105,6 +106,8 @@ impl AccountHandle {
             account.unspent_outputs.insert(output_id, output_data);
         }
 
+        drop(account);
+
         if !unknown_outputs.is_empty() {
             outputs.extend(self.client.get_outputs(unknown_outputs).await?);
         }
@@ -113,6 +116,7 @@ impl AccountHandle {
             "[SYNC] finished get_outputs in {:.2?}",
             get_outputs_start_time.elapsed()
         );
+
         Ok(outputs)
     }
 
