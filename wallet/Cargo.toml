@@ -38,7 +38,7 @@ tokio = { version = "1.25.0", default-features = false, features = [ "sync", "rt
 zeroize = { version = "1.5.7", default-features = false, features = [ "zeroize_derive" ] }
 
 [target.'cfg(target_family = "wasm")'.dependencies]
-gloo-storage = { version = "0.2.2", default-features = false }
+gloo-storage = { version = "0.2.2", default-features = false, optional = true }
 gloo-timers = { version = "0.2.6", default-features = false, features = [ "futures" ] }
 wasm-bindgen-futures = { version = "0.4.34", default-features = false }
 
@@ -49,7 +49,7 @@ dotenv = { version = "0.15.0", default-features = false }
 # only default for now, should later be replaced by stronghold since stronghold is more secure
 default = [ "storage", "rocksdb", "stronghold" ]
 ledger_nano = [ "iota-client/ledger_nano" ]
-stronghold = [ "iota-client/stronghold" ]
+stronghold = [ "iota-client/stronghold", "gloo-storage" ]
 storage = []
 message_interface = []
 events = []

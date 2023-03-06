@@ -73,7 +73,7 @@ See the [Node.js examples](../nodejs/examples) for more demonstrations, the only
 
 Unlike Node.js, a few more steps are required to use this in the browser.
 
-The library loads the compiled Wasm file with an HTTP GET request, so the `wallet_wasm_bg.wasm` file must be copied to the root of the distribution folder.
+The library loads the compiled Wasm file with an HTTP GET request, so the `iota_wallet_wasm_bg.wasm` file must be copied to the root of the distribution folder.
 
 A bundler such as [webpack](https://webpack.js.org/) or [rollup](https://rollupjs.org/) is recommended.
 
@@ -96,9 +96,9 @@ import copy from 'rollup-plugin-copy'
 // Add the copy plugin to the `plugins` array:
 copy({
   targets: [{
-    src: 'node_modules/@iota/wallet-wasm/web/wasm/wallet_wasm_bg.wasm',
+    src: 'node_modules/@iota/wallet-wasm/web/wasm/iota_wallet_wasm_bg.wasm',
     dest: 'public',
-    rename: 'wallet_wasm_bg.wasm'
+    rename: 'iota_wallet_wasm_bg.wasm'
   }]
 })
 ```
@@ -129,8 +129,8 @@ plugins: [
     new CopyWebPlugin({
       patterns: [
         {
-          from: 'node_modules/@iota/wallet-wasm/web/wasm/wallet_wasm_bg.wasm',
-          to: 'wallet_wasm_bg.wasm'
+          from: 'node_modules/@iota/wallet-wasm/web/wasm/iota_wallet_wasm_bg.wasm',
+          to: 'iota_wallet_wasm_bg.wasm'
         }
       ]
     }),
@@ -164,8 +164,8 @@ init().then(() => {
   });
 }).catch(console.error);
 
-// Default path to load is "wallet_wasm_bg.wasm", 
+// Default path to load is "iota_wallet_wasm_bg.wasm", 
 // but you can override it by passing a path explicitly.
 //
-// init("./static/wallet_wasm_bg.wasm").then(...)
+// init("./static/iota_wallet_wasm_bg.wasm").then(...)
 ```

@@ -2,7 +2,12 @@
 resolver = "2"
 members = [
 	"cli",
-	"wallet"
+	"wallet",
+	"wallet/bindings/java/lib/native",
+	"wallet/bindings/nodejs",
+	"wallet/bindings/python",
+	"wallet/bindings/swift",
+	"wallet/bindings/wasm"
 ]
 
 [profile.dev]
