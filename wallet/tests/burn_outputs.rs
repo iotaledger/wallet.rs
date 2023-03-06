@@ -3,7 +3,10 @@
 
 mod common;
 
-use iota_client::block::output::{NftId, OutputId};
+use iota_client::block::output::{
+    unlock_condition::{AddressUnlockCondition, ExpirationUnlockCondition},
+    NftId, NftOutputBuilder, OutputId, UnlockCondition,
+};
 use iota_wallet::{account::AccountHandle, NativeTokenOptions, NftOptions, Result, U256};
 
 #[ignore]
@@ -45,6 +48,54 @@ async fn mint_and_burn_nft() -> Result<()> {
     let search = balance.nfts.iter().find(|&balance_nft_id| *balance_nft_id == nft_id);
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
     assert!(search.is_none());
+
+    common::tear_down(storage_path)
+}
+
+#[ignore]
+#[tokio::test]
+async fn mint_and_burn_expired_nft() -> Result<()> {
+    let storage_path = "test-storage/mint_and_burn_expired_nft";
+    common::setup(storage_path)?;
+
+    let manager = common::make_manager(storage_path, None, None).await?;
+    let account_0 = &common::create_accounts_with_funds(&manager, 1).await?[0];
+    let account_1 = manager.create_account().finish().await?;
+
+    let token_supply = account_0.client().get_token_supply().await?;
+
+    let amount = 1_000_000;
+    let outputs = vec![
+        NftOutputBuilder::new_with_amount(amount, NftId::null())?
+            .with_unlock_conditions(vec![
+                UnlockCondition::Address(AddressUnlockCondition::new(
+                    *account_0.addresses().await?[0].address().as_ref(),
+                )),
+                // immediately expired to account_1
+                UnlockCondition::Expiration(ExpirationUnlockCondition::new(
+                    *account_1.addresses().await?[0].address().as_ref(),
+                    1,
+                )?),
+            ])
+            .finish_output(token_supply)?,
+    ];
+
+    let transaction = account_0.send(outputs, None).await?;
+    account_0
+        .retry_transaction_until_included(&transaction.transaction_id, None, None)
+        .await?;
+
+    let output_id = OutputId::new(transaction.transaction_id, 0u16)?;
+    let nft_id = NftId::from(&output_id);
+
+    account_1.sync(None).await?;
+    let transaction = account_1.burn_nft(nft_id, None).await?;
+    account_1
+        .retry_transaction_until_included(&transaction.transaction_id, None, None)
+        .await?;
+    let balance = account_1.sync(None).await?;
+    // After burning the amount is available on account_1
+    assert_eq!(balance.base_coin.available, amount);
 
     common::tear_down(storage_path)
 }
