@@ -135,7 +135,7 @@ public class IotaWalletMobile extends Plugin {
                 clientResponse.add("payload", jsonResponse);
                 ret.put("result", clientResponse.toString());
             } else {
-                ret.put("result", "Ok");
+                ret.put("result", "ok");
             }
             call.resolve(ret);
         } catch (Exception ex) {
@@ -162,7 +162,7 @@ public class IotaWalletMobile extends Plugin {
                 public void receive(Event event) {
                     Log.d("listen", "Received event " + event.toString());
                     JSObject walletResponse = new JSObject();
-                    walletResponse.put("result", event.getEvent().toString());
+                    walletResponse.put("result", event.toString());
                     call.resolve(walletResponse);
                 }
             }, types);
