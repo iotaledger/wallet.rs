@@ -8,7 +8,8 @@
 #![allow(
     clippy::redundant_pub_crate,
     clippy::module_name_repetitions,
-    clippy::missing_const_for_fn
+    clippy::missing_const_for_fn,
+    clippy::significant_drop_in_scrutinee
 )]
 
 /// [`AccountHandle`]: crate::account::handle::AccountHandle

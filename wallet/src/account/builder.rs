@@ -204,6 +204,7 @@ impl AccountBuilder {
         #[cfg(feature = "storage")]
         account_handle.save(None).await?;
         accounts.push(account_handle.clone());
+
         Ok(account_handle)
     }
 }

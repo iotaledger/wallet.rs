@@ -36,8 +36,7 @@ impl AccountManager {
         let mut max_account_index_to_keep = None;
 
         // Search for addresses in current accounts
-        let accounts = self.accounts.read().await;
-        for account_handle in accounts.iter() {
+        for account_handle in self.accounts.read().await.iter() {
             // If the gap limit is 0, there is no need to search for funds
             if address_gap_limit > 0 {
                 account_handle
@@ -54,7 +53,6 @@ impl AccountManager {
                 None => max_account_index_to_keep = Some(account_index),
             }
         }
-        drop(accounts);
 
         // Create accounts below account_start_index, because we don't want to have gaps in the accounts, but we also
         // don't want to sync them
@@ -74,11 +72,13 @@ impl AccountManager {
             .await;
 
         // remove accounts without outputs
-        let mut accounts = self.accounts.write().await;
         let mut new_accounts = Vec::new();
+        let mut accounts = self.accounts.write().await;
+
         for account_handle in accounts.iter() {
             let account_index = *account_handle.read().await.index();
             let mut keep_account = false;
+
             if let Some(max_account_index_to_keep) = max_account_index_to_keep {
                 if account_index <= max_account_index_to_keep {
                     new_accounts.push((account_index, account_handle.clone()));

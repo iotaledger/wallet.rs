@@ -88,7 +88,6 @@ impl AccountHandle {
         token_id: TokenId,
         burn_token_amount: U256,
     ) -> crate::Result<StrippedOutputAggregate> {
-        let account = self.read().await;
         let token_supply = self.client.get_token_supply().await?;
 
         let mut basic_and_nft_selection = Vec::new();
@@ -97,7 +96,7 @@ impl AccountHandle {
         let mut alias_selection = HashMap::new();
         let mut foundry_selection = Vec::new();
 
-        for (output_id, output_data) in account.unspent_outputs().iter() {
+        for (output_id, output_data) in self.read().await.unspent_outputs().iter() {
             match &output_data.output {
                 Output::Basic(_) | Output::Nft(_) => {
                     if let Some((amount, output)) = strip_native_token_if_found(token_id, output_data, token_supply)? {
@@ -120,8 +119,6 @@ impl AccountHandle {
                 Output::Treasury(_) => continue,
             }
         }
-
-        drop(account);
 
         if basic_and_nft_selection.is_empty() && alias_selection.is_empty() && foundry_selection.is_empty() {
             return Err(crate::Error::BurningOrMeltingFailed(
@@ -292,8 +289,7 @@ impl AccountHandle {
             }
             None => {
                 // Find controlling alias
-                let account = self.read().await;
-                for (output_id, output_data) in account.unspent_outputs().iter() {
+                for (output_id, output_data) in self.read().await.unspent_outputs().iter() {
                     match &output_data.output {
                         Output::Alias(alias_output) => {
                             if alias_output.alias_id_non_null(output_id) == alias_id {

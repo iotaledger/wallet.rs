@@ -1,8 +1,8 @@
 /**
  * This example generates an address without storing it.
  */
-
-require('dotenv').config({ path: '../.env' });
+const path = require('path')
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 const { AccountManager, CoinType } = require('@iota/wallet');
 
 async function run() {

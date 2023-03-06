@@ -1,7 +1,8 @@
 /**
  * This example changes the stronghold password.
  */
- require('dotenv').config({ path: '../.env' });
+const path = require('path')
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 const getUnlockedManager = require('./account-manager');
 
 const NEW_PASSWORD = 'new_super_secure_password'
