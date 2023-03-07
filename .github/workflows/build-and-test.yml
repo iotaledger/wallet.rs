@@ -12,10 +12,10 @@ on:
       - dev
       - develop
     paths-ignore:
-      - 'specs/**'
-      - 'docs/**'
+      - "specs/**"
+      - "docs/**"
 
-concurrency: 
+concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
@@ -28,75 +28,75 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Install toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        override: true
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
 
-    - name: Install LLVM and Clang (Windows) # required for bindgen to work, see https://github.com/rust-lang/rust-bindgen/issues/1797
-      uses: KyleMayes/install-llvm-action@32c4866ebb71e0949e8833eb49beeebed48532bd
-      if: matrix.os == 'windows-latest'
-      with:
-        version: "11.0"
-        directory: ${{ runner.temp }}/llvm
-      
-    - name: Set LIBCLANG_PATH (Windows)
-      run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
-      if: matrix.os == 'windows-latest'
+      - name: Install LLVM and Clang (Windows) # required for bindgen to work, see https://github.com/rust-lang/rust-bindgen/issues/1797
+        uses: KyleMayes/install-llvm-action@32c4866ebb71e0949e8833eb49beeebed48532bd
+        if: matrix.os == 'windows-latest'
+        with:
+          version: "11.0"
+          directory: ${{ runner.temp }}/llvm
 
-    - name: Get current date
-      run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-      if: matrix.os == 'macos-latest' || matrix.os == 'ubuntu-latest'
+      - name: Set LIBCLANG_PATH (Windows)
+        run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
+        if: matrix.os == 'windows-latest'
 
-    - name: Get current date
-      if: matrix.os == 'windows-latest'
-      run: echo "CURRENT_DATE=$(Get-Date -Format "yyyy-MM-dd")" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Get current date
+        run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+        if: matrix.os == 'macos-latest' || matrix.os == 'ubuntu-latest'
 
-    - name: Install required packages (Ubuntu)
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        sudo apt-get update
-        sudo apt-get install libudev-dev libusb-1.0-0-dev
+      - name: Get current date
+        if: matrix.os == 'windows-latest'
+        run: echo "CURRENT_DATE=$(Get-Date -Format "yyyy-MM-dd")" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-    - name: Cache cargo registry
-      uses: actions/cache@v3
-      with:
-        path: ~/.cargo/registry
-        # Add date to the cache to keep it up to date
-        key: ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
-        # Restore from outdated cache for speed
-        restore-keys: |
-          ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-          ${{ matrix.os }}-stable-cargo-registry-
-    - name: Cache cargo index
-      uses: actions/cache@v3
-      with:
-        path: ~/.cargo/git
-        # Add date to the cache to keep it up to date
-        key: ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
-        # Restore from outdated cache for speed
-        restore-keys: |
-          ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}
-          ${{ matrix.os }}-stable-cargo-index-
-    - name: Cache cargo target
-      uses: actions/cache@v3
-      with:
-        path: target
-        # Add date to the cache to keep it up to date
-        key: ${{ matrix.os }}-stable-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
-        # Restore from outdated cache for speed
-        restore-keys: |
-          ${{ matrix.os }}-stable-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
-          ${{ matrix.os }}-stable-cargo-build-target-
+      - name: Install required packages (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install libudev-dev libusb-1.0-0-dev
 
-    - name: Run tests
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: --all-features --release --manifest-path wallet/Cargo.toml
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          # Add date to the cache to keep it up to date
+          key: ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
+          # Restore from outdated cache for speed
+          restore-keys: |
+            ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+            ${{ matrix.os }}-stable-cargo-registry-
+      - name: Cache cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          # Add date to the cache to keep it up to date
+          key: ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
+          # Restore from outdated cache for speed
+          restore-keys: |
+            ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+            ${{ matrix.os }}-stable-cargo-index-
+      - name: Cache cargo target
+        uses: actions/cache@v3
+        with:
+          path: target
+          # Add date to the cache to keep it up to date
+          key: ${{ matrix.os }}-stable-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
+          # Restore from outdated cache for speed
+          restore-keys: |
+            ${{ matrix.os }}-stable-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+            ${{ matrix.os }}-stable-cargo-build-target-
+
+      - name: Run tests
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --all-features --release --manifest-path wallet/Cargo.toml
 
   nodejs-bindings:
     runs-on: ${{ matrix.os }}
@@ -104,7 +104,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-    
+
     steps:
       - uses: actions/checkout@v3
 
@@ -113,14 +113,14 @@ jobs:
         with:
           toolchain: stable
           override: true
-      
+
       - name: Install LLVM and Clang (Windows) # required for bindgen to work, see https://github.com/rust-lang/rust-bindgen/issues/1797
         uses: KyleMayes/install-llvm-action@32c4866ebb71e0949e8833eb49beeebed48532bd
         if: matrix.os == 'windows-latest'
         with:
           version: "11.0"
           directory: ${{ runner.temp }}/llvm
-        
+
       - name: Set LIBCLANG_PATH (Windows)
         run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
         if: matrix.os == 'windows-latest'
@@ -128,7 +128,7 @@ jobs:
       - name: Set up Node.js 14.x
         uses: actions/setup-node@v2
         with:
-          node-version: '14.x'
+          node-version: "14.x"
 
         # Temporary fix for "ValueError: invalid mode: 'rU' while trying to load binding.gyp"
         # See <PR link>
@@ -136,7 +136,7 @@ jobs:
       - name: Set up Python 3.10
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Get current date
         run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
@@ -173,7 +173,7 @@ jobs:
           restore-keys: |
             ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}
             ${{ matrix.os }}-stable-cargo-index-
-     
+
       - name: Cache nodejs binding cargo target
         uses: actions/cache@v3
         if: matrix.os != 'windows-latest'
@@ -204,7 +204,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest]
-    
+
     steps:
       - uses: actions/checkout@v3
 
@@ -253,13 +253,13 @@ jobs:
           args: --all-features --release --manifest-path wallet/bindings/swift/Cargo.toml
 
       - name: Move built library to xcode folder
-        run: mv "$GITHUB_WORKSPACE/wallet/bindings/swift/target/release/libiota_wallet.dylib" "$GITHUB_WORKSPACE/wallet/bindings/swift/xcode/IotaWallet/iota_wallet"
+        run: mv "$GITHUB_WORKSPACE/target/release/libiota_wallet.dylib" "$GITHUB_WORKSPACE/wallet/bindings/swift/xcode/IotaWallet/iota_wallet"
 
       - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: latest-stable
-      
+
       - name: Build project
         run: |
           set -o pipefail
@@ -275,90 +275,90 @@ jobs:
         python-version: [3.9]
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Install toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        override: true
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
 
-    - name: Install LLVM and Clang (Windows) # required for bindgen to work, see https://github.com/rust-lang/rust-bindgen/issues/1797
-      uses: KyleMayes/install-llvm-action@32c4866ebb71e0949e8833eb49beeebed48532bd
-      if: matrix.os == 'windows-latest'
-      with:
-        version: "11.0"
-        directory: ${{ runner.temp }}/llvm
-      
-    - name: Set LIBCLANG_PATH (Windows)
-      run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
-      if: matrix.os == 'windows-latest'
+      - name: Install LLVM and Clang (Windows) # required for bindgen to work, see https://github.com/rust-lang/rust-bindgen/issues/1797
+        uses: KyleMayes/install-llvm-action@32c4866ebb71e0949e8833eb49beeebed48532bd
+        if: matrix.os == 'windows-latest'
+        with:
+          version: "11.0"
+          directory: ${{ runner.temp }}/llvm
 
-    # Set custom deployment target because of rocksdb
-    - name: Set deployment target (macOS)
-      run: echo "MACOSX_DEPLOYMENT_TARGET=10.14" >> $GITHUB_ENV 
-      if: matrix.os == 'macos-latest'
+      - name: Set LIBCLANG_PATH (Windows)
+        run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
+        if: matrix.os == 'windows-latest'
 
-    - name: Get current date
-      run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-      if: matrix.os == 'macos-latest' || matrix.os == 'ubuntu-latest'
+      # Set custom deployment target because of rocksdb
+      - name: Set deployment target (macOS)
+        run: echo "MACOSX_DEPLOYMENT_TARGET=10.14" >> $GITHUB_ENV
+        if: matrix.os == 'macos-latest'
 
-    - name: Get current date
-      if: matrix.os == 'windows-latest'
-      run: echo "CURRENT_DATE=$(Get-Date -Format "yyyy-MM-dd")" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Get current date
+        run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+        if: matrix.os == 'macos-latest' || matrix.os == 'ubuntu-latest'
 
-    - name: Install required packages (Ubuntu)
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        sudo apt-get update
-        sudo apt-get install libudev-dev libusb-1.0-0-dev
+      - name: Get current date
+        if: matrix.os == 'windows-latest'
+        run: echo "CURRENT_DATE=$(Get-Date -Format "yyyy-MM-dd")" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-  
-    - name: Install dependencies for python binding test
-      run: |
-        python -m pip install --upgrade setuptools pip wheel
-        python -m pip install tox-gh-actions
-    
-    - name: Cache cargo registry
-      uses: actions/cache@v3
-      with:
-        path: ~/.cargo/registry
-        # Add date to the cache to keep it up to date
-        key: ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
-        # Restore from outdated cache for speed
-        restore-keys: |
-          ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-          ${{ matrix.os }}-stable-cargo-registry-
+      - name: Install required packages (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install libudev-dev libusb-1.0-0-dev
 
-    - name: Cache cargo index
-      uses: actions/cache@v3
-      with:
-        path: ~/.cargo/git
-        # Add date to the cache to keep it up to date
-        key: ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
-        # Restore from outdated cache for speed
-        restore-keys: |
-          ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}
-          ${{ matrix.os }}-stable-cargo-index-
-    
-    - name: Cache python binding cargo target
-      uses: actions/cache@v3
-      with:
-        path: wallet/bindings/python/target
-        # Add date to the cache to keep it up to date
-        key: ${{ matrix.os }}-stable-cargo-build-python-target-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
-        # Restore from outdated cache for speed
-        restore-keys: |
-          ${{ matrix.os }}-stable-cargo-build-python-target-${{ hashFiles('**/Cargo.lock') }}
-          ${{ matrix.os }}-stable-cargo-build-python-target-
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
 
-    - name: Build and test python binding
-      run: tox
-      working-directory: wallet/bindings/python
+      - name: Install dependencies for python binding test
+        run: |
+          python -m pip install --upgrade setuptools pip wheel
+          python -m pip install tox-gh-actions
+
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          # Add date to the cache to keep it up to date
+          key: ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
+          # Restore from outdated cache for speed
+          restore-keys: |
+            ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+            ${{ matrix.os }}-stable-cargo-registry-
+
+      - name: Cache cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          # Add date to the cache to keep it up to date
+          key: ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
+          # Restore from outdated cache for speed
+          restore-keys: |
+            ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+            ${{ matrix.os }}-stable-cargo-index-
+
+      - name: Cache python binding cargo target
+        uses: actions/cache@v3
+        with:
+          path: wallet/bindings/python/target
+          # Add date to the cache to keep it up to date
+          key: ${{ matrix.os }}-stable-cargo-build-python-target-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
+          # Restore from outdated cache for speed
+          restore-keys: |
+            ${{ matrix.os }}-stable-cargo-build-python-target-${{ hashFiles('**/Cargo.lock') }}
+            ${{ matrix.os }}-stable-cargo-build-python-target-
+
+      - name: Build and test python binding
+        run: tox
+        working-directory: wallet/bindings/python
 
   test-java:
     name: Test Java binding
@@ -429,7 +429,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: ${{ matrix.java }}
-          distribution: 'temurin'
+          distribution: "temurin"
 
       - name: Test
         shell: bash
