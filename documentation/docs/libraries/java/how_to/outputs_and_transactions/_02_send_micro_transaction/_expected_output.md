@@ -4,7 +4,7 @@
     "type":6,
     "essence":{
       "type":1,
-      "networkId":"8342982141227064571",
+      "networkId":"1856588631910923207",
       "inputs":[
         {
           "type":0,
@@ -120,7 +120,7 @@
   "inclusionState":"Pending",
   "timestamp":"1664887369004",
   "transactionId":"0xaccae1f4e78ee169d0fc1d99843e6cd417290da91aa62c696fa507d21fd245cc",
-  "networkId":"8342982141227064571",
+  "networkId":"1856588631910923207",
   "incoming":false
 }
 ```
