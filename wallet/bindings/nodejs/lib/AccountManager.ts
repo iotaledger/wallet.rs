@@ -291,13 +291,17 @@ export class AccountManager {
      * if ignore_if_coin_type_mismatch is provided client options will not be restored
      * if ignore_if_coin_type_mismatch == true, client options coin type and accounts will not be restored if the cointype doesn't match
      */
-    async restoreBackup(source: string, password: string, ignoreIfCoinTypeMismatch?: boolean): Promise<void> {
+    async restoreBackup(
+        source: string,
+        password: string,
+        ignoreIfCoinTypeMismatch?: boolean,
+    ): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'restoreBackup',
             payload: {
                 source,
                 password,
-                ignoreIfCoinTypeMismatch
+                ignoreIfCoinTypeMismatch,
             },
         });
     }
