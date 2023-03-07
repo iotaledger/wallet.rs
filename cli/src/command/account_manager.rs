@@ -160,7 +160,9 @@ pub async fn restore_command(
         .finish()
         .await?;
 
-    account_manager.restore_backup(backup_path.into(), password).await?;
+    account_manager
+        .restore_backup(backup_path.into(), password, None)
+        .await?;
 
     Ok(account_manager)
 }
