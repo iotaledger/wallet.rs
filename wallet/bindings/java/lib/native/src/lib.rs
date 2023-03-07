@@ -16,7 +16,7 @@ use jni::{
     JNIEnv, JavaVM,
 };
 #[cfg(target_os = "android")]
-use log::{LevelFilter, error};
+use log::{error, LevelFilter};
 use once_cell::sync::OnceCell;
 use tokio::runtime::Runtime;
 
