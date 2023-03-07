@@ -364,7 +364,100 @@ async fn backup_and_restore_same_coin_type() -> Result<()> {
         account_before_backup.addresses().await?
     );
 
-    // compare restored client options
+    // compare client options, they are not restored
+    let client_options = restore_manager.get_client_options().await;
+    let node_dto = NodeDto::Node(Node::from(Url::parse(common::NODE_OTHER).unwrap()));
+    assert!(client_options.node_manager_builder.nodes.contains(&node_dto));
+
+    common::tear_down(storage_path)
+}
+
+#[tokio::test]
+#[cfg(all(feature = "stronghold", feature = "storage"))]
+// Backup and restore with Stronghold
+async fn backup_and_restore_different_coin_type_dont_ignore() -> Result<()> {
+    let storage_path = "test-storage/backup_and_restore_different_coin_type_dont_ignore";
+    common::setup(storage_path)?;
+
+    let client_options = ClientOptions::new().with_node(common::NODE_LOCAL)?;
+
+    let stronghold_password = "some_hopefully_secure_password";
+
+    // Create directory if not existing, because stronghold panics otherwise
+    std::fs::create_dir_all(storage_path).unwrap_or(());
+    let mut stronghold = StrongholdSecretManager::builder()
+        .password(stronghold_password)
+        .build(PathBuf::from(
+            "test-storage/backup_and_restore_different_coin_type_dont_ignore/1.stronghold",
+        ))?;
+
+    stronghold.store_mnemonic("inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak".to_string()).await.unwrap();
+
+    let manager = AccountManager::builder()
+        .with_secret_manager(SecretManager::Stronghold(stronghold))
+        .with_client_options(client_options.clone())
+        .with_coin_type(SHIMMER_COIN_TYPE)
+        .with_storage_path("test-storage/backup_and_restore_different_coin_type_dont_ignore/1")
+        .finish()
+        .await?;
+
+    // Create one account
+    let account = manager
+        .create_account()
+        .with_alias("Alice".to_string())
+        .finish()
+        .await?;
+
+    manager
+        .backup(
+            PathBuf::from("test-storage/backup_and_restore_different_coin_type_dont_ignore/backup.stronghold"),
+            stronghold_password.to_string(),
+        )
+        .await?;
+
+    // restore from backup
+
+    let stronghold = StrongholdSecretManager::builder().build(PathBuf::from(
+        "test-storage/backup_and_restore_different_coin_type_dont_ignore/2.stronghold",
+    ))?;
+
+    let restore_manager = AccountManager::builder()
+        .with_storage_path("test-storage/backup_and_restore_different_coin_type_dont_ignore/2")
+        .with_secret_manager(SecretManager::Stronghold(stronghold))
+        .with_client_options(ClientOptions::new().with_node(common::NODE_OTHER)?)
+        // Build with a different coin type, to check if it gets replaced by the one from the backup
+        .with_coin_type(IOTA_COIN_TYPE)
+        .finish()
+        .await?;
+
+    // restore with ignore_if_coin_type_mismatch: Some(true) to not overwrite the coin type
+    restore_manager
+        .restore_backup(
+            PathBuf::from("test-storage/backup_and_restore_different_coin_type_dont_ignore/backup.stronghold"),
+            stronghold_password.to_string(),
+            Some(false),
+        )
+        .await?;
+
+    // Validate restored data
+
+    // No accounts restored, because the coin type was different
+    let restored_account = restore_manager.get_account("Alice").await?;
+    assert_eq!(
+        account.addresses().await?[0].address().to_bech32(),
+        restored_account.addresses().await?[0].address().to_bech32(),
+    );
+
+    // Restored coin type is used
+    let new_account = restore_manager.create_account().finish().await?;
+    assert_eq!(new_account.read().await.coin_type(), &SHIMMER_COIN_TYPE);
+    // secret manager is restored
+    assert_eq!(
+        new_account.addresses().await?[0].address().to_bech32(),
+        "smr1qzvjvjyqxgfx4f0m3xhn2rj24e03dwsmjz082735y3wx88v2gudu2afedhu"
+    );
+
+    // compare client options, they are not restored
     let client_options = restore_manager.get_client_options().await;
     let node_dto = NodeDto::Node(Node::from(Url::parse(common::NODE_OTHER).unwrap()));
     assert!(client_options.node_manager_builder.nodes.contains(&node_dto));
