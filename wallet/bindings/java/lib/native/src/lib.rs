@@ -1,12 +1,6 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-#[cfg(target_os = "android")]
-#[macro_use]
-extern crate log;
-#[cfg(target_os = "android")]
-extern crate android_logger;
-
 use std::{convert::TryFrom, sync::Mutex};
 
 #[cfg(target_os = "android")]
@@ -22,7 +16,7 @@ use jni::{
     JNIEnv, JavaVM,
 };
 #[cfg(target_os = "android")]
-use log::LevelFilter;
+use log::{LevelFilter, error};
 use once_cell::sync::OnceCell;
 use tokio::runtime::Runtime;
 
