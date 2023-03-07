@@ -21,7 +21,7 @@ async function run() {
         storagePath: './alice-database',
         coinType: CoinType.Shimmer,
         clientOptions: {
-            nodes: ['https://api.testnet.shimmer.network'],
+            nodes: ['http://localhost:14265'],
         },
         secretManager: {
             mnemonic:
@@ -43,7 +43,7 @@ async function run() {
     expect(savedAccount).not.toBeNull();
 
     manager.getNodeInfo().then((value: NodeInfoWrapper) => {
-        expect(value.url).toBe('https://api.testnet.shimmer.network');
+        expect(value.url).toBe('http://localhost:14265');
     });
 }
 
