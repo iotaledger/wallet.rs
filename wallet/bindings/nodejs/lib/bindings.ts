@@ -31,7 +31,6 @@ const sendMessageAsync = (
         });
     });
 
-
 export {
     initLogger as internalInitLogger,
     sendMessageAsync,
