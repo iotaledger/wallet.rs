@@ -77,9 +77,16 @@ jobs:
         working-directory: wallet/bindings/wasm/
         run: yarn build
 
+      - name: Start private tangle
+        uses: './.github/actions/private-tangle/setup'
+
       - name: Run Yarn Test
         working-directory: wallet/bindings/wasm/
         run: yarn test
+
+      - name: Tear down private tangle
+        if: always()
+        uses: './.github/actions/private-tangle/tear-down'
 
   lint:
     name: Lint
