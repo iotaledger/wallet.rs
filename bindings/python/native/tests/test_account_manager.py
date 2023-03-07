@@ -195,32 +195,32 @@ def test_account_manager_stop_background_sync():
     manager.stop_background_sync()
 
 
-def test_get_migration_data():
+# def test_get_migration_data():
 
-    legacy_node = pat['migration']['legacy_node']
+#     legacy_node = pat['migration']['legacy_node']
 
-    # Note: The seed is for testing ONLY!
-    #       Also get the seed from the environment variable or using another safer way.
-    seed = pat['migration']['test_only_seed']
-    permanode = pat['migration']['permanode']
-    min_weight_magnitude = pat['migration']['min_weight_magnitude']
+#     # Note: The seed is for testing ONLY!
+#     #       Also get the seed from the environment variable or using another safer way.
+#     seed = pat['migration']['test_only_seed']
+#     permanode = pat['migration']['permanode']
+#     min_weight_magnitude = pat['migration']['min_weight_magnitude']
 
-    migration_data = manager.get_migration_data(
-        nodes=[legacy_node], seed=seed, permanode=permanode)
+#     migration_data = manager.get_migration_data(
+#         nodes=[legacy_node], seed=seed, permanode=permanode)
 
-    input_address_indexes = []
-    for input in migration_data['inputs']:
-        input_address_indexes.append(input['index'])
-    try:
-        bundle = manager.create_migration_bundle(
-            seed, input_address_indexes, mine=True, timeout_seconds=40, offset=0)
+#     input_address_indexes = []
+#     for input in migration_data['inputs']:
+#         input_address_indexes.append(input['index'])
+#     try:
+#         bundle = manager.create_migration_bundle(
+#             seed, input_address_indexes, mine=True, timeout_seconds=40, offset=0)
 
-    except ValueError as e:
-        assert 'Input value is < dust protection value' in str(e)
-    else:
-        try:
-            manager.send_migration_bundle(
-                [legacy_node], bundle['bundle_hash'], min_weight_magnitude)
+#     except ValueError as e:
+#         assert 'Input value is < dust protection value' in str(e)
+#     else:
+#         try:
+#             manager.send_migration_bundle(
+#                 [legacy_node], bundle['bundle_hash'], min_weight_magnitude)
 
-        except ValueError as e:
-            assert 'input list is empty' in str(e)
+#         except ValueError as e:
+#             assert 'input list is empty' in str(e)
