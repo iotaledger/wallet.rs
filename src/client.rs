@@ -261,7 +261,7 @@ impl ClientOptionsBuilder {
     /// let client_options = ClientOptionsBuilder::new()
     ///     .with_nodes(&[
     ///         "https://api.lb-0.h.chrysalis-devnet.iota.cafe",
-    ///         "https://api.thin-hornet-0.h.chrysalis-devnet.iota.cafe/",
+    ///         "https://api.lb-0.h.chrysalis-devnet.iota.cafe/",
     ///     ])
     ///     .expect("invalid nodes URLs")
     ///     .build();
@@ -739,7 +739,7 @@ mod tests {
                 .build()
                 .unwrap(),
             ClientOptionsBuilder::new()
-                .with_node("https://api.thin-hornet-1.h.chrysalis-devnet.iota.cafe/")
+                .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe/")
                 .unwrap()
                 .build()
                 .unwrap(),
@@ -753,12 +753,6 @@ mod tests {
                 .with_nodes(&["https://api.lb-1.h.chrysalis-devnet.iota.cafe"])
                 .unwrap()
                 .with_network("testnet2")
-                .build()
-                .unwrap(),
-            ClientOptionsBuilder::new()
-                .with_network("testnet2")
-                .with_nodes(&["https://api.fat-hornet-0.h.chrysalis-devnet.iota.cafe/"])
-                .unwrap()
                 .build()
                 .unwrap(),
         ];

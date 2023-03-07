@@ -237,7 +237,8 @@ fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, Arc<Password>>>> {
                     if let Some(curr_snapshot_path) = current_snapshot_path {
                         if &snapshot_path == curr_snapshot_path {
                             let mut runtime = actor_runtime().lock().await;
-                            let _ = clear_stronghold_cache(&mut runtime, true).await;
+                            #[allow(unused_must_use)]
+                            let _ = clear_stronghold_cache(&mut runtime, true);
                         }
                     }
                     crate::event::emit_stronghold_status_change(&Status {
