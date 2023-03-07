@@ -121,7 +121,7 @@ fn default_signers() -> Signers {
         signers.insert(
             SignerType::Stronghold,
             Arc::new(Mutex::new(
-                Box::new(self::stronghold::StrongholdSigner::default()) as Box<dyn Signer + Sync + Send>
+                Box::<self::stronghold::StrongholdSigner>::default() as Box<dyn Signer + Sync + Send>
             )),
         );
     }

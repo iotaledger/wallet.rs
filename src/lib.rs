@@ -37,13 +37,13 @@ pub(crate) mod stronghold;
 
 pub use error::Error;
 
+pub use storage::remove as remove_storage;
 #[cfg(feature = "stronghold")]
 #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
 pub use stronghold::{
     get_status as get_stronghold_status, set_password_clear_interval as set_stronghold_password_clear_interval,
     unload_snapshot as lock_stronghold, SnapshotStatus as StrongholdSnapshotStatus, Status as StrongholdStatus,
 };
-pub use storage::remove as remove_storage;
 
 /// The wallet Result type.
 pub type Result<T> = std::result::Result<T, Error>;

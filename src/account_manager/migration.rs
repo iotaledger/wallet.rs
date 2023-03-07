@@ -195,10 +195,7 @@ impl<'a> MigrationDataFinder<'a> {
                     unique_inputs.insert(input.index, input);
                 }
             }
-            current_inputs = unique_inputs
-                .into_iter()
-                .map(|(_, input)| input)
-                .collect::<Vec<InputData>>();
+            current_inputs = unique_inputs.into_values().collect::<Vec<InputData>>();
             let current_balance: u64 = current_inputs.iter().map(|d| d.balance).sum();
             balance += current_balance;
             inputs.insert(address_index..address_index + self.gap_limit, current_inputs);
