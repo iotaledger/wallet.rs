@@ -63,7 +63,7 @@ describe('Wallet methods', () => {
             secretManager: 'placeholder',
         });
 
-        let mnemonic = await manager.generateMnemonic();
+        const mnemonic = await manager.generateMnemonic();
         expect(mnemonic.split(' ').length).toBe(24);
     });
 });
