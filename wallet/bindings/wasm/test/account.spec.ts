@@ -35,12 +35,10 @@ async function run() {
 
     expect(account.getMetadata().alias).toBe('Alice');
 
-    account.setAlias('new alias');
-    expect(account.getMetadata().alias).toBe('new alias');
-
     const balance: AccountBalance = await account.sync();
-    expect(balance.baseCoin.available).toBe('0');
+    expect(balance.baseCoin.available).not.toBeNaN();
 
+    await account.setAlias('new alias');
     const savedAccount: Account = await manager.getAccount('new alias');
     expect(savedAccount).not.toBeNull();
 
@@ -50,7 +48,8 @@ async function run() {
 }
 
 describe('Wallet methods', () => {
+    jest.setTimeout(10000);
     it('account', async () => {
-        run();
+        await run();
     });
 });

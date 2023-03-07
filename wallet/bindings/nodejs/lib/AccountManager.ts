@@ -229,10 +229,10 @@ export class AccountManager {
     /**
      * Listen to wallet events with a callback. An empty array will listen to all possible events.
      */
-    listen(
+    async listen(
         eventTypes: EventType[],
         callback: (error: Error, result: string) => void,
-    ): void {
+    ): Promise<void> {
         return this.messageHandler.listen(eventTypes, callback);
     }
 
