@@ -99,7 +99,7 @@ pub extern "system" fn Java_org_iota_api_NativeApi_createMessageHandler(
     android_logger::init_once(
         Config::default()
             .with_tag("lib_wallet")
-            .with_max_level(LevelFilter::Trace),
+            .with_max_level(LevelFilter::Off),
     );
 
     if let Ok(mut message_handler_store) = MESSAGE_HANDLER.lock() {
