@@ -8,17 +8,18 @@ import {
     AccountManager,
     CoinType,
     NodeInfoWrapper,
+    PlaceholderSecretManager,
 } from '../node/lib';
 
 async function run() {
     try {
-        fs.rmdirSync('./alice-database', { recursive: true });
+        fs.rmdirSync('./test-alice-database', { recursive: true });
     } catch (e) {
         // ignore it
     }
 
     const manager = new AccountManager({
-        storagePath: './alice-database',
+        storagePath: './test-alice-database',
         coinType: CoinType.Shimmer,
         clientOptions: {
             nodes: ['http://localhost:14265'],
@@ -51,5 +52,18 @@ describe('Wallet methods', () => {
     jest.setTimeout(10000);
     it('account', async () => {
         await run();
+    });
+    it('generate mnemonic', async () => {
+        const manager = new AccountManager({
+            storagePath: './test-generate-mnemonic',
+            coinType: CoinType.Shimmer,
+            clientOptions: {
+                nodes: [],
+            },
+            secretManager: 'placeholder',
+        });
+
+        let mnemonic = await manager.generateMnemonic();
+        expect(mnemonic.split(' ').length).toBe(24);
     });
 });

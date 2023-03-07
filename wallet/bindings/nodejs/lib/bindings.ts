@@ -7,13 +7,8 @@ import type { MessageHandler } from './MessageHandler';
 // @ts-ignore: path is set to match runtime transpiled js path
 import addon = require('../../build/Release/index.node');
 
-const {
-    initLogger,
-    sendMessage,
-    messageHandlerNew,
-    listenRust,
-    destroy,
-} = addon;
+const { initLogger, sendMessage, messageHandlerNew, listenRust, destroy } =
+    addon;
 
 const listen = (
     eventTypes: EventType[],
@@ -22,7 +17,7 @@ const listen = (
 ): Promise<void> => {
     listenRust(eventTypes, callback, handler);
     return Promise.resolve();
-}
+};
 
 const sendMessageAsync = (
     message: string,
