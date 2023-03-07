@@ -24,7 +24,7 @@ Listing Outputs: [
       type: 0,
       pubKeyHash: '0xeed1e4e3e9e7555e2f1592594bf916523e7fef3a9a8c0d630a4934440b822647'
     },
-    networkId: '8342982141227064571',
+    networkId: '1856588631910923207',
     remainder: false,
     chain: [ [Object], [Object], [Object], [Object], [Object] ]
   },
