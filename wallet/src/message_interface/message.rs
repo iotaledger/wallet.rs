@@ -104,7 +104,7 @@ pub enum Message {
     /// Replaces client_options, coin_type, secret_manager and accounts. Returns an error if accounts were already
     /// created If Stronghold is used as secret_manager, the existing Stronghold file will be overwritten. If a
     /// mnemonic was stored, it will be gone.
-    /// if ignore_if_coin_type_mismatch.is_some(). client options will not be restored
+    /// if ignore_if_coin_type_mismatch.is_some(), client options will not be restored
     /// if ignore_if_coin_type_mismatch == Some(true), client options coin type and accounts will not be restored if
     /// the cointype doesn't match Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "stronghold")]
