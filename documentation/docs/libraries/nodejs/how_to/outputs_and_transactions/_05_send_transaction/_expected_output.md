@@ -49,7 +49,7 @@ Account: Account {
     type: 6,
     essence: {
       type: 1,
-      networkId: '8342982141227064571',
+      networkId: '1856588631910923207',
       inputs: [Array],
       inputsCommitment: '0x4a56ceb8ee05b747b73e97bdb093be9f885b6ba27562c91a1d8745d9ccfd57e1',
       outputs: [Array]
@@ -60,7 +60,7 @@ Account: Account {
   inclusionState: 'Pending',
   timestamp: '1662654717453',
   transactionId: '0x17670e2cda90f199c3e07188068c38ad856274e98d4913b80da8e3830db7afc4',
-  networkId: '8342982141227064571',
+  networkId: '1856588631910923207',
   incoming: false,
   note: null
 }
