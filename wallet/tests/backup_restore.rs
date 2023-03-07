@@ -284,3 +284,90 @@ async fn backup_and_restore_different_coin_type() -> Result<()> {
 
     common::tear_down(storage_path)
 }
+
+#[tokio::test]
+#[cfg(all(feature = "stronghold", feature = "storage"))]
+// Backup and restore with Stronghold
+async fn backup_and_restore_same_coin_type() -> Result<()> {
+    let storage_path = "test-storage/backup_and_restore_different_coin_type";
+    common::setup(storage_path)?;
+
+    let client_options = ClientOptions::new().with_node(common::NODE_LOCAL)?;
+
+    let stronghold_password = "some_hopefully_secure_password";
+
+    // Create directory if not existing, because stronghold panics otherwise
+    std::fs::create_dir_all(storage_path).unwrap_or(());
+    let mut stronghold = StrongholdSecretManager::builder()
+        .password(stronghold_password)
+        .build(PathBuf::from(
+            "test-storage/backup_and_restore_same_coin_type/1.stronghold",
+        ))?;
+
+    stronghold.store_mnemonic("inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak".to_string()).await.unwrap();
+
+    let manager = AccountManager::builder()
+        .with_secret_manager(SecretManager::Stronghold(stronghold))
+        .with_client_options(client_options.clone())
+        .with_coin_type(SHIMMER_COIN_TYPE)
+        .with_storage_path("test-storage/backup_and_restore_same_coin_type/1")
+        .finish()
+        .await?;
+
+    // Create one account
+    let account_before_backup = manager
+        .create_account()
+        .with_alias("Alice".to_string())
+        .finish()
+        .await?;
+
+    manager
+        .backup(
+            PathBuf::from("test-storage/backup_and_restore_same_coin_type/backup.stronghold"),
+            stronghold_password.to_string(),
+        )
+        .await?;
+
+    // restore from backup
+
+    let stronghold = StrongholdSecretManager::builder().build(PathBuf::from(
+        "test-storage/backup_and_restore_same_coin_type/2.stronghold",
+    ))?;
+
+    let restore_manager = AccountManager::builder()
+        .with_storage_path("test-storage/backup_and_restore_same_coin_type/2")
+        .with_secret_manager(SecretManager::Stronghold(stronghold))
+        .with_client_options(ClientOptions::new().with_node(common::NODE_OTHER)?)
+        // Build with same coin type
+        .with_coin_type(SHIMMER_COIN_TYPE)
+        .finish()
+        .await?;
+
+    // restore with ignore_if_coin_type_mismatch: Some(true) to not overwrite the coin type
+    restore_manager
+        .restore_backup(
+            PathBuf::from("test-storage/backup_and_restore_same_coin_type/backup.stronghold"),
+            stronghold_password.to_string(),
+            Some(true),
+        )
+        .await?;
+
+    // Validate restored data
+
+    // The account is restored, because the coin type is the same
+    let restored_accounts = restore_manager.get_accounts().await?;
+    assert_eq!(restored_accounts.len(), 1);
+
+    // addresses are still there
+    assert_eq!(
+        restored_accounts[0].addresses().await?,
+        account_before_backup.addresses().await?
+    );
+
+    // compare restored client options
+    let client_options = restore_manager.get_client_options().await;
+    let node_dto = NodeDto::Node(Node::from(Url::parse(common::NODE_OTHER).unwrap()));
+    assert!(client_options.node_manager_builder.nodes.contains(&node_dto));
+
+    common::tear_down(storage_path)
+}
