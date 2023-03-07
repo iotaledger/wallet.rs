@@ -55,7 +55,15 @@ impl AccountManager {
     /// Replaces client_options, coin_type, secret_manager and accounts. Returns an error if accounts were already
     /// created If Stronghold is used as secret_manager, the existing Stronghold file will be overwritten. If a
     /// mnemonic was stored, it will be gone.
-    pub async fn restore_backup(&self, backup_path: PathBuf, mut stronghold_password: String) -> crate::Result<()> {
+    /// if ignore_if_coin_type_mismatch.is_some(). client options will not be restored
+    /// if ignore_if_coin_type_mismatch == Some(true), client options coin type and accounts will not be restored if the
+    /// cointype doesn't match
+    pub async fn restore_backup(
+        &self,
+        backup_path: PathBuf,
+        mut stronghold_password: String,
+        ignore_if_coin_type_mismatch: Option<bool>,
+    ) -> crate::Result<()> {
         log::debug!("[restore_backup] loading stronghold backup");
 
         if !backup_path.is_file() {
@@ -86,13 +94,30 @@ impl AccountManager {
         let (read_client_options, read_coin_type, read_secret_manager, read_accounts) =
             read_data_from_stronghold_snapshot(&mut new_stronghold).await?;
 
+        // If the coin type is not matching the current one, then the addresses in the accounts will also not be
+        // correct, so we will not restore them
+        let ignore_backup_values = ignore_if_coin_type_mismatch.map_or(false, |ignore| {
+            if ignore {
+                read_coin_type.map_or(true, |read_coin_type| {
+                    self.coin_type.load(Ordering::Relaxed) != read_coin_type
+                })
+            } else {
+                false
+            }
+        });
+
         // Update AccountManager with read data
-        if let Some(read_client_options) = read_client_options {
-            *self.client_options.write().await = read_client_options;
+        if ignore_if_coin_type_mismatch.is_none() {
+            if let Some(read_client_options) = read_client_options {
+                // If the nodes are from the same network as the current client options, then extend it
+                *self.client_options.write().await = read_client_options;
+            }
         }
 
-        if let Some(read_coin_type) = read_coin_type {
-            self.coin_type.store(read_coin_type, Ordering::Relaxed);
+        if !ignore_backup_values {
+            if let Some(read_coin_type) = read_coin_type {
+                self.coin_type.store(read_coin_type, Ordering::Relaxed);
+            }
         }
 
         if let Some(mut read_secret_manager) = read_secret_manager {
@@ -116,22 +141,24 @@ impl AccountManager {
 
         stronghold_password.zeroize();
 
-        if let Some(read_accounts) = read_accounts {
-            let client = self.client_options.read().await.clone().finish()?;
+        if !ignore_backup_values {
+            if let Some(read_accounts) = read_accounts {
+                let client = self.client_options.read().await.clone().finish()?;
 
-            let mut restored_account_handles = Vec::new();
-            for account in read_accounts {
-                restored_account_handles.push(AccountHandle::new(
-                    account,
-                    client.clone(),
-                    self.secret_manager.clone(),
-                    #[cfg(feature = "events")]
-                    self.event_emitter.clone(),
-                    #[cfg(feature = "storage")]
-                    self.storage_manager.clone(),
-                ))
+                let mut restored_account_handles = Vec::new();
+                for account in read_accounts {
+                    restored_account_handles.push(AccountHandle::new(
+                        account,
+                        client.clone(),
+                        self.secret_manager.clone(),
+                        #[cfg(feature = "events")]
+                        self.event_emitter.clone(),
+                        #[cfg(feature = "storage")]
+                        self.storage_manager.clone(),
+                    ))
+                }
+                *accounts = restored_account_handles;
             }
-            *accounts = restored_account_handles;
         }
 
         // store new data
