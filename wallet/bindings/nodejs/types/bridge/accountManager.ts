@@ -124,6 +124,7 @@ export type __RestoreBackupMessage__ = {
     payload: {
         source: string;
         password: string;
+        ignoreIfCoinTypeMismatch?: boolean;
     };
 };
 

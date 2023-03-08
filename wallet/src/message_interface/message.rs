@@ -104,7 +104,9 @@ pub enum Message {
     /// Replaces client_options, coin_type, secret_manager and accounts. Returns an error if accounts were already
     /// created If Stronghold is used as secret_manager, the existing Stronghold file will be overwritten. If a
     /// mnemonic was stored, it will be gone.
-    /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
+    /// if ignore_if_coin_type_mismatch.is_some(), client options will not be restored
+    /// if ignore_if_coin_type_mismatch == Some(true), client options coin type and accounts will not be restored if
+    /// the cointype doesn't match Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "stronghold")]
     #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
     RestoreBackup {
@@ -112,6 +114,8 @@ pub enum Message {
         source: PathBuf,
         /// Stronghold file password.
         password: String,
+        #[serde(rename = "ignoreIfCoinTypeMismatch")]
+        ignore_if_coin_type_mismatch: Option<bool>,
     },
     /// Removes the latest account (account with the largest account index).
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
@@ -268,7 +272,14 @@ impl Debug for Message {
             ),
             Self::RemoveLatestAccount => write!(f, "RemoveLatestAccount"),
             #[cfg(feature = "stronghold")]
-            Self::RestoreBackup { source, password: _ } => write!(f, "RestoreBackup{{ source: {source:?} }}"),
+            Self::RestoreBackup {
+                source,
+                password: _,
+                ignore_if_coin_type_mismatch,
+            } => write!(
+                f,
+                "RestoreBackup{{ source: {source:?}, password: <ommited>, ignore_if_coin_type_mismatch: {ignore_if_coin_type_mismatch:?} }}"
+            ),
             Self::GenerateMnemonic => write!(f, "GenerateMnemonic"),
             Self::VerifyMnemonic { mnemonic: _ } => write!(f, "VerifyMnemonic{{ mnemonic: <omitted> }}"),
             Self::SetClientOptions { client_options } => {
