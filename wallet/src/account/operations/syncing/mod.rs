@@ -48,68 +48,82 @@ impl AccountHandle {
             return self.balance().await;
         }
 
-        let addresses_to_sync = self.get_addresses_to_sync(&options).await?;
-        log::debug!("[SYNC] addresses_to_sync {}", addresses_to_sync.len());
+        // Sync the first time with pending_transactions if not disabled. If a pending transaction got confirmed for
+        // which we don't have an output, we request the outputs in the second round to also have them.
+        for i in 0..2 {
+            let addresses_to_sync = self.get_addresses_to_sync(&options).await?;
+            log::debug!("[SYNC] addresses_to_sync {}", addresses_to_sync.len());
 
-        let (spent_or_not_synced_output_ids, addresses_with_unspent_outputs, outputs_data): (
-            Vec<OutputId>,
-            Vec<AddressWithUnspentOutputs>,
-            Vec<OutputData>,
-        ) = self.request_outputs_recursively(addresses_to_sync, &options).await?;
+            let (spent_or_not_synced_output_ids, addresses_with_unspent_outputs, outputs_data): (
+                Vec<OutputId>,
+                Vec<AddressWithUnspentOutputs>,
+                Vec<OutputData>,
+            ) = self.request_outputs_recursively(addresses_to_sync, &options).await?;
 
-        // Request possible spent outputs
-        log::debug!("[SYNC] spent_or_not_synced_outputs: {spent_or_not_synced_output_ids:?}");
-        let spent_or_unsynced_output_metadata_responses = self
-            .client
-            .try_get_outputs_metadata(spent_or_not_synced_output_ids.clone())
+            // Request possible spent outputs
+            log::debug!("[SYNC] spent_or_not_synced_outputs: {spent_or_not_synced_output_ids:?}");
+            let spent_or_unsynced_output_metadata_responses = self
+                .client
+                .try_get_outputs_metadata(spent_or_not_synced_output_ids.clone())
+                .await?;
+
+            // Add the output response to the output ids, the output response is optional, because an output could be
+            // pruned and then we can't get the metadata
+            let mut spent_or_unsynced_output_metadata_map: HashMap<OutputId, Option<OutputMetadataDto>> =
+                spent_or_not_synced_output_ids.into_iter().map(|o| (o, None)).collect();
+            for output_metadata_response in spent_or_unsynced_output_metadata_responses {
+                let output_id = output_metadata_response.output_id()?;
+                spent_or_unsynced_output_metadata_map.insert(output_id, Some(output_metadata_response));
+            }
+
+            if options.sync_incoming_transactions {
+                let transaction_ids = outputs_data
+                    .iter()
+                    .map(|output| *output.output_id.transaction_id())
+                    .collect();
+                // Request and store transaction payload for newly received unspent outputs
+                self.request_incoming_transaction_data(transaction_ids).await?;
+            }
+
+            if options.sync_native_token_foundries {
+                let native_token_foundry_ids = outputs_data
+                    .iter()
+                    .filter_map(|output| output.output.native_tokens())
+                    .flat_map(|native_tokens| {
+                        native_tokens
+                            .iter()
+                            .map(|native_token| FoundryId::from(*native_token.token_id()))
+                    })
+                    .collect::<HashSet<_>>();
+
+                // Request and store foundry outputs
+                self.request_and_store_foundry_outputs(native_token_foundry_ids).await?;
+            }
+
+            // Updates account with balances, output ids, outputs
+            self.update_account(
+                addresses_with_unspent_outputs,
+                outputs_data,
+                spent_or_unsynced_output_metadata_map,
+                &options,
+            )
             .await?;
 
-        // Add the output response to the output ids, the output response is optional, because an output could be pruned
-        // and then we can't get the metadata
-        let mut spent_or_unsynced_output_metadata_map: HashMap<OutputId, Option<OutputMetadataDto>> =
-            spent_or_not_synced_output_ids.into_iter().map(|o| (o, None)).collect();
-        for output_metadata_response in spent_or_unsynced_output_metadata_responses {
-            let output_id = output_metadata_response.output_id()?;
-            spent_or_unsynced_output_metadata_map.insert(output_id, Some(output_metadata_response));
+            // Only sync transactions the first time
+            // If a transaction got confirmed, sync outputs again
+            if i == 0 {
+                // Sync transactions after updating account with outputs, so we can use them to check the transaction
+                // status
+                if options.sync_pending_transactions {
+                    let confirmed = self.sync_pending_transactions().await?;
+                    if !confirmed {
+                        break;
+                    }
+                } else {
+                    break;
+                };
+            }
         }
-
-        if options.sync_incoming_transactions {
-            let transaction_ids = outputs_data
-                .iter()
-                .map(|output| *output.output_id.transaction_id())
-                .collect();
-            // Request and store transaction payload for newly received unspent outputs
-            self.request_incoming_transaction_data(transaction_ids).await?;
-        }
-
-        if options.sync_native_token_foundries {
-            let native_token_foundry_ids = outputs_data
-                .iter()
-                .filter_map(|output| output.output.native_tokens())
-                .flat_map(|native_tokens| {
-                    native_tokens
-                        .iter()
-                        .map(|native_token| FoundryId::from(*native_token.token_id()))
-                })
-                .collect::<HashSet<_>>();
-
-            // Request and store foundry outputs
-            self.request_and_store_foundry_outputs(native_token_foundry_ids).await?;
-        }
-
-        // Updates account with balances, output ids, outputs
-        self.update_account(
-            addresses_with_unspent_outputs,
-            outputs_data,
-            spent_or_unsynced_output_metadata_map,
-            &options,
-        )
-        .await?;
-
-        // Sync transactions after updating account with outputs, so we can use them to check the transaction status
-        if options.sync_pending_transactions {
-            self.sync_pending_transactions().await?;
-        };
 
         let account_balance = self.balance().await?;
         // Update last_synced mutex
