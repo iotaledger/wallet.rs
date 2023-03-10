@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Custom `Serialize` implementation for `Error`;
 - Reduced `MIN_SYNC_INTERVAL`;
 - Made `TransactionOptionsDto`, `ReturnStrategy` and `MintTokenTransactionDto` pub reachable;
+- Resync outputs if a transaction got confirmed between syncing outputs and pending transactions to prevent not having unspent outputs afterwards;
 
 ### Removed
 
