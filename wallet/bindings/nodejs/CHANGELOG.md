@@ -1,5 +1,12 @@
 # Changelog
 
+## \[2.0.3-rc.25]
+
+- Resync outputs if a transaction got confirmed between syncing outputs and pending transactions to prevent not having unspent outputs afterwards.
+  - [67fd04fc](https://github.com/iotaledger/wallet.rs/commit/67fd04fc7e27a9a6e33eb1851df6cbc29dd77022) fix(sync): fetch output from the node if local copy is unspent ([#454](https://github.com/iotaledger/wallet.rs/pull/454)) on 2021-03-21
+  - [8f5f2e42](https://github.com/iotaledger/wallet.rs/commit/8f5f2e42e8db60626c84da6e08ac5fc1d00da037) Apply Version Updates From Current Changes ([#405](https://github.com/iotaledger/wallet.rs/pull/405)) on 2021-04-01
+  - [aa7d22bc](https://github.com/iotaledger/wallet.rs/commit/aa7d22bcc3dbac39d6029f3767eb6ab6ccf1d080) Resync outputs if a transaction got confirmed ([#1937](https://github.com/iotaledger/wallet.rs/pull/1937)) on 2023-03-10
+
 ## \[2.0.3-rc.24]
 
 - Fix address for the amount of expired NFTs that get burned with `Account::burnNft()`;

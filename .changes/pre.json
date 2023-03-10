@@ -58,6 +58,7 @@
     ".changes/sdr-prepare-output.md",
     ".changes/stop-background-sync.md",
     ".changes/stop-background-syncing.md",
+    ".changes/sync.md",
     ".changes/syncOptions.md",
     ".changes/syncing.md",
     ".changes/tagAndMetadataHex.md",
