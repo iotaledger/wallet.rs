@@ -24,12 +24,18 @@ use crate::account::{
 impl AccountHandle {
     /// Sync transactions and reattach them if unconfirmed. Returns the transaction with updated metadata and spent
     /// output ids that don't need to be locked anymore
-    pub(crate) async fn sync_pending_transactions(&self) -> crate::Result<()> {
+    /// Return true if a transaction got confirmed for which we don't have an output already, based on this outputs will
+    /// be synced again
+    pub(crate) async fn sync_pending_transactions(&self) -> crate::Result<bool> {
         log::debug!("[SYNC] sync pending transactions");
         let account = self.read().await;
 
+        // only set to true if a transaction got confirmed for which we don't have an output
+        // (transaction_output.is_none())
+        let mut confirmed_unknown_output = false;
+
         if account.pending_transactions.is_empty() {
-            return Ok(());
+            return Ok(confirmed_unknown_output);
         }
 
         let network_id = self.client.get_network_id().await?;
@@ -101,6 +107,7 @@ impl AccountHandle {
                                         transaction_id,
                                         metadata.block_id
                                     );
+                                    confirmed_unknown_output = true;
                                     updated_transaction_and_outputs(
                                         transaction,
                                         Some(BlockId::from_str(&metadata.block_id)?),
@@ -116,6 +123,7 @@ impl AccountHandle {
                                     if let Ok(included_block) =
                                         self.client.get_included_block(&transaction.payload.id()).await
                                     {
+                                        confirmed_unknown_output = true;
                                         updated_transaction_and_outputs(
                                             transaction,
                                             Some(included_block.id()),
@@ -208,7 +216,7 @@ impl AccountHandle {
         self.update_account_with_transactions(updated_transactions, spent_output_ids, output_ids_to_unlock)
             .await?;
 
-        Ok(())
+        Ok(confirmed_unknown_output)
     }
 }
 

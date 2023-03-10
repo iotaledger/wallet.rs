@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security -->
 
+## 1.0.0-rc.7 - 2023-XX-XX
+
+### Changed
+
+- Resync outputs if a transaction got confirmed between syncing outputs and pending transactions to prevent not having unspent outputs afterwards;
+
 ## 1.0.0-rc.6 - 2023-03-09
 
 ### Added
