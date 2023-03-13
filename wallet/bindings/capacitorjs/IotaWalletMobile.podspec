@@ -4,7 +4,7 @@
     s.version = '0.0.1'
     s.summary = 'Capacitor plugin binding to the wallet library'
     s.license = { :type => 'Apache-2.0' }
-    s.homepage = 'https://github.com/iotaledger/wallet.rs/bindings/capacitorjs/#readme'
+    s.homepage = 'https://github.com/iotaledger/wallet.rs/wallet/bindings/capacitorjs/#readme'
     s.author = 'IOTA Stiftung'
     s.source = { :git => 'https://github.com/iotaledger/wallet.rs.git', :tag => s.version.to_s }
     s.source_files = ['ios/Plugin/**/*.{swift,h,m,c,cc,mm,cpp}', 'ios/*.{h,m,swift}']
