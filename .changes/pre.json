@@ -8,6 +8,7 @@
     ".changes/align-transactions.md",
     ".changes/async-destroy.md",
     ".changes/auth.md",
+    ".changes/basecoinbalanceAvailable.md",
     ".changes/claimoutputs.md",
     ".changes/clearlistener-move.md",
     ".changes/dont-filter-custom-mandatory-inputs.md",
