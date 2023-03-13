@@ -13,7 +13,7 @@ curl -SL --progress-bar --fail https://files.iota.org/firefly/bindings/iota-wall
 rm -rf ../android/libs && mkdir -p ../android/libs             
 cp -rv iota-wallet.jar ../android/libs
 echo Installing Swift libraries
-curl -SL --progress-bar --fail https://files.iota.org/firefly/bindings/WalletFramework-2.0.0-alpha.0.zip > iota-wallet-swift.zip
+curl -SL --progress-bar --fail https://files.iota.org/firefly/bindings/WalletFramework-1.0.0-alpha.0.zip > iota-wallet-swift.zip
 unzip iota-wallet-swift.zip             
 rm -f ../ios/WalletFramework.xcframework/ios-x86/WalletFramework.framework/WalletFramework
 rm -f ../ios/WalletFramework.xcframework/ios-arm64/WalletFramework.framework/WalletFramework
