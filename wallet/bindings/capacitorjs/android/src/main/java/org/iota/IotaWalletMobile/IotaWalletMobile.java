@@ -13,7 +13,6 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
 import java.util.Arrays;
-import java.util.List;
 
 import org.iota.Wallet;
 import org.iota.api.WalletCommand;
@@ -22,7 +21,6 @@ import org.iota.types.CoinType;
 import org.iota.types.WalletConfig;
 import org.iota.types.events.Event;
 import org.iota.types.events.EventListener;
-import org.iota.types.events.transaction.TransactionProgressEvent;
 import org.iota.types.events.wallet.WalletEventType;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.secret.StrongholdSecretManager;
@@ -30,13 +28,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import static org.iota.api.NativeApi.callBaseApi;
-import static org.iota.api.NativeApi.callListen;
+import static org.iota.api.NativeApi.destroyHandle;
 
 
 @CapacitorPlugin(name = "IotaWalletMobile")
@@ -116,11 +113,11 @@ public class IotaWalletMobile extends Plugin {
             JsonElement element = JsonParser.parseString(message);
             JsonObject jsonObject = element.getAsJsonObject();
             WalletCommand walletCommand;
-            if (jsonObject.has("payload")) {
-                walletCommand = new WalletCommand(
-                        jsonObject.get("cmd").getAsString(),
-                        jsonObject.get("payload")
-                );
+            if (jsonObject.has("payload") && jsonObject.has("cmd")) {
+                        walletCommand = new WalletCommand(
+                                jsonObject.get("cmd").getAsString(),
+                                jsonObject.get("payload")
+                        );
             }
             else {
                 walletCommand = new WalletCommand(jsonObject.get("cmd").getAsString());
@@ -176,7 +173,7 @@ public class IotaWalletMobile extends Plugin {
     @PluginMethod()
     public void destroy(final PluginCall call) {
         try {
-            wallet.destroy();
+            destroyHandle();
             call.release(bridge);
         } catch (Exception ex) {
             call.reject(ex.getMessage() + Arrays.toString(ex.getStackTrace()));
