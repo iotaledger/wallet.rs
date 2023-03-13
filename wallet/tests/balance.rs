@@ -94,3 +94,46 @@ async fn balance_expiration() -> Result<()> {
 
     common::tear_down(storage_path)
 }
+
+#[ignore]
+#[tokio::test]
+#[cfg(feature = "participation")]
+async fn balance_voting_power() -> Result<()> {
+    let storage_path = "test-storage/balance_voting_power";
+    common::setup(storage_path)?;
+
+    let manager = common::make_manager(storage_path, None, None).await?;
+
+    let account = &common::create_accounts_with_funds(&manager, 1).await?[0];
+
+    let faucet_amount = 100_000_000_000;
+
+    let balance = account.balance().await?;
+    assert_eq!(balance.base_coin.total, faucet_amount);
+    assert_eq!(balance.base_coin.available, faucet_amount);
+
+    let voting_power = 1_000_000;
+    // Only use a part as voting power
+    let tx = account.increase_voting_power(voting_power).await?;
+    account
+        .retry_transaction_until_included(&tx.transaction_id, None, None)
+        .await?;
+    let balance = account.sync(None).await?;
+    assert_eq!(balance.base_coin.total, faucet_amount);
+    assert_eq!(balance.base_coin.available, faucet_amount - voting_power);
+    let account_voting_power = account.get_voting_power().await?;
+    assert_eq!(account_voting_power, voting_power);
+
+    // Increase voting power to total amount
+    let tx = account.increase_voting_power(faucet_amount - voting_power).await?;
+    account
+        .retry_transaction_until_included(&tx.transaction_id, None, None)
+        .await?;
+    let balance = account.sync(None).await?;
+    assert_eq!(balance.base_coin.total, faucet_amount);
+    assert_eq!(balance.base_coin.available, 0);
+    let account_voting_power = account.get_voting_power().await?;
+    assert_eq!(account_voting_power, faucet_amount);
+
+    common::tear_down(storage_path)
+}
