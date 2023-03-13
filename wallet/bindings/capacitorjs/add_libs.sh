@@ -17,6 +17,6 @@ curl -SL --progress-bar --fail https://files.iota.org/firefly/bindings/WalletFra
 unzip iota-wallet-swift.zip             
 rm -f ../ios/WalletFramework.xcframework/ios-x86/WalletFramework.framework/WalletFramework
 rm -f ../ios/WalletFramework.xcframework/ios-arm64/WalletFramework.framework/WalletFramework
-cp -v x86_64/libiota_wallet.a ../ios/WalletFramework.xcframework/ios-x86/WalletFramework.framework/WalletFramework
-cp -v aarch64/libiota_wallet.a ../ios/WalletFramework.xcframework/ios-arm64/WalletFramework.framework/WalletFramework
+cp -v x86_64-apple-ios/libiota_wallet.a ../ios/WalletFramework.xcframework/ios-x86/WalletFramework.framework/WalletFramework
+cp -v aarch64-apple-ios/libiota_wallet.a ../ios/WalletFramework.xcframework/ios-arm64/WalletFramework.framework/WalletFramework
 cd .. && rm -rf tmp
