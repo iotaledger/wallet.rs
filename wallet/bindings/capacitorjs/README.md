@@ -2,10 +2,9 @@
 
 ## Requirements (only for building the binary yourself)
 
-[Android: Follow this guide](https://github.com/iotaledger/wallet.rs/tree/develop/bindings/java#instead-build-everything-from-scratch-yourself)
+[Android: Follow this guide](https://github.com/iotaledger/wallet.rs/tree/develop/wallet/bindings/java#instead-build-everything-from-scratch-yourself)
 
-[iOS: Follow this guide](https://github.com/iotaledger/wallet.rs/blob/develop/bindings/swift)
-
+[iOS: Follow this guide](https://github.com/iotaledger/wallet.rs/blob/develop/wallet/bindings/swift)
 
 ## Installation
 
