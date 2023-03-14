@@ -36,12 +36,14 @@ impl AccountHandle {
             output_ids.extend(
                 client
                     .alias_output_ids(vec![QueryParameter::Governor(bech32_address.to_string())])
-                    .await?,
+                    .await?
+                    .items,
             );
             output_ids.extend(
                 client
                     .alias_output_ids(vec![QueryParameter::StateController(bech32_address.to_string())])
-                    .await?,
+                    .await?
+                    .items,
             );
         }
 
