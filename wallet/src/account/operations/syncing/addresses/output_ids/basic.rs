@@ -6,7 +6,10 @@ use std::collections::HashSet;
 
 #[cfg(not(target_family = "wasm"))]
 use futures::FutureExt;
-use iota_client::{block::output::OutputId, node_api::indexer::query_parameters::QueryParameter};
+use iota_client::{
+    api_types::plugins::indexer::OutputIdsResponse, block::output::OutputId,
+    node_api::indexer::query_parameters::QueryParameter,
+};
 
 use crate::account::handle::AccountHandle;
 
@@ -17,14 +20,16 @@ impl AccountHandle {
         bech32_address: String,
     ) -> iota_client::Result<Vec<OutputId>> {
         // Only request basic outputs with `AddressUnlockCondition` only
-        self.client
+        Ok(self
+            .client
             .basic_output_ids(vec![
                 QueryParameter::Address(bech32_address),
                 QueryParameter::HasExpiration(false),
                 QueryParameter::HasTimelock(false),
                 QueryParameter::HasStorageDepositReturn(false),
             ])
-            .await
+            .await?
+            .items)
     }
 
     /// Returns output ids of basic outputs that have the address in the `AddressUnlockCondition`,
@@ -106,11 +111,13 @@ impl AccountHandle {
 
             // Get all results
             let mut output_ids = HashSet::new();
-            let results: Vec<crate::Result<Vec<OutputId>>> = futures::future::try_join_all(tasks).await?;
+            let results: Vec<crate::Result<OutputIdsResponse>> = futures::future::try_join_all(tasks).await?;
+
             for res in results {
                 let found_output_ids = res?;
-                output_ids.extend(found_output_ids.into_iter());
+                output_ids.extend(found_output_ids.items);
             }
+
             Ok(output_ids.into_iter().collect())
         }
     }

@@ -6,6 +6,7 @@ use std::collections::HashSet;
 #[cfg(not(target_family = "wasm"))]
 use futures::FutureExt;
 use iota_client::{
+    api_types::plugins::indexer::OutputIdsResponse,
     block::{
         address::{Address, AliasAddress},
         output::{Output, OutputId},
@@ -74,10 +75,12 @@ impl AccountHandle {
                 }
                 .boxed(),
             ];
-            let results: Vec<crate::Result<Vec<OutputId>>> = futures::future::try_join_all(tasks).await?;
+
+            let results: Vec<crate::Result<OutputIdsResponse>> = futures::future::try_join_all(tasks).await?;
+
             for res in results {
                 let found_output_ids = res?;
-                output_ids.extend(found_output_ids);
+                output_ids.extend(found_output_ids.items);
             }
         }
 
@@ -121,11 +124,11 @@ impl AccountHandle {
         }
 
         let mut output_ids = HashSet::new();
+        let results: Vec<crate::Result<OutputIdsResponse>> = futures::future::try_join_all(tasks).await?;
 
-        let results: Vec<crate::Result<Vec<OutputId>>> = futures::future::try_join_all(tasks).await?;
         for res in results {
             let foundry_output_ids = res?;
-            output_ids.extend(foundry_output_ids.into_iter());
+            output_ids.extend(foundry_output_ids.items);
         }
 
         Ok(output_ids.into_iter().collect())
