@@ -54,7 +54,6 @@ public class IotaWalletMobile: CAPPlugin {
     
     @objc func messageHandlerNew(_ call: CAPPluginCall) {
         do {
-            print("Capacitor call messageHandlerNew received", call.jsObjectRepresentation)
             guard let storagePath = call.getString("storagePath"),
                   let clientOptions = call.getObject("clientOptions"),
                   let coinType = call.getInt("coinType"),
@@ -71,7 +70,7 @@ public class IotaWalletMobile: CAPPlugin {
             
             let SecretManager = try? JSONSerialization.data(withJSONObject: secretManager)
             let stringfiedSecretManager = String(data: SecretManager!, encoding: .utf8)!
-            print(stringfiedSecretManager)
+            
             // prepare the internal app directory path
             let fm = FileManager.default
             guard let documents = fm.urls(
@@ -111,7 +110,6 @@ public class IotaWalletMobile: CAPPlugin {
                 }}
             }
             """
-            print(options)
             
             // TODO: implement logger as a fn
             let filename = "\(path)/iota_wallet.log"
@@ -129,7 +127,6 @@ public class IotaWalletMobile: CAPPlugin {
     }
 
     @objc func destroy(_ call: CAPPluginCall) {
-        print("Capacitor call destroy received", call.jsObjectRepresentation)
         guard let handler = call.getInt("messageHandler") else {
             return call.reject("handler is required")
         }
@@ -159,7 +156,6 @@ public class IotaWalletMobile: CAPPlugin {
     }
 
     @objc func listen(_ call: CAPPluginCall) {
-        print("Capacitor call listen received", call.jsObjectRepresentation)
         guard let handler = call.getInt("messageHandler") else {
             return call.reject("handler is required")
         }
@@ -185,7 +181,6 @@ public class IotaWalletMobile: CAPPlugin {
     }
 
     @objc func clearListeners(_ call: CAPPluginCall) {
-        print("Capacitor call clearListeners received", call.jsObjectRepresentation)
         guard let handler = call.getInt("messageHandler") else {
             return call.reject("handler is required")
         }
