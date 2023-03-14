@@ -1,5 +1,10 @@
 # Changelog
 
+## \[2.0.3-rc.27]
+
+- Fix deadlock when syncing and another function which locked the storage_manager are running at the same time
+  - [0421de1d](https://github.com/iotaledger/wallet.rs/commit/0421de1d26b2c7caaadb65b2f5f7cea25071f291) Fix deadlock ([#1955](https://github.com/iotaledger/wallet.rs/pull/1955)) on 2023-03-14
+
 ## \[2.0.3-rc.26]
 
 - `BaseCoinBalance::available` can't underflow anymore;

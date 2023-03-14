@@ -11,6 +11,7 @@
     ".changes/basecoinbalanceAvailable.md",
     ".changes/claimoutputs.md",
     ".changes/clearlistener-move.md",
+    ".changes/deadlock.md",
     ".changes/dont-filter-custom-mandatory-inputs.md",
     ".changes/downgrade-rocksb.md",
     ".changes/expiredNftBurn.md",
