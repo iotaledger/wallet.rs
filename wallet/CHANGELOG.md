@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - `BaseCoinBalance::available` can't underflow anymore;
+- Deadlock when syncing and another function which locked the storage_manager are running at the same time;
 
 ## 1.0.0-rc.6 - 2023-03-09
 
