@@ -65,6 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Account::claim_outputs()` when the account has no basic outputs available;
 - SDR amount in `Account::prepare_output()`;
 - Address for the amount of expired NFTs that get burned with `Account::burn_nft()`;
+- Deadlock when syncing and another function which locked the storage_manager are running at the same time;
 
 ## 1.0.0-rc.5 - 2023-02-09
 

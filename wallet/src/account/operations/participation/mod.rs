@@ -157,11 +157,12 @@ impl AccountHandle {
     /// Gets client for an event.
     /// If event isn't found, the client from the account will be returned.
     pub(crate) async fn get_client_for_event(&self, id: &ParticipationEventId) -> crate::Result<Client> {
+        let account_index = self.read().await.index;
         let events = self
             .storage_manager
             .lock()
             .await
-            .get_participation_events(self.read().await.index)
+            .get_participation_events(account_index)
             .await?;
 
         let event_with_nodes = match events.get(id) {
@@ -184,11 +185,12 @@ impl AccountHandle {
     ) -> crate::Result<()> {
         let latest_milestone_index = self.client().get_info().await?.node_info.status.latest_milestone.index;
 
+        let account_index = self.read().await.index;
         let events = self
             .storage_manager
             .lock()
             .await
-            .get_participation_events(self.read().await.index)
+            .get_participation_events(account_index)
             .await?;
 
         // TODO try to remove this clone
