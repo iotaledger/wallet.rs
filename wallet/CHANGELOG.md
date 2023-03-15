@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Resync outputs if a transaction got confirmed between syncing outputs and pending transactions to prevent not having unspent outputs afterwards;
 - Cache participations for spent outputs;
-- Make `Storage::get` generic over a `T: Deserialize` and return a `T`, avoiding always having to deserialize after;
+- Make `{Storage, StorageManager}::get` generic over a `T: Deserialize` and return a `T`, avoiding always having to deserialize after;
 
 ### Fixed
 
