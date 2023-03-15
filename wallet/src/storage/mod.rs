@@ -15,7 +15,7 @@ mod participation;
 use std::collections::HashMap;
 
 use crypto::ciphers::chacha;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use self::adapter::StorageAdapter;
 
@@ -30,19 +30,19 @@ impl Storage {
         self.inner.id()
     }
 
-    async fn get(&self, key: &str) -> crate::Result<Option<String>> {
+    async fn get<T: for<'de> Deserialize<'de>>(&self, key: &str) -> crate::Result<Option<T>> {
         match self.inner.get(key).await? {
             Some(record) => {
                 if let Some(key) = &self.encryption_key {
                     if serde_json::from_str::<Vec<u8>>(&record).is_ok() {
-                        Ok(Some(
-                            String::from_utf8_lossy(&chacha::aead_decrypt(key, record.as_bytes())?).into_owned(),
-                        ))
+                        Ok(Some(serde_json::from_str(&String::from_utf8_lossy(
+                            &chacha::aead_decrypt(key, record.as_bytes())?,
+                        ))?))
                     } else {
-                        Ok(Some(record))
+                        Ok(Some(serde_json::from_str(&record)?))
                     }
                 } else {
-                    Ok(Some(record))
+                    Ok(Some(serde_json::from_str(&record)?))
                 }
             }
             None => Ok(None),

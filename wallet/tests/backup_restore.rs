@@ -289,7 +289,7 @@ async fn backup_and_restore_different_coin_type() -> Result<()> {
 #[cfg(all(feature = "stronghold", feature = "storage"))]
 // Backup and restore with Stronghold
 async fn backup_and_restore_same_coin_type() -> Result<()> {
-    let storage_path = "test-storage/backup_and_restore_different_coin_type";
+    let storage_path = "test-storage/backup_and_restore_same_coin_type";
     common::setup(storage_path)?;
 
     let client_options = ClientOptions::new().with_node(common::NODE_LOCAL)?;

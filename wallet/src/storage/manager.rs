@@ -1,9 +1,8 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{str::FromStr, sync::Arc};
+use std::sync::Arc;
 
-use crypto::ciphers::chacha;
 use iota_client::secret::{SecretManager, SecretManagerDto};
 use serde::{Deserialize, Serialize};
 use tokio::sync::{Mutex, RwLock};
@@ -50,10 +49,7 @@ pub(crate) async fn new_storage_manager(
         encryption_key,
     };
     // Get the db version or set it
-    let db_schema_version = storage.get(DATABASE_SCHEMA_VERSION_KEY).await?;
-    if let Some(db_schema_version) = db_schema_version {
-        let db_schema_version = u8::from_str(&db_schema_version)
-            .map_err(|_| crate::Error::Storage("invalid db_schema_version".to_string()))?;
+    if let Some(db_schema_version) = storage.get::<u8>(DATABASE_SCHEMA_VERSION_KEY).await? {
         if db_schema_version != DATABASE_SCHEMA_VERSION {
             return Err(crate::Error::Storage(format!(
                 "unsupported database schema version {db_schema_version}"
@@ -65,10 +61,8 @@ pub(crate) async fn new_storage_manager(
             .await?;
     };
 
-    let account_indexes = match storage.get(ACCOUNTS_INDEXATION_KEY).await? {
-        Some(account_indexes) => serde_json::from_str(&account_indexes)?,
-        None => Vec::new(),
-    };
+    let account_indexes = storage.get(ACCOUNTS_INDEXATION_KEY).await?.unwrap_or_default();
+
     let storage_manager = StorageManager {
         storage,
         account_indexes,
@@ -95,7 +89,7 @@ impl StorageManager {
         self.storage.encryption_key.is_some()
     }
 
-    pub async fn get(&self, key: &str) -> crate::Result<Option<String>> {
+    pub async fn get<T: for<'de> Deserialize<'de>>(&self, key: &str) -> crate::Result<Option<T>> {
         self.storage.get(key).await
     }
 
@@ -125,13 +119,16 @@ impl StorageManager {
 
     pub async fn get_account_manager_data(&self) -> crate::Result<Option<AccountManagerBuilder>> {
         log::debug!("get_account_manager_data");
-        if let Some(data) = self.storage.get(ACCOUNT_MANAGER_INDEXATION_KEY).await? {
-            log::debug!("get_account_manager_data {data:?}");
-            let mut builder: AccountManagerBuilder = serde_json::from_str(&data)?;
+        if let Some(mut builder) = self
+            .storage
+            .get::<AccountManagerBuilder>(ACCOUNT_MANAGER_INDEXATION_KEY)
+            .await?
+        {
+            log::debug!("get_account_manager_data {builder:?}");
 
-            if let Some(data) = self.storage.get(SECRET_MANAGER_KEY).await? {
-                log::debug!("get_secret_manager {data}");
-                let secret_manager_dto: SecretManagerDto = serde_json::from_str(&data)?;
+            if let Some(secret_manager_dto) = self.storage.get::<SecretManagerDto>(SECRET_MANAGER_KEY).await? {
+                log::debug!("get_secret_manager {secret_manager_dto:?}");
+
                 // Only secret_managers that aren't SecretManagerDto::Mnemonic can be restored, because there the Seed
                 // can't be serialized, so we can't create the SecretManager again
                 match secret_manager_dto {
@@ -149,9 +146,9 @@ impl StorageManager {
     }
 
     pub async fn get_accounts(&mut self) -> crate::Result<Vec<Account>> {
-        if let Some(record) = self.storage.get(ACCOUNTS_INDEXATION_KEY).await? {
+        if let Some(account_indexes) = self.storage.get(ACCOUNTS_INDEXATION_KEY).await? {
             if self.account_indexes.is_empty() {
-                self.account_indexes = serde_json::from_str(&record)?;
+                self.account_indexes = account_indexes;
             }
         } else {
             return Ok(Vec::new());
@@ -168,7 +165,7 @@ impl StorageManager {
             );
         }
 
-        parse_accounts(&accounts, &self.storage.encryption_key)
+        Ok(accounts)
     }
 
     pub async fn save_account(&mut self, account: &Account) -> crate::Result<()> {
@@ -194,25 +191,4 @@ impl StorageManager {
             .set(ACCOUNTS_INDEXATION_KEY, self.account_indexes.clone())
             .await
     }
-}
-
-// Parse accounts from strings and decrypt them first if necessary
-fn parse_accounts(accounts: &[String], encryption_key: &Option<[u8; 32]>) -> crate::Result<Vec<Account>> {
-    let mut parsed_accounts: Vec<Account> = Vec::new();
-    for account in accounts {
-        let account_json = if account.starts_with('{') {
-            Some(account.to_string())
-        } else if let Some(key) = encryption_key {
-            Some(String::from_utf8_lossy(&chacha::aead_decrypt(key, account.as_bytes())?).into_owned())
-        } else {
-            None
-        };
-        if let Some(json) = account_json {
-            let acc = serde_json::from_str::<Account>(&json)?;
-            parsed_accounts.push(acc);
-        } else {
-            return Err(crate::Error::StorageIsEncrypted);
-        }
-    }
-    Ok(parsed_accounts)
 }
