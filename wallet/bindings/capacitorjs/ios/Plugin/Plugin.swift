@@ -64,9 +64,6 @@ public class IotaWalletMobile: CAPPlugin {
             // TODO: replacing for urls slashes temporaly, make better using Codable structs with URL type?
             let stringfiedClientOptions = String(data: ClientOptions!, encoding: .utf8)!.replacingOccurrences(of: "\\", with: "")
             
-            let SecretManager = try? JSONSerialization.data(withJSONObject: secretManager)
-            let stringfiedSecretManager = String(data: SecretManager!, encoding: .utf8)!
-            print(stringfiedSecretManager)
             // prepare the internal app directory path
             let fm = FileManager.default
             guard let documents = fm.urls(

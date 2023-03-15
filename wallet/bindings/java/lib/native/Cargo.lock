@@ -75,6 +75,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "android_log-sys"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "27f0fc03f560e1aebde41c2398b691cb98b5ea5996a6184a7a67bbbb77448969"
+
+[[package]]
+name = "android_logger"
+version = "0.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3fa490e751f3878eb9accb9f18988eca52c2337ce000a8bf31ef50d4c723ca9e"
+dependencies = [
+ "android_log-sys",
+ "env_logger",
+ "log",
+ "once_cell",
+]
+
+[[package]]
 name = "anyhow"
 version = "1.0.69"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -637,6 +655,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "env_logger"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "85cdab6a89accf66733ad5a1693a4dcced6aeff64602b634530dd73c1f3ee9f0"
+dependencies = [
+ "log",
+]
+
+[[package]]
 name = "fern"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1118,8 +1145,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "2.0.1-rc.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b8206762d9c7062a3de9ec8a1653537c51b2d07e58a6589e74b6e70615c2581a"
+source = "git+https://github.com/iotaledger/iota.rs?rev=e8422a87c89d3bcc811d41668ddd4d9078d36438#e8422a87c89d3bcc811d41668ddd4d9078d36438"
 dependencies = [
  "async-trait",
  "backtrace",
@@ -1199,20 +1225,17 @@ dependencies = [
 [[package]]
 name = "iota-pow"
 version = "1.0.0-rc.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "73b3ffe5d6ada4c62fa5e5d0a7622893af02ad431d6a6144979686662eee5f1c"
+source = "git+https://github.com/iotaledger/iota.rs?rev=e8422a87c89d3bcc811d41668ddd4d9078d36438#e8422a87c89d3bcc811d41668ddd4d9078d36438"
 dependencies = [
  "instant",
  "iota-crypto",
  "num_cpus",
- "thiserror",
 ]
 
 [[package]]
 name = "iota-types"
-version = "1.0.0-rc.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ac00be923ed4f7ae33c03628d24d03c920f0d6c27806daae57ce735ac240f96"
+version = "1.0.0-rc.6"
+source = "git+https://github.com/iotaledger/iota.rs?rev=e8422a87c89d3bcc811d41668ddd4d9078d36438#e8422a87c89d3bcc811d41668ddd4d9078d36438"
 dependencies = [
  "bech32 0.9.1",
  "bitflags",
@@ -1231,7 +1254,6 @@ dependencies = [
  "serde-big-array",
  "serde_json",
  "serde_repr",
- "thiserror",
 ]
 
 [[package]]
@@ -1245,6 +1267,7 @@ dependencies = [
  "getset",
  "gloo-storage",
  "gloo-timers",
+ "instant",
  "iota-client",
  "iota-crypto",
  "log",
@@ -1256,6 +1279,7 @@ dependencies = [
  "serde_json",
  "thiserror",
  "tokio",
+ "wasm-bindgen-futures",
  "zeroize",
 ]
 
@@ -1263,10 +1287,12 @@ dependencies = [
 name = "iota-wallet-java"
 version = "0.1.0"
 dependencies = [
+ "android_logger",
  "futures",
  "iota-wallet",
  "jni",
  "lazy_static",
+ "log",
  "once_cell",
  "serde_json",
  "tokio",
