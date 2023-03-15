@@ -3,11 +3,15 @@
 
 use std::collections::HashMap;
 
-use iota_client::api_types::plugins::participation::types::ParticipationEventId;
+use iota_client::{
+    api_types::plugins::participation::{responses::OutputStatusResponse, types::ParticipationEventId},
+    block::output::OutputId,
+};
 
 use super::manager::StorageManager;
 use crate::{
-    account::operations::participation::ParticipationEventWithNodes, storage::constants::PARTICIPATION_EVENTS,
+    account::operations::participation::ParticipationEventWithNodes,
+    storage::constants::{PARTICIPATION_CACHED_OUTPUTS, PARTICIPATION_EVENTS},
 };
 
 impl StorageManager {
@@ -73,6 +77,38 @@ impl StorageManager {
             .await?
         {
             Some(events) => Ok(serde_json::from_str(&events)?),
+            None => Ok(HashMap::new()),
+        }
+    }
+
+    pub(crate) async fn set_cached_participation_output_status(
+        &mut self,
+        account_index: u32,
+        outputs_participation: HashMap<OutputId, OutputStatusResponse>,
+    ) -> crate::Result<()> {
+        log::debug!("set_cached_participation");
+
+        self.storage
+            .set(
+                &format!("{PARTICIPATION_CACHED_OUTPUTS}{account_index}"),
+                outputs_participation,
+            )
+            .await?;
+        Ok(())
+    }
+
+    pub(crate) async fn get_cached_participation_output_status(
+        &self,
+        account_index: u32,
+    ) -> crate::Result<HashMap<OutputId, OutputStatusResponse>> {
+        log::debug!("get_cached_participation");
+
+        match self
+            .storage
+            .get(&format!("{PARTICIPATION_CACHED_OUTPUTS}{account_index}"))
+            .await?
+        {
+            Some(cached_outputs) => Ok(serde_json::from_str(&cached_outputs)?),
             None => Ok(HashMap::new()),
         }
     }
