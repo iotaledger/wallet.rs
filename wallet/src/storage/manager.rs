@@ -147,7 +147,7 @@ impl StorageManager {
     }
 
     pub async fn get_accounts(&mut self) -> crate::Result<Vec<Account>> {
-        if let Some(account_indexes) = self.storage.get::<Vec<u32>>(ACCOUNTS_INDEXATION_KEY).await? {
+        if let Some(account_indexes) = self.storage.get(ACCOUNTS_INDEXATION_KEY).await? {
             if self.account_indexes.is_empty() {
                 self.account_indexes = account_indexes;
             }
