@@ -92,6 +92,7 @@ impl StorageManager {
                 outputs_participation,
             )
             .await?;
+
         Ok(())
     }
 
@@ -101,13 +102,10 @@ impl StorageManager {
     ) -> crate::Result<HashMap<OutputId, OutputStatusResponse>> {
         log::debug!("get_cached_participation");
 
-        match self
+        Ok(self
             .storage
             .get(&format!("{PARTICIPATION_CACHED_OUTPUTS}{account_index}"))
             .await?
-        {
-            Some(cached_outputs) => Ok(serde_json::from_str(&cached_outputs)?),
-            None => Ok(HashMap::new()),
-        }
+            .unwrap_or_default())
     }
 }
