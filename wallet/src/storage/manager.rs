@@ -3,7 +3,6 @@
 
 use std::sync::Arc;
 
-use crypto::ciphers::chacha;
 use iota_client::secret::{SecretManager, SecretManagerDto};
 use serde::{Deserialize, Serialize};
 use tokio::sync::{Mutex, RwLock};
@@ -90,7 +89,7 @@ impl StorageManager {
         self.storage.encryption_key.is_some()
     }
 
-    pub async fn get(&self, key: &str) -> crate::Result<Option<String>> {
+    pub async fn get<T: for<'de> Deserialize<'de>>(&self, key: &str) -> crate::Result<Option<T>> {
         self.storage.get(key).await
     }
 
@@ -166,7 +165,7 @@ impl StorageManager {
             );
         }
 
-        parse_accounts(&accounts, &self.storage.encryption_key)
+        Ok(accounts)
     }
 
     pub async fn save_account(&mut self, account: &Account) -> crate::Result<()> {
@@ -192,25 +191,4 @@ impl StorageManager {
             .set(ACCOUNTS_INDEXATION_KEY, self.account_indexes.clone())
             .await
     }
-}
-
-// Parse accounts from strings and decrypt them first if necessary
-fn parse_accounts(accounts: &[String], encryption_key: &Option<[u8; 32]>) -> crate::Result<Vec<Account>> {
-    let mut parsed_accounts: Vec<Account> = Vec::new();
-    for account in accounts {
-        let account_json = if account.starts_with('{') {
-            Some(account.to_string())
-        } else if let Some(key) = encryption_key {
-            Some(String::from_utf8_lossy(&chacha::aead_decrypt(key, account.as_bytes())?).into_owned())
-        } else {
-            None
-        };
-        if let Some(json) = account_json {
-            let acc = serde_json::from_str::<Account>(&json)?;
-            parsed_accounts.push(acc);
-        } else {
-            return Err(crate::Error::StorageIsEncrypted);
-        }
-    }
-    Ok(parsed_accounts)
 }
