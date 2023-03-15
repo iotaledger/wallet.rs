@@ -26,6 +26,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Resync outputs if a transaction got confirmed between syncing outputs and pending transactions to prevent not having unspent outputs afterwards;
 - Make `Storage::get` generic over a `T: Deserialize` and return a `T`, avoiding always having to deserialize after;
 
+### Fixed
+
+- `BaseCoinBalance::available` can't underflow anymore;
+- Deadlock when syncing and another function which locked the storage_manager are running at the same time;
+
 ## 1.0.0-rc.6 - 2023-03-09
 
 ### Added
