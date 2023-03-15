@@ -379,7 +379,7 @@ async fn backup_and_restore_different_coin_type_dont_ignore() -> Result<()> {
     let storage_path = "test-storage/backup_and_restore_different_coin_type_dont_ignore";
     common::setup(storage_path)?;
 
-    let client_options = ClientOptions::new().with_node(common::NODE_LOCAL)?;
+    let client_options = ClientOptions::new().with_node(common::NODE_OTHER)?;
 
     let stronghold_password = "some_hopefully_secure_password";
 
@@ -424,7 +424,7 @@ async fn backup_and_restore_different_coin_type_dont_ignore() -> Result<()> {
     let restore_manager = AccountManager::builder()
         .with_storage_path("test-storage/backup_and_restore_different_coin_type_dont_ignore/2")
         .with_secret_manager(SecretManager::Stronghold(stronghold))
-        .with_client_options(ClientOptions::new().with_node(common::NODE_OTHER)?)
+        .with_client_options(ClientOptions::new().with_node(common::NODE_LOCAL)?)
         // Build with a different coin type, to check if it gets replaced by the one from the backup
         .with_coin_type(IOTA_COIN_TYPE)
         .finish()
@@ -459,7 +459,7 @@ async fn backup_and_restore_different_coin_type_dont_ignore() -> Result<()> {
 
     // compare client options, they are not restored
     let client_options = restore_manager.get_client_options().await;
-    let node_dto = NodeDto::Node(Node::from(Url::parse(common::NODE_OTHER).unwrap()));
+    let node_dto = NodeDto::Node(Node::from(Url::parse(common::NODE_LOCAL).unwrap()));
     assert!(client_options.node_manager_builder.nodes.contains(&node_dto));
 
     common::tear_down(storage_path)
