@@ -48,10 +48,6 @@ public class IotaWalletMobile: CAPPlugin {
         }
     }
 
-    // TODO: we really need pass this params from swift?
-    private let error_buffer: UnsafeMutablePointer<CChar>? = nil
-    private let error_buffer_size = 0
-    
     @objc func messageHandlerNew(_ call: CAPPluginCall) {
         do {
             guard let storagePath = call.getString("storagePath"),
@@ -70,7 +66,7 @@ public class IotaWalletMobile: CAPPlugin {
             
             let SecretManager = try? JSONSerialization.data(withJSONObject: secretManager)
             let stringfiedSecretManager = String(data: SecretManager!, encoding: .utf8)!
-            
+            print(stringfiedSecretManager)
             // prepare the internal app directory path
             let fm = FileManager.default
             guard let documents = fm.urls(
@@ -111,6 +107,9 @@ public class IotaWalletMobile: CAPPlugin {
             }
             """
             
+            let error_buffer: UnsafeMutablePointer<CChar>? = nil
+            let error_buffer_size = 0
+        
             // TODO: implement logger as a fn
             let filename = "\(path)/iota_wallet.log"
             let level_filter = "debug"
@@ -152,6 +151,9 @@ public class IotaWalletMobile: CAPPlugin {
         // where it will be converted back to object type ready to use
         let context = Unmanaged<ContextResult>.passRetained(contextResult).toOpaque()
         
+        let error_buffer: UnsafeMutablePointer<CChar>? = nil
+        let error_buffer_size = 0
+        
         iota_send_message(messageHandler, message, contextResult.callback, context)
     }
 
@@ -180,23 +182,4 @@ public class IotaWalletMobile: CAPPlugin {
         call.resolve()
     }
 
-    @objc func clearListeners(_ call: CAPPluginCall) {
-        guard let handler = call.getInt("messageHandler") else {
-            return call.reject("handler is required")
-        }
-        let messageHandler: OpaquePointer? = OpaquePointer(bitPattern: handler)
-        
-        guard let eventTypes = call.getArray("eventTypes") else {
-            return call.reject("eventTypes is required")
-        }
-        let eventChar = eventTypes.description.cString(using: .utf8)
-        
-        let contextResult = ContextResult(_call: call)
-        let context = Unmanaged<ContextResult>.passRetained(contextResult).toOpaque()
-        
-        iota_clear_listeners(
-            messageHandler, eventChar, contextResult.callback, context,
-            error_buffer, error_buffer_size
-        )
-    }
 }
