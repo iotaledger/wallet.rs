@@ -40,6 +40,7 @@ impl Serialize for WalletEvent {
         #[serde(untagged)]
         enum WalletEvent_<'a> {
             T0,
+            #[cfg(feature = "ledger_nano")]
             T1(&'a AddressData),
             T2(&'a NewOutputEvent),
             T3(&'a SpentOutputEvent),
@@ -58,6 +59,7 @@ impl Serialize for WalletEvent {
                 kind: 0,
                 event: WalletEvent_::T0,
             },
+            #[cfg(feature = "ledger_nano")]
             Self::LedgerAddressGeneration(e) => TypedWalletEvent_ {
                 kind: 1,
                 event: WalletEvent_::T1(e),
@@ -93,6 +95,7 @@ impl<'de> Deserialize<'de> for WalletEvent {
                 .ok_or_else(|| serde::de::Error::custom("invalid event type"))? as u8
             {
                 0 => Self::ConsolidationRequired,
+                #[cfg(feature = "ledger_nano")]
                 1 => Self::LedgerAddressGeneration(AddressData::deserialize(value).map_err(|e| {
                     serde::de::Error::custom(format!("cannot deserialize LedgerAddressGeneration: {e}"))
                 })?),
