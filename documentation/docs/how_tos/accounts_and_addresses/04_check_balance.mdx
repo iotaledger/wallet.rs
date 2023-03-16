@@ -14,6 +14,7 @@ keywords:
 
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import WarningUnlockConditions from '../../_admonitions/_warning_unlock_conditions.md'
 import NodejsCode from "../../libraries/nodejs/how_to/accounts_and_addresses/_04_check_balance/_code_sample.mdx";
 import NodejsOutput from "../../libraries/nodejs/how_to/accounts_and_addresses/_04_check_balance/_expected_output.md";
 import PythonCode from "../../libraries/python/how_to/accounts_and_addresses/_04_check_balance/_code_sample.mdx";
@@ -38,6 +39,8 @@ The following example will:
 2. Get Alice's account which was [created in the first guide](01_create_a_wallet_account.mdx).
 3. Sync the account with the node to get the latest transactions.
 4. Request the account's balance.
+
+<WarningUnlockConditions/>
 
 <Tabs groupId="language">
     <TabItem value="rust" label="Rust">

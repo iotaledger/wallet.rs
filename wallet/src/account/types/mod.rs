@@ -28,7 +28,7 @@ use iota_client::{
 use serde::{Deserialize, Deserializer, Serialize};
 
 pub use self::{
-    address::{AccountAddress, AddressWithUnspentOutputs},
+    address::{AccountAddress, AddressWithUnspentOutputs, AddressWrapper},
     balance::{
         AccountBalance, AccountBalanceDto, BaseCoinBalance, BaseCoinBalanceDto, NativeTokensBalance,
         NativeTokensBalanceDto, RequiredStorageDeposit,
