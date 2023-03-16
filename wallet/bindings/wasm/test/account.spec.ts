@@ -47,11 +47,8 @@ async function run() {
     });
 }
 
+// Tests that do not require a node
 describe('Wallet methods', () => {
-    jest.setTimeout(10000);
-    it('account', async () => {
-        await run();
-    });
     it('generate mnemonic', async () => {
         const manager = new AccountManager({
             storagePath: './test-generate-mnemonic',
@@ -59,10 +56,18 @@ describe('Wallet methods', () => {
             clientOptions: {
                 nodes: [],
             },
-            secretManager: 'placeholder',
+            secretManager: 'placeholder'
         });
 
         const mnemonic = await manager.generateMnemonic();
         expect(mnemonic.split(' ').length).toBe(24);
+    });
+});
+
+// Tests requiring a local node
+describe.skip('local node tests', () => {
+    jest.setTimeout(10000);
+    it('account', async () => {
+        await run();
     });
 });

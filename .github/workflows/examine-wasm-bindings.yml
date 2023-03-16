@@ -90,7 +90,7 @@ jobs:
         if: ${{ !startsWith(matrix.os, 'ubuntu') }}
         working-directory: wallet/bindings/wasm/
         # Only run test that doesn't require a node because we can't use the private tangle script on macos and windows
-        run: yarn test --t "generate mnemonic"
+        run: yarn jest
 
       - name: Tear down private tangle
         if: ${{ startsWith(matrix.os, 'ubuntu') }}
