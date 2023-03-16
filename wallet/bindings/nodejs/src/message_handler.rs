@@ -9,6 +9,7 @@ use iota_wallet::{
         create_message_handler, init_logger as init_logger_rust, ManagerOptions, Message, Response,
         WalletMessageHandler,
     },
+    Result,
 };
 use neon::prelude::*;
 use tokio::sync::RwLock;
@@ -27,23 +28,17 @@ pub struct MessageHandler {
 type JsCallback = Root<JsFunction<JsObject>>;
 
 impl MessageHandler {
-    fn new(channel: Channel, options: String) -> Self {
-        let manager_options = match serde_json::from_str::<ManagerOptions>(&options) {
-            Ok(options) => Some(options),
-            Err(e) => {
-                log::debug!("{:?}", e);
-                None
-            }
-        };
+    fn new(channel: Channel, options: String) -> Result<Self> {
+        let manager_options = serde_json::from_str::<ManagerOptions>(&options)?;
 
         let wallet_message_handler = crate::RUNTIME
-            .block_on(async move { create_message_handler(manager_options).await })
+            .block_on(async move { create_message_handler(Some(manager_options)).await })
             .expect("error initializing account manager");
 
-        Self {
+        Ok(Self {
             channel,
             wallet_message_handler,
-        }
+        })
     }
 
     async fn send_message(&self, serialized_message: String) -> (String, bool) {
@@ -103,7 +98,11 @@ pub fn message_handler_new(mut cx: FunctionContext) -> JsResult<JsBox<MessageHan
     let options = cx.argument::<JsString>(0)?;
     let options = options.value(&mut cx);
     let channel = cx.channel();
-    let message_handler = MessageHandler::new(channel, options);
+    let message_handler = MessageHandler::new(channel, options).or_else(|e| {
+        cx.throw_error(
+            serde_json::to_string(&Response::Error(e)).expect("the response is generated manually, so unwrap is safe."),
+        )
+    })?;
 
     Ok(cx.boxed(MessageHandlerWrapper(Arc::new(RwLock::new(Some(message_handler))))))
 }

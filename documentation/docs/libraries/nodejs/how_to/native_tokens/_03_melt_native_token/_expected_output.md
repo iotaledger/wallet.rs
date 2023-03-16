@@ -4,7 +4,7 @@
     type: 6,
     essence: {
       type: 1,
-      networkId: '8342982141227064571',
+      networkId: '1856588631910923207',
       inputs: [Array],
       inputsCommitment: '0x2d6b40731bd6222d0f7670ea5a1b143e499703cf71fd51a821d32d91a77a5041',
       outputs: [Array]
@@ -15,7 +15,7 @@
   inclusionState: 'Pending',
   timestamp: '1671182041013',
   transactionId: '0xd7b94f8487a817bc70febb80d83f0df93f1d7035851affaf7114cd7348cb610d',
-  networkId: '8342982141227064571',
+  networkId: '1856588631910923207',
   incoming: false,
   note: null
 }

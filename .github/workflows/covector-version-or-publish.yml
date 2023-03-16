@@ -20,7 +20,7 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: 14
-          registry-url: 'https://registry.npmjs.org'
+          registry-url: "https://registry.npmjs.org"
 
       - name: git config
         run: |
@@ -29,7 +29,7 @@ jobs:
 
       - name: Set up Homebrew
         uses: Homebrew/actions/setup-homebrew@master
-      
+
       - name: Install Dasel
         run: |
           brew update --preinstall
@@ -42,7 +42,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          command: 'version-or-publish'
+          command: "version-or-publish"
       - name: Create Pull Request With Versions Bumped
         if: steps.covector.outputs.commandRan == 'version'
         uses: iotaledger/create-pull-request@v3.4.1
@@ -51,7 +51,7 @@ jobs:
           branch: release/version-updates
           title: Apply Version Updates From Current Changes
           commit-message: "apply version updates"
-          labels: "version updates"
+          labels: "i-release"
           body: ${{ steps.covector.outputs.change }}
 
   nodejs-binding-prebuild:
@@ -65,7 +65,7 @@ jobs:
         # (which is used by neon-sys) sadly fails to recognize it. As a mitigation, we still run the
         # tests on Windows 2019, until we can figure out a way to fix the problem.
         os: [ubuntu-20.04, macos-11, windows-2019]
-        node-version: ['16.x']
+        node-version: ["16.x"]
 
     steps:
       - uses: actions/checkout@v3
@@ -81,21 +81,21 @@ jobs:
       - name: Set up Python 3.10
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           override: true
-      
+
       - name: Install LLVM and Clang (Windows) # required for bindgen to work, see https://github.com/rust-lang/rust-bindgen/issues/1797
         uses: KyleMayes/install-llvm-action@32c4866ebb71e0949e8833eb49beeebed48532bd
         if: matrix.os == 'windows-2019'
         with:
           version: "11.0"
           directory: ${{ runner.temp }}/llvm
-      
+
       - name: Set LIBCLANG_PATH (Windows)
         run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
         if: matrix.os == 'windows-2019'
@@ -142,12 +142,11 @@ jobs:
       - name: Install dependencies
         run: npm install typescript && npm ci
         working-directory: wallet/bindings/nodejs
-      
+
       - name: Build Node.js prebuild
         run: npm run prebuild
         working-directory: wallet/bindings/nodejs
-      
+
       - name: Upload prebuild to GitHub release
         run: npx prebuild --upload-all ${{ secrets.GITHUB_TOKEN }} --tag-prefix nodejs-binding-v
         working-directory: wallet/bindings/nodejs
-  

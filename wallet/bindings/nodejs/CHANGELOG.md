@@ -1,5 +1,31 @@
 # Changelog
 
+## \[2.0.3-rc.27]
+
+- Fix deadlock when syncing and another function which locked the storage_manager are running at the same time
+  - [0421de1d](https://github.com/iotaledger/wallet.rs/commit/0421de1d26b2c7caaadb65b2f5f7cea25071f291) Fix deadlock ([#1955](https://github.com/iotaledger/wallet.rs/pull/1955)) on 2023-03-14
+
+## \[2.0.3-rc.26]
+
+- `BaseCoinBalance::available` can't underflow anymore;
+  - [904b4a9d](https://github.com/iotaledger/wallet.rs/commit/904b4a9dc09c0315f7260d456393dfe5dc0fe039) Fix possible basecoindbalance::available underflow ([#1949](https://github.com/iotaledger/wallet.rs/pull/1949)) on 2023-03-13
+
+## \[2.0.3-rc.25]
+
+- Resync outputs if a transaction got confirmed between syncing outputs and pending transactions to prevent not having unspent outputs afterwards.
+  - [67fd04fc](https://github.com/iotaledger/wallet.rs/commit/67fd04fc7e27a9a6e33eb1851df6cbc29dd77022) fix(sync): fetch output from the node if local copy is unspent ([#454](https://github.com/iotaledger/wallet.rs/pull/454)) on 2021-03-21
+  - [8f5f2e42](https://github.com/iotaledger/wallet.rs/commit/8f5f2e42e8db60626c84da6e08ac5fc1d00da037) Apply Version Updates From Current Changes ([#405](https://github.com/iotaledger/wallet.rs/pull/405)) on 2021-04-01
+  - [aa7d22bc](https://github.com/iotaledger/wallet.rs/commit/aa7d22bcc3dbac39d6029f3767eb6ab6ccf1d080) Resync outputs if a transaction got confirmed ([#1937](https://github.com/iotaledger/wallet.rs/pull/1937)) on 2023-03-10
+
+## \[2.0.3-rc.24]
+
+- Fix address for the amount of expired NFTs that get burned with `Account::burnNft()`;
+  - [1e3c1fc8](https://github.com/iotaledger/wallet.rs/commit/1e3c1fc8eac869b5e85d79189bf2cc0812c7cb05) Fix address for the amount of expired NFTs that get burned with `Account::burn_nft()` ([#1916](https://github.com/iotaledger/wallet.rs/pull/1916)) on 2023-03-06
+- Return correct error for wrong ManagerOptions.
+  - [4fc11ba8](https://github.com/iotaledger/wallet.rs/commit/4fc11ba87750534ea9600e1a612922bf1f594d79) Return error for wrong ManagerOptions ([#1926](https://github.com/iotaledger/wallet.rs/pull/1926)) on 2023-03-06
+- Add optional ignoreIfCoinTypeMismatch to `AccountManager::restoreBackup()`;
+  - [22aead66](https://github.com/iotaledger/wallet.rs/commit/22aead66c8c69a3469962387f5befd71e10dd6e8) Add ignore_if_coin_type_mismatch to restore_backup() ([#1933](https://github.com/iotaledger/wallet.rs/pull/1933)) on 2023-03-08
+
 ## \[2.0.3-rc.23]
 
 - `Account::getParticipationOverview` optional accepts eventIds to filter.

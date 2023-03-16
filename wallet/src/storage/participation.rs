@@ -3,11 +3,15 @@
 
 use std::collections::HashMap;
 
-use iota_client::api_types::plugins::participation::types::ParticipationEventId;
+use iota_client::{
+    api_types::plugins::participation::{responses::OutputStatusResponse, types::ParticipationEventId},
+    block::output::OutputId,
+};
 
 use super::manager::StorageManager;
 use crate::{
-    account::operations::participation::ParticipationEventWithNodes, storage::constants::PARTICIPATION_EVENTS,
+    account::operations::participation::ParticipationEventWithNodes,
+    storage::constants::{PARTICIPATION_CACHED_OUTPUTS, PARTICIPATION_EVENTS},
 };
 
 impl StorageManager {
@@ -18,14 +22,13 @@ impl StorageManager {
     ) -> crate::Result<()> {
         log::debug!("insert_participation_event {}", event_with_nodes.id);
 
-        let mut events: HashMap<ParticipationEventId, ParticipationEventWithNodes> = match self
+        let mut events = self
             .storage
-            .get(&format!("{PARTICIPATION_EVENTS}{account_index}"))
+            .get::<HashMap<ParticipationEventId, ParticipationEventWithNodes>>(&format!(
+                "{PARTICIPATION_EVENTS}{account_index}"
+            ))
             .await?
-        {
-            Some(events) => serde_json::from_str(&events)?,
-            None => HashMap::new(),
-        };
+            .unwrap_or_default();
 
         events.insert(event_with_nodes.id, event_with_nodes);
 
@@ -43,12 +46,14 @@ impl StorageManager {
     ) -> crate::Result<()> {
         log::debug!("remove_participation_event {id}");
 
-        let mut events: HashMap<ParticipationEventId, ParticipationEventWithNodes> = match self
+        let mut events = match self
             .storage
-            .get(&format!("{PARTICIPATION_EVENTS}{account_index}"))
+            .get::<HashMap<ParticipationEventId, ParticipationEventWithNodes>>(&format!(
+                "{PARTICIPATION_EVENTS}{account_index}"
+            ))
             .await?
         {
-            Some(events) => serde_json::from_str(&events)?,
+            Some(events) => events,
             None => return Ok(()),
         };
 
@@ -67,13 +72,40 @@ impl StorageManager {
     ) -> crate::Result<HashMap<ParticipationEventId, ParticipationEventWithNodes>> {
         log::debug!("get_participation_events");
 
-        match self
+        Ok(self
             .storage
             .get(&format!("{PARTICIPATION_EVENTS}{account_index}"))
             .await?
-        {
-            Some(events) => Ok(serde_json::from_str(&events)?),
-            None => Ok(HashMap::new()),
-        }
+            .unwrap_or_default())
+    }
+
+    pub(crate) async fn set_cached_participation_output_status(
+        &mut self,
+        account_index: u32,
+        outputs_participation: HashMap<OutputId, OutputStatusResponse>,
+    ) -> crate::Result<()> {
+        log::debug!("set_cached_participation");
+
+        self.storage
+            .set(
+                &format!("{PARTICIPATION_CACHED_OUTPUTS}{account_index}"),
+                outputs_participation,
+            )
+            .await?;
+
+        Ok(())
+    }
+
+    pub(crate) async fn get_cached_participation_output_status(
+        &self,
+        account_index: u32,
+    ) -> crate::Result<HashMap<OutputId, OutputStatusResponse>> {
+        log::debug!("get_cached_participation");
+
+        Ok(self
+            .storage
+            .get(&format!("{PARTICIPATION_CACHED_OUTPUTS}{account_index}"))
+            .await?
+            .unwrap_or_default())
     }
 }

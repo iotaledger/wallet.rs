@@ -35,7 +35,7 @@
       "type":0,
       "pubKeyHash":"0x4cfde0600797ae07d19d67d78910e70950bfdaf716f0035e9a30b97828aaf6a2"
    },
-   "networkId":"8342982141227064571",
+   "networkId":"1856588631910923207",
    "remainder":false,
    "chain":[
       {

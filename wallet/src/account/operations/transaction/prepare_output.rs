@@ -69,13 +69,13 @@ impl AccountHandle {
 
             if let Some(tag) = features.tag {
                 first_output_builder = first_output_builder.add_feature(Feature::Tag(TagFeature::new(
-                    prefix_hex::decode(&tag).map_err(|_| DtoError::InvalidField("tag"))?,
+                    prefix_hex::decode(tag).map_err(|_| DtoError::InvalidField("tag"))?,
                 )?));
             }
 
             if let Some(metadata) = features.metadata {
                 first_output_builder = first_output_builder.add_feature(Feature::Metadata(MetadataFeature::new(
-                    prefix_hex::decode(&metadata).map_err(|_| DtoError::InvalidField("metadata"))?,
+                    prefix_hex::decode(metadata).map_err(|_| DtoError::InvalidField("metadata"))?,
                 )?));
             }
 
@@ -240,13 +240,13 @@ impl AccountHandle {
         if let Some(features) = options.features {
             if let Some(tag) = features.tag {
                 first_output_builder = first_output_builder.add_feature(Feature::Tag(TagFeature::new(
-                    prefix_hex::decode(&tag).map_err(|_| DtoError::InvalidField("tag"))?,
+                    prefix_hex::decode(tag).map_err(|_| DtoError::InvalidField("tag"))?,
                 )?));
             }
 
             if let Some(metadata) = features.metadata {
                 first_output_builder = first_output_builder.add_feature(Feature::Metadata(MetadataFeature::new(
-                    prefix_hex::decode(&metadata).map_err(|_| DtoError::InvalidField("metadata"))?,
+                    prefix_hex::decode(metadata).map_err(|_| DtoError::InvalidField("metadata"))?,
                 )?));
             }
 

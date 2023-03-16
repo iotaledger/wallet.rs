@@ -212,8 +212,16 @@ impl WalletMessageHandler {
                 .await
             }
             #[cfg(feature = "stronghold")]
-            Message::RestoreBackup { source, password } => {
-                convert_async_panics(|| async { self.restore_backup(source.to_path_buf(), password).await }).await
+            Message::RestoreBackup {
+                source,
+                password,
+                ignore_if_coin_type_mismatch,
+            } => {
+                convert_async_panics(|| async {
+                    self.restore_backup(source.to_path_buf(), password, ignore_if_coin_type_mismatch)
+                        .await
+                })
+                .await
             }
             Message::GenerateMnemonic => convert_panics(|| {
                 self.account_manager
@@ -381,9 +389,14 @@ impl WalletMessageHandler {
     }
 
     #[cfg(feature = "stronghold")]
-    async fn restore_backup(&self, backup_path: PathBuf, stronghold_password: String) -> Result<Response> {
+    async fn restore_backup(
+        &self,
+        backup_path: PathBuf,
+        stronghold_password: String,
+        ignore_if_coin_type_mismatch: Option<bool>,
+    ) -> Result<Response> {
         self.account_manager
-            .restore_backup(backup_path, stronghold_password)
+            .restore_backup(backup_path, stronghold_password, ignore_if_coin_type_mismatch)
             .await?;
         Ok(Response::Ok(()))
     }

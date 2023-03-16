@@ -1,7 +1,5 @@
-/target
-/build
-/dist
-/iota_wallet.egg-info
-/iota_wallet/__*
-/iota_wallet/*.so
-/iota_wallet_venv
+build
+dist
+iota_wallet.egg-info
+.tox
+iota_wallet_venv

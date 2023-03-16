@@ -245,20 +245,13 @@ impl AccountHandle {
         }
 
         log::debug!(
-            "[BALANCE] total_amount: {}, locked balance: {}",
+            "[BALANCE] total_amount: {}, locked balance: {}, total_rent_amount: {}",
             total_amount,
-            locked_amount
+            locked_amount,
+            total_rent_amount,
         );
 
         locked_amount += total_rent_amount;
-
-        if total_amount < locked_amount {
-            log::warn!("[BALANCE] total_balance is smaller than the available balance");
-            // It can happen that the locked_amount is greater than the available balance if a transaction wasn't
-            // confirmed when it got checked during syncing, but shortly after, when the outputs from the address were
-            // requested, so we just overwrite the locked_amount
-            locked_amount = total_amount;
-        };
 
         let mut native_tokens_balance = Vec::new();
 
@@ -290,9 +283,11 @@ impl AccountHandle {
             base_coin: BaseCoinBalance {
                 total: total_amount,
                 #[cfg(not(feature = "participation"))]
-                available: total_amount - locked_amount,
+                available: total_amount.saturating_sub(locked_amount),
                 #[cfg(feature = "participation")]
-                available: total_amount - locked_amount - self.get_voting_power().await?,
+                available: total_amount
+                    .saturating_sub(locked_amount)
+                    .saturating_sub(self.get_voting_power().await?),
             },
             native_tokens: native_tokens_balance,
             required_storage_deposit,

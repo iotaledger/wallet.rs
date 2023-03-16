@@ -6,7 +6,7 @@ Listing Transactions: [
     inclusionState: 'Confirmed',
     timestamp: '1663005355019',
     transactionId: '0xc4cd87bb0f33f2be15fab5454628ca21dc7f516120e7ddae8f87f4308b123412',
-    networkId: '8342982141227064571',
+    networkId: '1856588631910923207',
     incoming: false,
     note: null
   }

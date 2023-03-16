@@ -7,7 +7,7 @@
 // Import needs to be in a single line, otherwise it breaks
 // prettier-ignore
 // @ts-ignore: path is set to match runtime transpiled js path when bundled.
-import { initLogger, sendMessageAsync, messageHandlerNew, listen, destroy } from '../wasm/wallet_wasm';
+import { initLogger, sendMessageAsync, messageHandlerNew, listen, destroy } from '../wasm/iota_wallet_wasm';
 
 export {
     initLogger as internalInitLogger,

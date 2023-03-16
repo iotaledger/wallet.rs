@@ -78,7 +78,12 @@ pub async fn init_command(
     let account_manager = AccountManager::builder()
         .with_secret_manager(secret_manager)
         .with_client_options(
-            ClientOptions::new().with_node(parameters.node.as_deref().unwrap_or("http://localhost:14265"))?,
+            ClientOptions::new().with_node(
+                parameters
+                    .node
+                    .as_deref()
+                    .unwrap_or("https://api.testnet.shimmer.network"),
+            )?,
         )
         .with_storage_path(&storage_path)
         .with_coin_type(parameters.coin_type.unwrap_or(SHIMMER_COIN_TYPE))
@@ -148,16 +153,16 @@ pub async fn restore_command(
     let account_manager = AccountManager::builder()
         .with_secret_manager(secret_manager)
         // Will be overwritten by the backup's value.
-        .with_client_options(
-            ClientOptions::new().with_node("http://localhost:14265")?, // .with_ignore_node_health(),
-        )
+        .with_client_options(ClientOptions::new().with_node("https://api.testnet.shimmer.network")?)
         .with_storage_path(&storage_path)
         // Will be overwritten by the backup's value.
         .with_coin_type(SHIMMER_COIN_TYPE)
         .finish()
         .await?;
 
-    account_manager.restore_backup(backup_path.into(), password).await?;
+    account_manager
+        .restore_backup(backup_path.into(), password, None)
+        .await?;
 
     Ok(account_manager)
 }

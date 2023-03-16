@@ -58,10 +58,11 @@ impl AccountHandle {
                 data: event_data,
                 nodes: vec![options.node.clone()],
             };
+            let account_index = self.read().await.index;
             self.storage_manager
                 .lock()
                 .await
-                .insert_participation_event(self.read().await.index, event_with_node.clone())
+                .insert_participation_event(account_index, event_with_node.clone())
                 .await?;
             registered_participation_events.insert(event_id, event_with_node.clone());
         }
@@ -71,10 +72,11 @@ impl AccountHandle {
 
     /// Removes a previously registered participation event from local storage.
     pub async fn deregister_participation_event(&self, id: &ParticipationEventId) -> crate::Result<()> {
+        let account_index = self.read().await.index;
         self.storage_manager
             .lock()
             .await
-            .remove_participation_event(self.read().await.index, id)
+            .remove_participation_event(account_index, id)
             .await?;
         Ok(())
     }
@@ -84,11 +86,12 @@ impl AccountHandle {
         &self,
         id: ParticipationEventId,
     ) -> crate::Result<Option<ParticipationEventWithNodes>> {
+        let account_index = self.read().await.index;
         Ok(self
             .storage_manager
             .lock()
             .await
-            .get_participation_events(self.read().await.index)
+            .get_participation_events(account_index)
             .await?
             .get(&id)
             .cloned())
@@ -98,10 +101,11 @@ impl AccountHandle {
     pub async fn get_participation_events(
         &self,
     ) -> crate::Result<HashMap<ParticipationEventId, ParticipationEventWithNodes>> {
+        let account_index = self.read().await.index;
         self.storage_manager
             .lock()
             .await
-            .get_participation_events(self.read().await.index)
+            .get_participation_events(account_index)
             .await
     }
 
