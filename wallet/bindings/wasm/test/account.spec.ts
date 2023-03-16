@@ -8,7 +8,6 @@ import {
     AccountManager,
     CoinType,
     NodeInfoWrapper,
-    PlaceholderSecretManager,
 } from '../node/lib';
 
 async function run() {
