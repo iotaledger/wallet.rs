@@ -41,8 +41,8 @@ impl Serialize for WalletEvent {
         enum WalletEvent_<'a> {
             T0,
             T1(&'a AddressData),
-            T2(&'a Box<NewOutputEvent>),
-            T3(&'a Box<SpentOutputEvent>),
+            T2(&'a NewOutputEvent),
+            T3(&'a SpentOutputEvent),
             T4(&'a TransactionInclusionEvent),
             T5(&'a TransactionProgressEvent),
         }
