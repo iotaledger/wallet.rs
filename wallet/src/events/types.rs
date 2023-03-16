@@ -7,7 +7,7 @@ use iota_client::{
     api_types::core::response::OutputWithMetadataResponse,
     block::payload::transaction::{dto::TransactionPayloadDto, TransactionId},
 };
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
 
 use crate::account::types::{address::AddressWrapper, InclusionState, OutputDataDto};
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -19,7 +19,7 @@ pub struct Event {
     pub event: WalletEvent,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Deserialize)]
 pub enum WalletEvent {
     ConsolidationRequired,
     #[cfg(feature = "ledger_nano")]
@@ -29,6 +29,58 @@ pub enum WalletEvent {
     SpentOutput(Box<SpentOutputEvent>),
     TransactionInclusion(TransactionInclusionEvent),
     TransactionProgress(TransactionProgressEvent),
+}
+
+impl Serialize for WalletEvent {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        #[derive(Serialize)]
+        #[serde(untagged)]
+        enum WalletEvent_<'a> {
+            T0,
+            T1(&'a AddressData),
+            T2(&'a Box<NewOutputEvent>),
+            T3(&'a Box<SpentOutputEvent>),
+            T4(&'a TransactionInclusionEvent),
+            T5(&'a TransactionProgressEvent),
+        }
+        #[derive(Serialize)]
+        struct TypedWalletEvent_<'a> {
+            #[serde(rename = "type")]
+            kind: u8,
+            #[serde(flatten)]
+            event: WalletEvent_<'a>,
+        }
+        let event = match self {
+            Self::ConsolidationRequired => TypedWalletEvent_ {
+                kind: 0,
+                event: WalletEvent_::T0,
+            },
+            Self::LedgerAddressGeneration(e) => TypedWalletEvent_ {
+                kind: 1,
+                event: WalletEvent_::T1(e),
+            },
+            Self::NewOutput(e) => TypedWalletEvent_ {
+                kind: 2,
+                event: WalletEvent_::T2(e),
+            },
+            Self::SpentOutput(e) => TypedWalletEvent_ {
+                kind: 3,
+                event: WalletEvent_::T3(e),
+            },
+            Self::TransactionInclusion(e) => TypedWalletEvent_ {
+                kind: 4,
+                event: WalletEvent_::T4(e),
+            },
+            Self::TransactionProgress(e) => TypedWalletEvent_ {
+                kind: 5,
+                event: WalletEvent_::T5(e),
+            },
+        };
+        event.serialize(serializer)
+    }
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, Hash)]
