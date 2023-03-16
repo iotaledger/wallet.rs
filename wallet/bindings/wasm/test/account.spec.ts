@@ -12,16 +12,16 @@ import {
 
 async function run() {
     try {
-        fs.rmdirSync('./alice-database', { recursive: true });
+        fs.rmdirSync('./test-alice-database', { recursive: true });
     } catch (e) {
         // ignore it
     }
 
     const manager = new AccountManager({
-        storagePath: './alice-database',
+        storagePath: './test-alice-database',
         coinType: CoinType.Shimmer,
         clientOptions: {
-            nodes: ['https://api.testnet.shimmer.network'],
+            nodes: ['http://localhost:14265'],
         },
         secretManager: {
             mnemonic:
@@ -43,7 +43,7 @@ async function run() {
     expect(savedAccount).not.toBeNull();
 
     manager.getNodeInfo().then((value: NodeInfoWrapper) => {
-        expect(value.url).toBe('https://api.testnet.shimmer.network');
+        expect(value.url).toBe('http://localhost:14265');
     });
 }
 
@@ -51,5 +51,18 @@ describe('Wallet methods', () => {
     jest.setTimeout(10000);
     it('account', async () => {
         await run();
+    });
+    it('generate mnemonic', async () => {
+        const manager = new AccountManager({
+            storagePath: './test-generate-mnemonic',
+            coinType: CoinType.Shimmer,
+            clientOptions: {
+                nodes: [],
+            },
+            secretManager: 'placeholder',
+        });
+
+        const mnemonic = await manager.generateMnemonic();
+        expect(mnemonic.split(' ').length).toBe(24);
     });
 });

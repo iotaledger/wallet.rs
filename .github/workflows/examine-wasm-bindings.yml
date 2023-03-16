@@ -77,9 +77,24 @@ jobs:
         working-directory: wallet/bindings/wasm/
         run: yarn build
 
+      - name: Start private tangle
+        if: ${{ startsWith(matrix.os, 'ubuntu') }}
+        uses: './.github/actions/private-tangle/setup'
+
       - name: Run Yarn Test
+        if: ${{ startsWith(matrix.os, 'ubuntu') }}
         working-directory: wallet/bindings/wasm/
         run: yarn test
+
+      - name: Run Yarn Test
+        if: ${{ !startsWith(matrix.os, 'ubuntu') }}
+        working-directory: wallet/bindings/wasm/
+        # Only run test that doesn't require a node because we can't use the private tangle script on macos and windows
+        run: yarn test --t "generate mnemonic"
+
+      - name: Tear down private tangle
+        if: ${{ startsWith(matrix.os, 'ubuntu') }}
+        uses: './.github/actions/private-tangle/tear-down'
 
   lint:
     name: Lint

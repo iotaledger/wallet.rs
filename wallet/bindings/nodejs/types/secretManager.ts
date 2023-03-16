@@ -14,6 +14,9 @@ export interface SeedSecretManager {
     hexSeed: string;
 }
 
+/** Placeholder secret manager that can't do anything. */
+export type PlaceholderSecretManager = 'placeholder';
+
 /** Secret manager that uses Stronghold. */
 export interface StrongholdSecretManager {
     stronghold: {
@@ -49,4 +52,5 @@ export enum LedgerDeviceType {
 export type SecretManager =
     | LedgerNanoSecretManager
     | MnemonicSecretManager
-    | StrongholdSecretManager;
+    | StrongholdSecretManager
+    | PlaceholderSecretManager;
