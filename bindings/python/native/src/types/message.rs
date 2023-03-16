@@ -409,13 +409,13 @@ impl TryFrom<Essence> for RustEssence {
                     &indexation_payload
                         .indexation
                         .as_ref()
-                        .unwrap_or_else(|| panic!("Invalid IndexationPayload: {:?}", indexation_payload))[0]
+                        .unwrap_or_else(|| panic!("Invalid IndexationPayload: {indexation_payload:?}"))[0]
                         .index
                         .clone(),
                     &(indexation_payload
                         .indexation
                         .as_ref()
-                        .unwrap_or_else(|| panic!("Invalid IndexationPayload: {:?}", indexation_payload))[0]
+                        .unwrap_or_else(|| panic!("Invalid IndexationPayload: {indexation_payload:?}"))[0]
                         .data)
                         .clone(),
                 )
@@ -492,13 +492,13 @@ pub async fn to_rust_payload(
             &payload
                 .indexation
                 .as_ref()
-                .unwrap_or_else(|| panic!("Invalid Payload: {:?}", payload))[0]
+                .unwrap_or_else(|| panic!("Invalid Payload: {payload:?}"))[0]
                 .index
                 .clone(),
             &payload
                 .indexation
                 .as_ref()
-                .unwrap_or_else(|| panic!("Invalid Payload: {:?}", payload))[0]
+                .unwrap_or_else(|| panic!("Invalid Payload: {payload:?}"))[0]
                 .data,
         )?;
         Ok(RustWalletPayload::Indexation(Box::new(indexation)))

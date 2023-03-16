@@ -261,7 +261,7 @@ impl ClientOptionsBuilder {
     /// let client_options = ClientOptionsBuilder::new()
     ///     .with_nodes(&[
     ///         "https://api.lb-0.h.chrysalis-devnet.iota.cafe",
-    ///         "https://api.thin-hornet-0.h.chrysalis-devnet.iota.cafe/",
+    ///         "https://api.lb-0.h.chrysalis-devnet.iota.cafe/",
     ///     ])
     ///     .expect("invalid nodes URLs")
     ///     .build();
@@ -736,15 +736,21 @@ mod tests {
             ClientOptionsBuilder::new()
                 .with_node("https://api.lb-1.h.chrysalis-devnet.iota.cafe")
                 .unwrap()
+                .with_node("http://localhost:14265")
+                .unwrap()
                 .build()
                 .unwrap(),
             ClientOptionsBuilder::new()
-                .with_node("https://api.thin-hornet-1.h.chrysalis-devnet.iota.cafe/")
+                .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")
+                .unwrap()
+                .with_node("http://localhost:14265")
                 .unwrap()
                 .build()
                 .unwrap(),
             ClientOptionsBuilder::new()
                 .with_nodes(&["https://api.lb-1.h.chrysalis-devnet.iota.cafe"])
+                .unwrap()
+                .with_nodes(&["http://localhost:14265"])
                 .unwrap()
                 .with_network("mainnet")
                 .build()
@@ -753,12 +759,6 @@ mod tests {
                 .with_nodes(&["https://api.lb-1.h.chrysalis-devnet.iota.cafe"])
                 .unwrap()
                 .with_network("testnet2")
-                .build()
-                .unwrap(),
-            ClientOptionsBuilder::new()
-                .with_network("testnet2")
-                .with_nodes(&["https://api.fat-hornet-0.h.chrysalis-devnet.iota.cafe/"])
-                .unwrap()
                 .build()
                 .unwrap(),
         ];

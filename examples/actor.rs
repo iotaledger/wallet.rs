@@ -53,7 +53,7 @@ async fn main() {
 
     let account = AccountToCreate {
         client_options: ClientOptionsBuilder::new()
-            .with_node("https://api.thin-hornet-0.h.chrysalis-devnet.iota.cafe")
+            .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")
             .unwrap()
             .build()
             .unwrap(),

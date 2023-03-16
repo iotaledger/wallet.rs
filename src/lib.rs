@@ -37,6 +37,7 @@ pub(crate) mod stronghold;
 
 pub use error::Error;
 
+pub use storage::remove as remove_storage;
 #[cfg(feature = "stronghold")]
 #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
 pub use stronghold::{

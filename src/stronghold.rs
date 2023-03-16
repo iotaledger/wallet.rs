@@ -237,6 +237,7 @@ fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, Arc<Password>>>> {
                     if let Some(curr_snapshot_path) = current_snapshot_path {
                         if &snapshot_path == curr_snapshot_path {
                             let mut runtime = actor_runtime().lock().await;
+                            #[allow(unused_must_use, clippy::let_underscore_future)]
                             let _ = clear_stronghold_cache(&mut runtime, true);
                         }
                     }

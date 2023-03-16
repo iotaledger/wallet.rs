@@ -23,7 +23,7 @@ pub type EventId = [u8; 32];
 fn generate_indexation_id() -> String {
     let mut key = [0; 32];
     crypto::utils::rand::fill(&mut key).unwrap();
-    hex::encode(&key)
+    hex::encode(key)
 }
 
 /// The balance change event payload.

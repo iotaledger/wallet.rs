@@ -1508,9 +1508,9 @@ impl SyncedAccount {
     ///
     /// Returns a (addresses, address) tuple representing the selected input addresses and the remainder address if
     /// needed.
-    fn select_inputs<'a>(
+    fn select_inputs(
         &self,
-        locked_outputs: &'a mut MutexGuard<'_, Vec<AddressOutput>>,
+        locked_outputs: &mut MutexGuard<'_, Vec<AddressOutput>>,
         transfer_obj: &Transfer,
         available_outputs: Vec<input_selection::AddressInputs>,
         signer_type: SignerType,
@@ -1613,13 +1613,7 @@ impl SyncedAccount {
             }
         }
 
-        Ok((
-            selected_address_outputs
-                .into_iter()
-                .map(|(_id, address_inputs)| address_inputs)
-                .collect(),
-            remainder,
-        ))
+        Ok((selected_address_outputs.into_values().collect(), remainder))
     }
 
     async fn get_output_consolidation_transfers(
@@ -1635,10 +1629,7 @@ impl SyncedAccount {
                 if address.outputs().len() >= self.account_handle.account_options.output_consolidation_threshold {
                     let mut address_outputs = address.available_outputs(&sent_messages);
                     if !include_dust_allowance_outputs {
-                        address_outputs = address_outputs
-                            .into_iter()
-                            .filter(|addr| addr.kind != OutputKind::SignatureLockedDustAllowance)
-                            .collect();
+                        address_outputs.retain(|addr| addr.kind != OutputKind::SignatureLockedDustAllowance);
                     }
 
                     // the address outputs exceed the threshold, so we push a transfer to our vector

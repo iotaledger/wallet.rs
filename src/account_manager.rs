@@ -760,8 +760,9 @@ impl AccountManager {
         Ok(())
     }
 
+    /// Returns the path to the stronghold snapshot file.
     #[cfg(feature = "stronghold")]
-    pub(crate) async fn stronghold_snapshot_path(&self) -> crate::Result<PathBuf> {
+    pub async fn stronghold_snapshot_path(&self) -> crate::Result<PathBuf> {
         let storage_id = crate::storage::get(&self.storage_path).await?.lock().await.id();
         self.stronghold_snapshot_path_internal(storage_id).await
     }

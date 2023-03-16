@@ -966,10 +966,7 @@ impl AccountHandle {
             // Copy old events in case the transaction fails
             old_participations = participations.clone();
             // remove provided events
-            participations = participations
-                .into_iter()
-                .filter(|p| !event_ids.contains(&p.event_id))
-                .collect();
+            participations.retain(|p| !event_ids.contains(&p.event_id));
             storage.save_participations(*account.index(), participations).await?;
         };
         drop(storage);
@@ -1621,8 +1618,8 @@ mod tests {
 
             let updated_client_options = ClientOptionsBuilder::new()
                 .with_nodes(&[
-                    "https://api.thin-hornet-0.h.chrysalis-devnet.iota.cafe",
-                    "https://api.thin-hornet-1.h.chrysalis-devnet.iota.cafe",
+                    "https://api.lb-0.h.chrysalis-devnet.iota.cafe",
+                    "https://api.lb-1.h.chrysalis-devnet.iota.cafe",
                 ])
                 .unwrap()
                 .build()

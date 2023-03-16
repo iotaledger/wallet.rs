@@ -34,7 +34,7 @@ client_options = {
     "primary_pow_node": None,
     "nodes": [
         {
-            "url": "https://api.thin-hornet-0.h.chrysalis-devnet.iota.cafe",
+            "url": "https://api.lb-0.h.chrysalis-devnet.iota.cafe",
             "auth": None,
             "disabled": False
         }
