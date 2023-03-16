@@ -391,6 +391,21 @@ pub async fn mint_native_token_command(
     maximum_supply: String,
     foundry_metadata: Option<Vec<u8>>,
 ) -> Result<(), Error> {
+    // If no alias output exists, create one first
+    if account_handle.balance().await?.aliases.is_empty() {
+        let transaction = account_handle.create_alias_output(None, None).await?;
+        log::info!(
+            "Alias output minting transaction sent:\n{:?}\n{:?}",
+            transaction.transaction_id,
+            transaction.block_id
+        );
+        account_handle
+            .retry_transaction_until_included(&transaction.transaction_id, None, None)
+            .await?;
+        // Sync account after the transaction got confirmed, so the alias output is available
+        account_handle.sync(None).await?;
+    }
+
     let native_token_options = NativeTokenOptions {
         alias_id: None,
         circulating_supply: U256::from_dec_str(&circulating_supply).map_err(|e| Error::Miscellaneous(e.to_string()))?,
