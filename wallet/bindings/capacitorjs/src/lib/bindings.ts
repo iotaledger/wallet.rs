@@ -8,7 +8,6 @@ const {
     sendMessage,
     messageHandlerNew,
     listen,
-    clearListeners,
     destroy,
 } = IotaWalletMobile
 
@@ -23,6 +22,5 @@ export {
     sendMessageAsync,
     messageHandlerNew,
     listen,
-    clearListeners,
     destroy,
 }
