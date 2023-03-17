@@ -126,7 +126,6 @@ public class IotaWalletMobile extends Plugin {
             JsonElement jsonResponse = callBaseApi(walletCommand);
             JSObject ret = new JSObject();
             if (jsonResponse != null) {
-                Log.d("jsonResponse", jsonResponse.toString());
                 JsonObject clientResponse = new JsonObject();
                 clientResponse.addProperty("type", jsonObject.get("cmd").getAsString());
                 clientResponse.add("payload", jsonResponse);
@@ -157,7 +156,6 @@ public class IotaWalletMobile extends Plugin {
             wallet.listen(new EventListener() {
                 @Override
                 public void receive(Event event) {
-                    Log.d("listen", "Received event " + event.toString());
                     JSObject walletResponse = new JSObject();
                     walletResponse.put("result", event.toString());
                     call.resolve(walletResponse);
@@ -174,16 +172,6 @@ public class IotaWalletMobile extends Plugin {
     public void destroy(final PluginCall call) {
         try {
             destroyHandle();
-            call.release(bridge);
-        } catch (Exception ex) {
-            call.reject(ex.getMessage() + Arrays.toString(ex.getStackTrace()));
-        }
-    }
-
-    @PluginMethod()
-    public void clearListeners(final PluginCall call) {
-        try {
-            wallet.clearListeners();
             call.release(bridge);
         } catch (Exception ex) {
             call.reject(ex.getMessage() + Arrays.toString(ex.getStackTrace()));
