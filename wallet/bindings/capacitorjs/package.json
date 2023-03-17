@@ -14,7 +14,7 @@
     "IotaWalletMobile.podspec"
   ],
   "scripts": {
-    "verify": "npm run verify:ios && npm run verify:android && npm run verify:web",
+    "verify": "npm run verify:ios && npm run verify:android",
     "verify:ios": "cd ios && pod install && xcodebuild -workspace Plugin.xcworkspace -scheme Plugin && cd ..",
     "verify:android": "cd android && ./gradlew clean build test && cd ..",
     "build": "npm run clean && tsc && rollup -c rollup.config.js",
@@ -35,6 +35,7 @@
   "dependencies": {
     "@capacitor/core": "^3.4.1",
     "@iota/types": "^1.0.0-beta.15",
+    "rimraf": "^3.0.2",
     "rollup": "^2.29.0"
   },
   "devDependencies": {
@@ -42,7 +43,6 @@
     "@capacitor/core": "^3.4.1",
     "@capacitor/docgen": "^0.0.10",
     "@capacitor/ios": "^3.4.1",
-    "rimraf": "^3.0.2",
     "typescript": "^4.9.4"
   },
   "peerDependencies": {
