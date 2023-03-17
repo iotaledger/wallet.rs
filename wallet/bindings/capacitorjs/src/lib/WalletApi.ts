@@ -11,8 +11,8 @@ interface ProfileManagers {
     [key: string]: ProfileManager
 }
 const profileManagers: ProfileManagers = {}
-// @ts-ignore
-const WalletApi: any = {
+
+const WalletApi = {
     async createAccountManager(id: AccountId, options: AccountManagerOptions) {
         const manager = await createAccountManager(options)
         manager.id = id

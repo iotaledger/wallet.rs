@@ -6,7 +6,7 @@
     "allowUnreachableCode": true,
     "declaration": true,
     "esModuleInterop": true,
-    "lib": ["dom", "es2017"],
+    "lib": ["dom", "esnext"],
     "module": "esnext",
     "moduleResolution": "node",
     "noFallthroughCasesInSwitch": true,
