@@ -166,7 +166,6 @@ public class IotaWalletMobile: CAPPlugin {
         )
         
         call.keepAlive = true
-        call.resolve()
     }
 
 }
