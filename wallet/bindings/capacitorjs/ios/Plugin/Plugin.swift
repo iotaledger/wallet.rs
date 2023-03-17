@@ -37,7 +37,6 @@ public class IotaWalletMobile: CAPPlugin {
             guard let context = context,
                   let response = response else { return }
             // retain of the object awaiting for the next message.
-            // TODO: verify it's released later
             let contextResult = Unmanaged<ContextResult>.fromOpaque(context).retain().takeRetainedValue()
             
             if let error = error {
@@ -61,7 +60,6 @@ public class IotaWalletMobile: CAPPlugin {
                 return call.reject("clientOptions or secretManager is an invalid JSON object")
             }
             let ClientOptions = try? JSONSerialization.data(withJSONObject: clientOptions)
-            // TODO: replacing for urls slashes temporaly, make better using Codable structs with URL type?
             let stringfiedClientOptions = String(data: ClientOptions!, encoding: .utf8)!.replacingOccurrences(of: "\\", with: "")
             
             // prepare the internal app directory path
@@ -107,11 +105,6 @@ public class IotaWalletMobile: CAPPlugin {
             let error_buffer: UnsafeMutablePointer<CChar>? = nil
             let error_buffer_size = 0
         
-            // TODO: implement logger as a fn
-            let filename = "\(path)/iota_wallet.log"
-            let level_filter = "debug"
-            iota_init_logger(filename.cString(using: .utf8), level_filter.cString(using: .utf8))
-            
             // Keep the C++ handler / pointer of the messageHandler call result
             let handler: OpaquePointer? = iota_initialize(options.cString(using: .utf8), error_buffer, error_buffer_size)
             // Convert pointer to integer keeping bit pattern
