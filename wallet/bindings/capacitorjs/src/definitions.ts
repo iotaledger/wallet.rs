@@ -17,9 +17,7 @@ export interface IotaWalletMobileTypes {
         eventTypes: EventType[];
         messageHandler: number;
     }, callback: (message: {
-        error: {
-            cause: unknown;
-        };
+        error: Error;
         result: string;
     }) => void): Promise<void>;
     destroy(options: {
