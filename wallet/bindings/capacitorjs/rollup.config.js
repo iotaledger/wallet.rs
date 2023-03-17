@@ -5,14 +5,14 @@ export default [{
   input: ['dist/esm/index.js'],
   output: [
     {
-    file: 'dist/plugin.js',
-    format: 'iife',
-    name: 'capacitorPlugin',
-    globals: {
-      '@capacitor/core': 'capacitorExports',
-    },
-    sourcemap: true,
-    inlineDynamicImports: true,
+      file: 'dist/plugin.js',
+      format: 'iife',
+      name: 'capacitorPlugin',
+      globals: {
+        '@capacitor/core': 'capacitorExports',
+      },
+      sourcemap: true,
+      inlineDynamicImports: true,
     },
   ],
   external: ['@capacitor/core'],
@@ -21,11 +21,7 @@ export default [{
   input: ['dist/esm/lib/index.js'],
   output: [
     {
-    file: 'dist/api.js',
-    // format: 'iife',
-    // globals: {
-    //   '@capacitor/core': 'capacitorExports',
-    // },
+      file: 'dist/api.js',
     },
   ],
   external: ['@capacitor/core'],
