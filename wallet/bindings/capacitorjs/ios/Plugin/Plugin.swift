@@ -141,9 +141,6 @@ public class IotaWalletMobile: CAPPlugin {
         // where it will be converted back to object type ready to use
         let context = Unmanaged<ContextResult>.passRetained(contextResult).toOpaque()
         
-        let error_buffer: UnsafeMutablePointer<CChar>? = nil
-        let error_buffer_size = 0
-        
         iota_send_message(messageHandler, message.cString(using: .utf8), contextResult.callback, context)
     }
 
