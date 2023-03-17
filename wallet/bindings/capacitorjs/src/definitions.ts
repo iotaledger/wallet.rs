@@ -22,15 +22,6 @@ export interface IotaWalletMobileTypes {
         };
         result: string;
     }) => void): Promise<void>;
-    clearListeners(options: {
-        eventTypes: EventType[];
-        messageHandler: number;
-    }, callback: (message: {
-        error: {
-            cause: unknown;
-        };
-        result: string;
-    }) => void): Promise<void>;
     destroy(options: {
         messageHandler: number;
     }): Promise<void>;
