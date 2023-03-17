@@ -9,6 +9,5 @@ CAP_PLUGIN(IotaWalletMobile, "IotaWalletMobile",
     CAP_PLUGIN_METHOD(messageHandlerNew, CAPPluginReturnPromise);
     CAP_PLUGIN_METHOD(sendMessage, CAPPluginReturnPromise);
     CAP_PLUGIN_METHOD(listen, CAPPluginReturnCallback);
-    CAP_PLUGIN_METHOD(clearListeners, CAPPluginReturnPromise);
     CAP_PLUGIN_METHOD(destroy, CAPPluginReturnPromise);
 )
