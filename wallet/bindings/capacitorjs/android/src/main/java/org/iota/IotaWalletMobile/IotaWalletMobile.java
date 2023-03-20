@@ -95,7 +95,7 @@ public class IotaWalletMobile extends Plugin {
             ret.put("messageHandler", messageHandlerPointer);
             call.resolve(ret);
         } catch (Exception e) {
-            e.printStackTrace();
+            call.reject(ex.getMessage() + Arrays.toString(ex.getStackTrace()))
         }
     }
 
