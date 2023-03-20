@@ -23,8 +23,7 @@ import JavaOutput from "../../libraries/java/how_to/outputs_and_transactions/_06
 import RustCode from "../../libraries/rust/how_to/outputs_and_transactions/_06_check_unlock_conditions/_code_sample.mdx";
 import RustOutput from "../../libraries/rust/how_to/outputs_and_transactions/_06_check_unlock_conditions/_expected_output.md";
 
-Outputs may have multiple [UnlockConditions](https://github.com/iotaledger/tips/blob/main/tips/TIP-0018/tip-0018.md#unlock-conditions) which may require returning some or all of the amount, which could expire if not claimed in time, or which may not be unlockable for a very long time.
-
+Outputs may have multiple [UnlockConditions](https://wiki.iota.org/shimmer/tips/tips/TIP-0018/#unlock-conditions), which may require [returning some or all of the transferred amount](https://wiki.iota.org/shimmer/tips/tips/TIP-0018/#storage-deposit-return-unlock-condition). The outputs could also [expire if not claimed in time](https://wiki.iota.org/shimmer/tips/tips/TIP-0018/#expiration-unlock-condition), or may not be [unlockable for a predefined period](https://wiki.iota.org/shimmer/tips/tips/TIP-0018/#timelock-unlock-condition).
 ## Code Example
 
 The following example will:
