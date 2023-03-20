@@ -20,7 +20,7 @@ async function run() {
         };
 
         // provide event type to filter only for events with this type
-        manager.listen(['TransactionProgress'], callback);
+        await manager.listen(['TransactionProgress'], callback);
 
         // send transaction
         await account.sendMicroTransaction([
