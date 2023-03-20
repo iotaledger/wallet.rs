@@ -30,4 +30,4 @@ if len(output['unlockConditions']) == 1 and output['unlockConditions'][0]['type'
         controlled_by_account = True
 
 print(
-    f'The output has only an address unlock condition and that the address is from the account: {controlled_by_account}')
+    f'The output has only an address unlock condition and the address is from the account: {controlled_by_account}')

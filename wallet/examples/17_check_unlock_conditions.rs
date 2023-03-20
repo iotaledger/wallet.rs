@@ -42,7 +42,7 @@ async fn main() -> Result<()> {
     };
 
     println!(
-        "The output has only an address unlock condition and that the address is from the account: {controlled_by_account:?}"
+        "The output has only an address unlock condition and the address is from the account: {controlled_by_account:?}"
     );
 
     Ok(())
