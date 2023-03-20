@@ -25,12 +25,13 @@ impl<T: ToString> History<T> for AccountHistory {
     }
 
     fn write(&mut self, val: &T) {
-        if self.history.contains(&val.to_string()) {
+        let entry = val.to_string();
+        if self.history.contains(&entry) {
             return;
         }
         if self.history.len() == self.max {
             self.history.pop_back();
         }
-        self.history.push_front(val.to_string());
+        self.history.push_front(entry);
     }
 }
