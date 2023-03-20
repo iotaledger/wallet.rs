@@ -15,7 +15,7 @@
 
 @implementation Wallet
 
-+ (BOOL) init_logger:(NSString*) file_name level_filter: (nullable NSString*) level_filter {
+- (BOOL) init_logger:(NSString*) file_name level_filter: (nullable NSString*) level_filter {
     return iota_init_logger(file_name.UTF8String, level_filter.UTF8String) == 0 ? YES : NO;
 }
 

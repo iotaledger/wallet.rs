@@ -1,0 +1,25 @@
+// Copyright 2021 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
+{
+  "compilerOptions": {
+    "allowUnreachableCode": true,
+    "declaration": true,
+    "esModuleInterop": true,
+    "lib": ["dom", "esnext"],
+    "module": "esnext",
+    "moduleResolution": "node",
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "outDir": "dist/esm",
+    "pretty": true,
+    "sourceMap": false,
+    "target": "es2017"
+  },
+  "files": [
+    "src/index.ts",
+    "src/definitions.ts",
+  ],
+  "include": ["src/*", "src/lib/**/*", "src/types/**/*"]
+}

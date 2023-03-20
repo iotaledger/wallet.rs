@@ -76,7 +76,9 @@ public class NativeApi {
     private static native void createMessageHandler(String config) throws Exception;
 
     // Destroys account handle
-    protected static native void destroyHandle();
+    // For Firefly mobile, we sent clearListeners event by sendMessage
+    // so we need to call destroyHandle mannualy from Capacitor binding plugin.
+    public static native void destroyHandle();
 
     private static native String sendMessage(String command);
 
