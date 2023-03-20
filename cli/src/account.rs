@@ -6,6 +6,7 @@ use dialoguer::Input;
 use iota_wallet::account::AccountHandle;
 
 use crate::{
+    account_history::AccountHistory,
     command::account::{
         addresses_command, balance_command, burn_native_token_command, burn_nft_command, claim_command,
         consolidate_command, create_alias_outputs_command, decrease_native_token_command,
@@ -22,8 +23,9 @@ use crate::{
 
 // loop on the account prompt
 pub async fn account_prompt(account_handle: AccountHandle) -> Result<(), Error> {
+    let mut history = AccountHistory::default();
     loop {
-        match account_prompt_internal(account_handle.clone()).await {
+        match account_prompt_internal(account_handle.clone(), &mut history).await {
             Ok(true) => {
                 return Ok(());
             }
@@ -36,13 +38,18 @@ pub async fn account_prompt(account_handle: AccountHandle) -> Result<(), Error> 
 }
 
 // loop on the account prompt
-pub async fn account_prompt_internal(account_handle: AccountHandle) -> Result<bool, Error> {
+pub async fn account_prompt_internal(
+    account_handle: AccountHandle,
+    history: &mut AccountHistory,
+) -> Result<bool, Error> {
     let alias = {
         let account = account_handle.read().await;
         account.alias().clone()
     };
-    let command: String = Input::new().with_prompt(format!("Account \"{alias}\"")).interact()?;
-
+    let command: String = Input::new()
+        .with_prompt(format!("Account \"{}\"", alias))
+        .history_with(history)
+        .interact_text()?;
     match command.as_str() {
         "h" => {
             if let Err(err) = AccountCli::try_parse_from(vec!["Account:", "help"]) {
