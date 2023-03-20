@@ -1,5 +1,12 @@
 # Changelog
 
+## \[2.0.3-rc.28]
+
+- Made account manager `listen` async.
+  - [58713ded](https://github.com/iotaledger/wallet.rs/commit/58713ded6cb889257784359f047a637e1fff0fbe) Added listen to wasm ([#1879](https://github.com/iotaledger/wallet.rs/pull/1879)) on 2023-03-20
+- Add `PlaceholderSecretManager` type;
+  - [58713ded](https://github.com/iotaledger/wallet.rs/commit/58713ded6cb889257784359f047a637e1fff0fbe) Added listen to wasm ([#1879](https://github.com/iotaledger/wallet.rs/pull/1879)) on 2023-03-20
+
 ## \[2.0.3-rc.27]
 
 - Fix deadlock when syncing and another function which locked the storage_manager are running at the same time
