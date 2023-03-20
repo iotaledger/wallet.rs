@@ -56,7 +56,7 @@ describe('Wallet methods', () => {
             clientOptions: {
                 nodes: [],
             },
-            secretManager: 'placeholder'
+            secretManager: 'placeholder',
         });
 
         const mnemonic = await manager.generateMnemonic();
