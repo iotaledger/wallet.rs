@@ -1,5 +1,5 @@
 /**
- * In this example we check if an output has only an address unlock condition and that its address is from the account.
+ * In this example we check if an output has only an address unlock condition and that the address is from the account.
  */
 
 const getUnlockedManager = require('./account-manager');
@@ -26,7 +26,7 @@ async function run() {
                 controlledByAccount = true
         }
 
-        console.log("The output has only an address unlock condition and that its address is from the account: " + controlledByAccount)
+        console.log("The output has only an address unlock condition and that the address is from the account: " + controlledByAccount)
 
     } catch (error) {
         console.log('Error: ', error);

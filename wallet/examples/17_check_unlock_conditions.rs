@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 //! cargo run --example check_unlock_conditions --release
-// In this example we check if an output has only an address unlock condition and that its address is from the account.
+// In this example we check if an output has only an address unlock condition and that the address is from the account.
 
 use iota_client::block::output::{unlock_condition::AddressUnlockCondition, BasicOutputBuilder, UnlockCondition};
 use iota_wallet::{account::types::AddressWrapper, account_manager::AccountManager, Result};
@@ -42,7 +42,7 @@ async fn main() -> Result<()> {
     };
 
     println!(
-        "The output has only an address unlock condition and that its address is from the account: {controlled_by_account:?}"
+        "The output has only an address unlock condition and that the address is from the account: {controlled_by_account:?}"
     );
 
     Ok(())

@@ -8,7 +8,7 @@ the library.
 The wallet.rs library has numerous [examples](https://github.com/iotaledger/wallet.rs/tree/develop/wallet/bindings/python/examples)
 you can run to get acquainted with the library. After you have followed the instructions to
 [install the library](./../getting_started/python#install-the-library), you can run any example with the following
-command from the `bindings/python` directory:
+command from the `wallet/bindings/python` directory:
 
 ```bash
 python3 example/[example file name]

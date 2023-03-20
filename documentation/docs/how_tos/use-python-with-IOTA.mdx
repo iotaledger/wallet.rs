@@ -31,7 +31,7 @@ In this guide we will rename the `iota-wallet` to `iota-wallet-production`, but 
 
 :::
 
-In `bindings/python/native/Cargo.toml` change both names:
+In `wallet/bindings/python/native/Cargo.toml` change both names:
 
  ```diff
 [package]
@@ -59,7 +59,7 @@ In `bindings/python/native/Cargo.toml` change both names:
    .
  ```
 
-In `bindings/python/native/setup.py`:
+In `wallet/bindings/python/native/setup.py`:
 ```diff
 setup(
 -   name="iota_wallet",
@@ -70,7 +70,7 @@ setup(
     .
 ```
 
-And in `bindings/python/native/src/lib.rs`:
+And in `wallet/bindings/python/native/src/lib.rs`:
 ```diff
 /// IOTA Wallet implemented in Rust and binded by Python.
 #[pymodule]

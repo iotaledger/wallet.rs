@@ -52,7 +52,7 @@ public class CheckUnlockConditions {
         }
 
         // Print the balance.
-        System.out.println("The output has only an address unlock condition and that its address is from the account: " + controlledByAccount);
+        System.out.println("The output has only an address unlock condition and that the address is from the account: " + controlledByAccount);
 
         // In case you are done and don't need the wallet instance anymore you can destroy the instance to clean up memory.
         // For this, check out the ´DestroyWallet.java´ example.
