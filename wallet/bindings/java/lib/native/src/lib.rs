@@ -1,6 +1,8 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+#![allow(clippy::unused_unit)]
+
 use std::{convert::TryFrom, sync::Mutex};
 
 use iota_wallet::{

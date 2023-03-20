@@ -1,13 +1,11 @@
-[workspace]
-
 [package]
-name = "iota-wallet"
+name = "iota-wallet-swift"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+publish = false
 
 [lib]
+name = "iota_wallet"
 crate-type = [ "cdylib", "staticlib" ]      # Creates dynamic lib
 
 [dependencies]
@@ -15,6 +13,6 @@ iota-wallet = { path = "../../", features = [ "message_interface", "events", "ro
 
 futures =  { version = "0.3.26", default-features = false }
 once_cell = { version = "1.17.1", default-features = false }
-serde = { version = "1.0.152", default-features = false, features = [ "derive" ] }
-serde_json = { version = "1.0.93", default-features = false }
-tokio = { version = "1.25.0", default-features = false }
+serde = { version = "1.0.154", default-features = false, features = [ "derive" ] }
+serde_json = { version = "1.0.94", default-features = false }
+tokio = { version = "1.26.0", default-features = false }

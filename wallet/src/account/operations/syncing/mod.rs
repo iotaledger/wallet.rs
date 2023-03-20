@@ -48,14 +48,41 @@ impl AccountHandle {
             return self.balance().await;
         }
 
-        let addresses_to_sync = self.get_addresses_to_sync(&options).await?;
+        self.sync_internal(&options).await?;
+
+        // Sync transactions after updating account with outputs, so we can use them to check the transaction
+        // status
+        if options.sync_pending_transactions {
+            let confirmed_tx_with_unknown_output = self.sync_pending_transactions().await?;
+            // Sync again if we don't know the output yet, to prevent having no unspent outputs after syncing
+            if confirmed_tx_with_unknown_output {
+                log::debug!("[SYNC] a transaction for which no output is known got confirmed, syncing outputs again");
+                self.sync_internal(&options).await?;
+            }
+        };
+
+        let account_balance = self.balance().await?;
+        // Update last_synced mutex
+        let time_now = SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .expect("time went backwards")
+            .as_millis();
+        *last_synced = time_now;
+        log::debug!("[SYNC] finished syncing in {:.2?}", syc_start_time.elapsed());
+        Ok(account_balance)
+    }
+
+    async fn sync_internal(&self, options: &SyncOptions) -> crate::Result<()> {
+        log::debug!("[SYNC] sync_internal");
+
+        let addresses_to_sync = self.get_addresses_to_sync(options).await?;
         log::debug!("[SYNC] addresses_to_sync {}", addresses_to_sync.len());
 
         let (spent_or_not_synced_output_ids, addresses_with_unspent_outputs, outputs_data): (
             Vec<OutputId>,
             Vec<AddressWithUnspentOutputs>,
             Vec<OutputData>,
-        ) = self.request_outputs_recursively(addresses_to_sync, &options).await?;
+        ) = self.request_outputs_recursively(addresses_to_sync, options).await?;
 
         // Request possible spent outputs
         log::debug!("[SYNC] spent_or_not_synced_outputs: {spent_or_not_synced_output_ids:?}");
@@ -64,8 +91,8 @@ impl AccountHandle {
             .try_get_outputs_metadata(spent_or_not_synced_output_ids.clone())
             .await?;
 
-        // Add the output response to the output ids, the output response is optional, because an output could be pruned
-        // and then we can't get the metadata
+        // Add the output response to the output ids, the output response is optional, because an output could be
+        // pruned and then we can't get the metadata
         let mut spent_or_unsynced_output_metadata_map: HashMap<OutputId, Option<OutputMetadataDto>> =
             spent_or_not_synced_output_ids.into_iter().map(|o| (o, None)).collect();
         for output_metadata_response in spent_or_unsynced_output_metadata_responses {
@@ -102,24 +129,9 @@ impl AccountHandle {
             addresses_with_unspent_outputs,
             outputs_data,
             spent_or_unsynced_output_metadata_map,
-            &options,
+            options,
         )
-        .await?;
-
-        // Sync transactions after updating account with outputs, so we can use them to check the transaction status
-        if options.sync_pending_transactions {
-            self.sync_pending_transactions().await?;
-        };
-
-        let account_balance = self.balance().await?;
-        // Update last_synced mutex
-        let time_now = SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .expect("time went backwards")
-            .as_millis();
-        *last_synced = time_now;
-        log::debug!("[SYNC] finished syncing in {:.2?}", syc_start_time.elapsed());
-        Ok(account_balance)
+        .await
     }
 
     // First request all outputs directly related to the ed25519 addresses, then for each nft and alias output we got,

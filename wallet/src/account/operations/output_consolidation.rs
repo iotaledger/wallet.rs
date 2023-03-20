@@ -74,12 +74,12 @@ impl AccountHandle {
         log::debug!("[OUTPUT_CONSOLIDATION] consolidating outputs if needed");
         #[cfg(feature = "participation")]
         let voting_output = self.get_voting_output().await?;
-        let account = self.read().await;
-        let account_addresses = &account.addresses_with_unspent_outputs[..];
         let current_time = self.client.get_time_checked().await?;
         let token_supply = self.client.get_token_supply().await?;
-
         let mut outputs_to_consolidate = Vec::new();
+        let account = self.read().await;
+        let account_addresses = &account.addresses_with_unspent_outputs[..];
+
         for (output_id, output_data) in account.unspent_outputs() {
             #[cfg(feature = "participation")]
             if let Some(ref voting_output) = voting_output {

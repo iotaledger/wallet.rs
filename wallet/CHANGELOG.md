@@ -19,7 +19,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security -->
 
-## 1.0.0-rc.6 - 2023-XX-XX
+## 1.0.0-rc.7 - 2023-XX-XX
+
+### Changed
+
+- Resync outputs if a transaction got confirmed between syncing outputs and pending transactions to prevent not having unspent outputs afterwards;
+
+### Fixed
+
+- `BaseCoinBalance::available` can't underflow anymore;
+
+## 1.0.0-rc.6 - 2023-03-09
 
 ### Added
 
@@ -40,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   contains a `ParticipationEventRegistrationOptions` and expects a `ParticipationEvents` response;
 - `AccountMethod::GetParticipationEventIds` now also contains a `Node`;
 - Custom `Serialize` implementation for `Error`;
+- Reduced `MIN_SYNC_INTERVAL`;
 - Made `TransactionOptionsDto`, `ReturnStrategy` and `MintTokenTransactionDto` pub reachable;
 
 ### Removed
@@ -53,6 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `prepare_nft_output` uses newly provided tag/metadata instead of previous ones from unspent output;
 - `Account::claim_outputs()` when the account has no basic outputs available;
 - SDR amount in `Account::prepare_output()`;
+- Address for the amount of expired NFTs that get burned with `Account::burn_nft()`;
 
 ## 1.0.0-rc.5 - 2023-02-09
 

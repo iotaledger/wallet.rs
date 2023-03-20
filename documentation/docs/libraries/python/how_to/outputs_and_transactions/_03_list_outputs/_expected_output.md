@@ -29,7 +29,7 @@ Outputs:[
 			'type':0,
 			'pubKeyHash':'0xf4d94c9f4e63d553c81e644225fa3bbc412f820c4eafd495aeb0bb05a29922b2'
 		},
-		'networkId':'8342982141227064571',
+		'networkId':'1856588631910923207',
 		'remainder':False,
 		'chain':[
 			{
@@ -110,7 +110,7 @@ Unspent outputs:[
 			'type':0,
 			'pubKeyHash':'0xf4d94c9f4e63d553c81e644225fa3bbc412f820c4eafd495aeb0bb05a29922b2'
 		},
-		'networkId':'8342982141227064571',
+		'networkId':'1856588631910923207',
 		'remainder':False,
 		'chain':[
 			{

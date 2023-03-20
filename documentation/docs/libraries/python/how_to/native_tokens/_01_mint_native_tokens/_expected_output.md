@@ -40,7 +40,7 @@ Sent transaction:{
 			'type':6,
 			'essence':{
 				'type':1,
-				'networkId':'8342982141227064571',
+				'networkId':'1856588631910923207',
 				'inputs':[
 					{
 						'type':0,
@@ -163,7 +163,7 @@ Sent transaction:{
 		'inclusionState':'Pending',
 		'timestamp':'1665917714656',
 		'transactionId':'0x9d1e61384fc78777c8db475a3d6eaec6465c136dc3ce586ee46a9453aa3dfdc4',
-		'networkId':'8342982141227064571',
+		'networkId':'1856588631910923207',
 		'incoming':False,
 		'note':None
 	}

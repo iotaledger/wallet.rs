@@ -5,7 +5,10 @@ use iota_client::{
     api::input_selection::Burn,
     block::{
         address::{Address, NftAddress},
-        output::{unlock_condition::UnlockCondition, BasicOutputBuilder, NftId, Output, OutputId},
+        output::{
+            unlock_condition::{AddressUnlockCondition, UnlockCondition},
+            BasicOutputBuilder, NftId, Output, OutputId,
+        },
     },
 };
 
@@ -73,6 +76,7 @@ impl AccountHandle {
     async fn output_id_and_basic_output_for_nft(&self, nft_id: NftId) -> crate::Result<(OutputId, Output)> {
         let account = self.read().await;
         let token_supply = self.client.get_token_supply().await?;
+        let current_time = self.client.get_time_checked().await?;
 
         let (output_id, nft_output) = account
             .unspent_outputs()
@@ -89,15 +93,13 @@ impl AccountHandle {
             })
             .ok_or(Error::NftNotFoundInUnspentOutputs)?;
 
-        let address_unlock_condition = nft_output
+        let unlock_address = nft_output
             .unlock_conditions()
-            .address()
-            .expect("nft output needs to have an address unlock condition")
-            .clone();
+            .locked_address(nft_output.address(), current_time);
 
         let basic_output = Output::Basic(
             BasicOutputBuilder::new_with_amount(nft_output.amount())?
-                .add_unlock_condition(UnlockCondition::Address(address_unlock_condition))
+                .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(*unlock_address)))
                 .with_native_tokens(nft_output.native_tokens().clone())
                 .finish(token_supply)?,
         );
