@@ -1,0 +1,66 @@
+---
+title: Check Unlock Conditions
+description: 'How to check unlock conditions of an output.'
+image: /img/logo/iota_mark_light.png
+keywords:
+- how to
+- check unlock conditions
+- output
+- nodejs
+- python
+- java
+- rust
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import NodejsCode from "../../libraries/nodejs/how_to/outputs_and_transactions/_06_check_unlock_conditions/_code_sample.mdx";
+import NodejsOutput from "../../libraries/nodejs/how_to/outputs_and_transactions/_06_check_unlock_conditions/_expected_output.md";
+import PythonCode from "../../libraries/python/how_to/outputs_and_transactions/_06_check_unlock_conditions/_code_sample.mdx";
+import PythonOutput from "../../libraries/python/how_to/outputs_and_transactions/_06_check_unlock_conditions/_expected_output.md";
+import JavaCode from "../../libraries/java/how_to/outputs_and_transactions/_06_check_unlock_conditions/_code_sample.mdx";
+import JavaOutput from "../../libraries/java/how_to/outputs_and_transactions/_06_check_unlock_conditions/_expected_output.md";
+import RustCode from "../../libraries/rust/how_to/outputs_and_transactions/_06_check_unlock_conditions/_code_sample.mdx";
+import RustOutput from "../../libraries/rust/how_to/outputs_and_transactions/_06_check_unlock_conditions/_expected_output.md";
+
+Outputs may have multiple [UnlockConditions](https://wiki.iota.org/shimmer/tips/tips/TIP-0018/#unlock-conditions), which may require [returning some or all of the transferred amount](https://wiki.iota.org/shimmer/tips/tips/TIP-0018/#storage-deposit-return-unlock-condition). The outputs could also [expire if not claimed in time](https://wiki.iota.org/shimmer/tips/tips/TIP-0018/#expiration-unlock-condition), or may not be [unlockable for a predefined period](https://wiki.iota.org/shimmer/tips/tips/TIP-0018/#timelock-unlock-condition).
+## Code Example
+
+The following example will:
+
+1. Create an account manager.
+2. Get Alice's account which was [created in the first guide](../accounts_and_addresses/01_create_a_wallet_account.mdx).
+3. Check if an output has only an address unlock condition and that the address is from the account.
+
+<Tabs groupId="language">
+    <TabItem value="rust" label="Rust">
+        <RustCode/>
+    </TabItem>
+    <TabItem value="nodejs" label="Nodejs">
+        <NodejsCode/>
+    </TabItem>
+    <TabItem value="python" label="Python">
+        <PythonCode/>
+    </TabItem>
+    <TabItem value="java" label="Java">
+        <JavaCode/>
+    </TabItem>
+</Tabs>
+
+## Expected Output
+
+<Tabs groupId="language">
+    <TabItem value="rust" label="Rust">
+        <RustOutput/>
+    </TabItem>
+    <TabItem value="nodejs" label="Nodejs">
+        <NodejsOutput/>
+    </TabItem>
+    <TabItem value="python" label="Python">
+        <PythonOutput/>
+    </TabItem>
+    <TabItem value="java" label="Java">
+        <JavaOutput/>
+    </TabItem>
+</Tabs>
+

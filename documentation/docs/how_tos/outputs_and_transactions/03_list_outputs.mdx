@@ -15,6 +15,7 @@ keywords:
 
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import WarningUnlockConditions from '../../_admonitions/_warning_unlock_conditions.md'
 import NodejsCode from "../../libraries/nodejs/how_to/outputs_and_transactions/_12a_list_outputs/_code_sample.mdx";
 import NodejsOutput from "../../libraries/nodejs/how_to/outputs_and_transactions/_12a_list_outputs/_expected_output.md";
 import PythonCode from "../../libraries/python/how_to/outputs_and_transactions/_03_list_outputs/_code_sample.mdx";
@@ -33,6 +34,8 @@ The following example will:
 1. Create an account manager.
 2. Get Alice's account which was [created in the first guide](../accounts_and_addresses/01_create_a_wallet_account.mdx).
 3. List all the outputs related to Alice's account.
+
+<WarningUnlockConditions/>
 
 <Tabs groupId="language">
     <TabItem value="rust" label="Rust">

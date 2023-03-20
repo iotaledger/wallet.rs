@@ -12,7 +12,7 @@ book
 /.idea
 alice-database
 *.log
-/walletdb
+*/walletdb
 /pingdb
 /pongdb
 offline_walletdb

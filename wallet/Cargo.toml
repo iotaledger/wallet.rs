@@ -164,6 +164,10 @@ path = "examples/16_destroy_alias.rs"
 required-features = [ "stronghold" ]
 
 [[example]]
+name = "check_unlock_conditions"
+path = "examples/17_check_unlock_conditions.rs"
+
+[[example]]
 name = "accounts"
 path = "examples/accounts.rs"
 
