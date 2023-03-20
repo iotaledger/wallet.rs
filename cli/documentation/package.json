@@ -26,6 +26,7 @@
         "trim": "^0.0.3",
         "nth-check": "^2.0.1",
         "terser": "^5.14.2",
-        "dns-packet": "^5.4.0"
+        "dns-packet": "^5.4.0",
+        "webpack": "^5.76.0"
     }
 }
