@@ -104,6 +104,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
+        node: ["16"]
 
     steps:
       - uses: actions/checkout@v3
@@ -125,10 +126,12 @@ jobs:
         run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
         if: matrix.os == 'windows-latest'
 
-      - name: Set up Node.js 14.x
+      - name: Set Up Node.js ${{ matrix.node }} and Yarn Cache
         uses: actions/setup-node@v2
         with:
-          node-version: "14.x"
+          node-version: ${{ matrix.node }}
+          cache: yarn
+          cache-dependency-path: wallet/bindings/nodejs/yarn.lock
 
         # Temporary fix for "ValueError: invalid mode: 'rU' while trying to load binding.gyp"
         # See <PR link>

@@ -84,7 +84,7 @@ jobs:
       - name: Run Yarn Test
         if: ${{ startsWith(matrix.os, 'ubuntu') }}
         working-directory: wallet/bindings/wasm/
-        run: yarn test
+        run: yarn test 
 
       - name: Run Yarn Test
         if: ${{ !startsWith(matrix.os, 'ubuntu') }}
