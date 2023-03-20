@@ -65,7 +65,7 @@ describe('Wallet methods', () => {
 });
 
 // Tests requiring a local node
-describe.skip('local node tests', () => {
+describe('local node tests', () => {
     jest.setTimeout(10000);
     it('account', async () => {
         await run();
