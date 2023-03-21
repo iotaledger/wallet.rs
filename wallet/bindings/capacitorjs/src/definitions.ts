@@ -3,6 +3,7 @@
 
 import type { EventType, AccountManagerOptions } from './types';
 export interface IotaWalletMobileTypes {
+    initLogger(path: string): Promise<void>;
     messageHandlerNew(messageOptions: AccountManagerOptions): Promise<{
         messageHandler: number;
     }>;
