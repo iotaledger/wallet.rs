@@ -9,7 +9,10 @@ const moveArtifact = () => {
     if (!existsSync(path)) {
         mkdirSync(path, { recursive: true });
     }
-    renameSync(resolve(__dirname, '../index.node'), resolve(path, 'index.node'));
+    renameSync(
+        resolve(__dirname, '../index.node'),
+        resolve(path, 'index.node'),
+    );
 };
 
 module.exports = moveArtifact;
