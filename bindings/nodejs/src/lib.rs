@@ -44,7 +44,7 @@ fn account_instances() -> &'static AccountInstanceMap {
 }
 
 /// Drop all accounts and storages.
-pub fn drop_all(mut cx: FunctionContext<'_>) -> JsResult<JsUndefined> {
+pub fn drop_accounts_and_storages(mut cx: FunctionContext<'_>) -> JsResult<JsUndefined> {
     let (sender, receiver) = channel();
     crate::RUNTIME.spawn(async move {
         account_instances().write().await.clear();
@@ -142,7 +142,7 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
 
     // Account manager methods.
     cx.export_function("accountManagerNew", classes::account_manager::account_manager_new)?;
-    cx.export_function("dropAll", drop_all)?;
+    cx.export_function("dropAccountsAndStorages", drop_accounts_and_storages)?;
     cx.export_function("getAccount", classes::account_manager::get_account)?;
     cx.export_function("getAccounts", classes::account_manager::get_accounts)?;
     cx.export_function("removeAccount", classes::account_manager::remove_account)?;
