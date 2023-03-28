@@ -33,6 +33,7 @@ use tokio::{runtime::Runtime, sync::RwLock};
 
 use iota_wallet::remove_all_storages;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
+
 type AccountInstanceMap = Arc<RwLock<HashMap<String, AccountHandle>>>;
 type SyncedAccountHandle = Arc<RwLock<SyncedAccount>>;
 type SyncedAccountInstanceMap = Arc<RwLock<HashMap<String, SyncedAccountHandle>>>;
