@@ -60,7 +60,9 @@ class Account {
     }
 
     generateAddresses(amount) {
-        return generateAddresses.apply(this.account, [amount]).map((address) => JSON.parse(address));
+        return generateAddresses
+            .apply(this.account, [amount])
+            .map((address) => JSON.parse(address));
     }
 
     latestAddress() {

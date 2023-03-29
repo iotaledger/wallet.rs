@@ -2,55 +2,55 @@
 // SPDX-License-Identifier: Apache-2.0
 
 function promisify(fn) {
-  return function () {
-    return new Promise((resolve, reject) =>
-      fn.apply(this, [
-        ...Array.from(arguments),
-        (err, data) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(data);
-          }
-        },
-      ]),
-    );
-  };
+    return function () {
+        return new Promise((resolve, reject) =>
+            fn.apply(this, [
+                ...Array.from(arguments),
+                (err, data) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(data);
+                    }
+                },
+            ]),
+        );
+    };
 }
 
 class RemainderValueStrategy {
-  changeAddress() {
-    return {
-      strategy: 'ChangeAddress',
-      value: null,
-    };
-  }
+    changeAddress() {
+        return {
+            strategy: 'ChangeAddress',
+            value: null,
+        };
+    }
 
-  reuseAddress() {
-    return {
-      strategy: 'ReuseAddress',
-      value: null,
-    };
-  }
+    reuseAddress() {
+        return {
+            strategy: 'ReuseAddress',
+            value: null,
+        };
+    }
 
-  accountAddress(address) {
-    return {
-      strategy: 'AccountAddress',
-      value: address,
-    };
-  }
+    accountAddress(address) {
+        return {
+            strategy: 'AccountAddress',
+            value: address,
+        };
+    }
 }
 
 class OutputKind {
-  constructor() {}
+    constructor() {}
 
-  static signatureLockedSingle() {
-    return 'SignatureLockedSingle';
-  }
+    static signatureLockedSingle() {
+        return 'SignatureLockedSingle';
+    }
 
-  static signatureLockedDustAllowance() {
-    return 'SignatureLockedDustAllowance';
-  }
+    static signatureLockedDustAllowance() {
+        return 'SignatureLockedDustAllowance';
+    }
 }
 
 module.exports.promisify = promisify;

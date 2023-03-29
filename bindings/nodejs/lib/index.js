@@ -8,7 +8,7 @@ const amm = require('./messages/accountManager.js');
 const am = require('./binding/accountManager.js');
 const { RemainderValueStrategy, OutputKind } = require('./utils.js');
 
-let { initLogger } = addon;
+let { initLogger, dropAccountsAndStorages } = addon;
 let { MessageHandler } = mh;
 let { EventListener } = el;
 let { AccountManager } = am;
@@ -23,22 +23,23 @@ let { AccountManagerForMessages } = amm;
 // }));
 
 module.exports = {
-  MessageHandler,
-  AccountManagerForMessages,
-  EventListener,
-  AccountManager,
-  RemainderValueStrategy,
-  OutputKind,
-  initLogger: (config) => initLogger(JSON.stringify(config)),
-  SignerType: {
-    Stronghold: 1,
-  },
-  MessageType: {
-    Received: 1,
-    Sent: 2,
-    Failed: 3,
-    Unconfirmed: 4,
-    Value: 5,
-    Confirmed: 6,
-  },
+    MessageHandler,
+    AccountManagerForMessages,
+    EventListener,
+    AccountManager,
+    dropAccountsAndStorages,
+    RemainderValueStrategy,
+    OutputKind,
+    initLogger: (config) => initLogger(JSON.stringify(config)),
+    SignerType: {
+        Stronghold: 1,
+    },
+    MessageType: {
+        Received: 1,
+        Sent: 2,
+        Failed: 3,
+        Unconfirmed: 4,
+        Value: 5,
+        Confirmed: 6,
+    },
 };

@@ -7,11 +7,6 @@ mod classes;
 use classes::*;
 pub mod types;
 
-use neon::prelude::*;
-use once_cell::sync::Lazy;
-use std::{collections::HashMap, sync::Arc};
-use tokio::{runtime::Runtime, sync::RwLock};
-
 pub use iota_wallet::{
     account::{AccountHandle, SyncedAccount},
     account_manager::{AccountManager, DEFAULT_STORAGE_FOLDER},
@@ -28,7 +23,15 @@ pub use iota_wallet::{
     message::{IndexationPayload, MessageId, RemainderValueStrategy, Transfer, TransferOutput},
     Error,
 };
+use neon::prelude::*;
+use once_cell::sync::Lazy;
+use std::{
+    collections::HashMap,
+    sync::{mpsc::channel, Arc},
+};
+use tokio::{runtime::Runtime, sync::RwLock};
 
+use iota_wallet::remove_all_storages;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 
 type AccountInstanceMap = Arc<RwLock<HashMap<String, AccountHandle>>>;
@@ -39,6 +42,20 @@ type SyncedAccountInstanceMap = Arc<RwLock<HashMap<String, SyncedAccountHandle>>
 fn account_instances() -> &'static AccountInstanceMap {
     static INSTANCES: Lazy<AccountInstanceMap> = Lazy::new(Default::default);
     &INSTANCES
+}
+
+/// Drop all accounts and storages.
+pub fn drop_accounts_and_storages(mut cx: FunctionContext<'_>) -> JsResult<JsUndefined> {
+    let (sender, receiver) = channel();
+    crate::RUNTIME.spawn(async move {
+        account_instances().write().await.clear();
+        synced_account_instances().write().await.clear();
+        remove_all_storages().await;
+        let _ = sender.send(1);
+    });
+
+    let _ = receiver.recv().unwrap();
+    Ok(cx.undefined())
 }
 
 pub(crate) async fn get_account(id: &str) -> AccountHandle {
@@ -126,6 +143,7 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
 
     // Account manager methods.
     cx.export_function("accountManagerNew", classes::account_manager::account_manager_new)?;
+    cx.export_function("dropAccountsAndStorages", drop_accounts_and_storages)?;
     cx.export_function("getAccount", classes::account_manager::get_account)?;
     cx.export_function("getAccounts", classes::account_manager::get_accounts)?;
     cx.export_function("removeAccount", classes::account_manager::remove_account)?;

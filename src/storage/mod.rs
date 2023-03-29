@@ -760,6 +760,12 @@ pub async fn remove(storage_path: &Path) -> Option<String> {
     }
 }
 
+/// Removes all storage instances
+pub async fn remove_all_storages() {
+    let mut instances = INSTANCES.get_or_init(Default::default).write().await;
+    instances.clear();
+}
+
 pub(crate) async fn set_encryption_key(storage_path: &Path, encryption_key: [u8; 32]) -> crate::Result<()> {
     let instances = INSTANCES.get_or_init(Default::default).read().await;
     if let Some(instance) = instances.get(storage_path) {

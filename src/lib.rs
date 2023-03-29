@@ -36,6 +36,7 @@ pub(crate) mod storage;
 pub(crate) mod stronghold;
 
 pub use error::Error;
+pub use storage::remove_all_storages;
 
 pub use storage::remove as remove_storage;
 #[cfg(feature = "stronghold")]

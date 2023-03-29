@@ -5,10 +5,7 @@
 require('dotenv').config();
 
 async function run() {
-    const {
-        AccountManager,
-        RemainderValueStrategy,
-    } = require('@iota/wallet');
+    const { AccountManager, RemainderValueStrategy } = require('@iota/wallet');
 
     const manager = new AccountManager({
         storagePath: './alice-database',
