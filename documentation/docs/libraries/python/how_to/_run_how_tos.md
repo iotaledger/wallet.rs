@@ -1,13 +1,13 @@
 ## Prerequisites
 
-Before you can run the examples, please refer to the [Python Getting Started guide](./../getting_started/python) to install
+Before you can run the examples, please refer to the [Python Getting Started guide](./../../../getting_started/python.mdx) to install
 the library.
 
 ## Run Code Examples
 
 The wallet.rs library has numerous [examples](https://github.com/iotaledger/wallet.rs/tree/develop/wallet/bindings/python/examples)
 you can run to get acquainted with the library. After you have followed the instructions to
-[install the library](./../getting_started/python#install-the-library), you can run any example with the following
+[install the library](./../../../getting_started/python.mdx#install-the-library), you can run any example with the following
 command from the `wallet/bindings/python` directory:
 
 ```bash
