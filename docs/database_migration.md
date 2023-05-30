@@ -4,7 +4,7 @@ Since there are breaking changes we need to migrate the database from wallet.rs.
 
 Source for the following text: https://hackmd.io/Q3yQuUtvQLuis8putA9-aw?view
 
-I have an idea in mind for database migrations when we need to (we might not need them for simple additions that has a [default value](https://serde.rs/attr-default.html)). The idea is simple: store a DB version record on RocksDB (like Bee does), and check that version on initialization. If we see an older version, we must apply the migrations manually, reading the record with the old schema and converting it to the new one. Here's a PoC code:
+I have an idea in mind for database migrations when we need to (we might not need them for simple additions that has a [default value](https://serde.rs/attr-default.html)). The idea is simple: store a DB version record on RocksDB, and check that version on initialization. If we see an older version, we must apply the migrations manually, reading the record with the old schema and converting it to the new one. Here's a PoC code:
 
 - Cargo.toml
 ```toml
