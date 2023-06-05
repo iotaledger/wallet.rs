@@ -3,6 +3,7 @@
   "changes": [
     ".changes/ParticipationEventWithNodes.md",
     ".changes/account-bech32-hrp.md",
+    ".changes/account-manager-listen-async.md",
     ".changes/account-recovery.md",
     ".changes/account-sync-options-default.md",
     ".changes/align-transactions.md",
@@ -45,6 +46,7 @@
     ".changes/participation-rename.md",
     ".changes/participation-types.md",
     ".changes/participationEvents.md",
+    ".changes/placeholderSecretManager.md",
     ".changes/prebuild.md",
     ".changes/prepare-nft-output-features.md",
     ".changes/private-account-meta.md",
