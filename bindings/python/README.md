@@ -11,7 +11,7 @@ For all the optional values, the default values are the same as the ones in the 
 | ------ | ----- | ----------- | ------------------------ |
 | config | `str` | `undefined` | The logger configuration |
 
-The config is the dumped string from the JSON, which key:value pairs are from the [bee logger](https://github.com/iotaledger/bee/blob/dev/bee-common/bee-common/src/logger/config.rs).
+The config is the dumped string from the JSON, which key:value pairs are from the [fern logger](https://github.com/iotaledger/common-rs/blob/main/fern-logger/src/config.rs).
 
 Please check the `example/logger_example.py` to see how to use it.
 
