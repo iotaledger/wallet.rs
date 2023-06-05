@@ -1,1 +1,1 @@
-More advanced examples can be found in the [examples](https://github.com/iotaledger/wallet.rs/tree/develop/bindings/python/examples) folder.
+More advanced examples can be found in the [examples](https://github.com/iotaledger/wallet.rs/tree/develop/wallet/bindings/python/examples) folder.

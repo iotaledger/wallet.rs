@@ -106,7 +106,7 @@ public class CreateAccount {
 
 Now that you are up and running, you can get acquainted with the library using
 its [how-to guides](https://wiki.iota.org/shimmer/wallet.rs/how_tos/run_how_tos/) and the
-repository's [code examples](https://github.com/iotaledger/wallet.rs/tree/develop/bindings/java/examples/src).
+repository's [code examples](https://github.com/iotaledger/wallet.rs/tree/develop/wallet/bindings/java/examples/src).
 
 ## Instead, build everything from scratch yourself:
 

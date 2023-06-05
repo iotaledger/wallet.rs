@@ -1,1 +1,1 @@
-More advanced examples can be found in the [examples](https://github.com/iotaledger/wallet.rs/tree/develop/bindings/java/iota-wallet-java/examples/src) folder.
+More advanced examples can be found in the [examples](https://github.com/iotaledger/wallet.rs/tree/develop/wallet/bindings/java/examples/src) folder.
