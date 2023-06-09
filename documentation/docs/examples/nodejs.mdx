@@ -1,6 +1,6 @@
 ---
 description: Official IOTA Wallet Library Software Node.js examples.
-image: /img/logo/wallet_light.png
+image: /img/logo/logo_dark.svg
 keywords:
 - account
 - address
@@ -64,11 +64,11 @@ One of the key principles behind `Stronghold` based storage is that no one can e
 
 If you also want to store a seed somewhere else, you can use the `AccountManager.generateMnemonic()` method. Using this method generates a random seed. You can also use it before the actual account initialization.
 
-You can find detailed information about seed generation in the [Developer Guide to Chrysalis](https://wiki.iota.org/chrysalis-docs/guides/developer#seed).
+You can find detailed information about seed generation in the [Developer Guide to Chrysalis](https://wiki.iota.org/introduction/welcome/).
 
 ### Accounts
 
-The `wallet.rs` library uses a model of individual accounts to separate individual users or clients from each other. You can generate multiple addresses for each account deterministically. You can find more information about account management in the [Developer Guide to Chrysalis](https://wiki.iota.org/chrysalis-docs/guides/exchange#implementation-guide).
+The `wallet.rs` library uses a model of individual accounts to separate individual users or clients from each other. You can generate multiple addresses for each account deterministically. You can find more information about account management in the [Developer Guide to Chrysalis](https://wiki.iota.org/introduction/how_tos/exchange/).
 
 Once you have created the backend storage, you can create individual accounts for individual users can be created by running the `manager.createAccount()` method:
 
@@ -170,7 +170,7 @@ The `Account.send()` function returns a _wallet message_ that fully describes th
 
 ### Dust Protection
 
-The network uses a [dust protection](https://wiki.iota.org/chrysalis-docs/faq#what-is-dust-protection-and-how-does-it-work) protocol to prevent malicious actors from spamming the network while also keeping track of the unspent amount ( _UTXO_ ).
+The network uses a [dust protection](https://wiki.iota.org/introduction/explanations/faq/#what-is-dust-protection-and-how-does-it-work) protocol to prevent malicious actors from spamming the network while also keeping track of the unspent amount ( _UTXO_ ).
 
 :::info
 

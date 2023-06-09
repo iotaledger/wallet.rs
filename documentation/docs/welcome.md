@@ -1,6 +1,6 @@
 ---
 description: The official IOTA Wallet Library Software can be used to integrate an IOTA Wallet into your application. 
-image: /img/logo/wallet_light.png
+image: /img/logo/logo_dark.svg
 keywords:
 - requirements
 - wallet
@@ -37,10 +37,10 @@ With the `wallet.rs` library, developers no longer need to use a self-generated 
 
 ## IOTA 1.5 (Chrysalis) in a Nutshell
 
-For some background, you can checkout our [Developer Guide to Chrysalis](https://wiki.iota.org/chrysalis-docs/introduction/what_is_chrysalis) which explains all of the main concepts behind the IOTA Chrysalis in detail.
+For some background, you can checkout our [Developer Guide to Chrysalis](https://wiki.iota.org/introduction/explanations/update/what_is_chrysalis/) which explains all of the main concepts behind the IOTA Chrysalis in detail.
 
-You can also read our [Chrysalis documentation](https://wiki.iota.org/chrysalis-docs/guides/overview) to learn the history of versions between IOTA 1.0 and Chrysalis.
+You can also read our [Chrysalis documentation](https://wiki.iota.org/introduction/welcome/) to learn the history of versions between IOTA 1.0 and Chrysalis.
 
 ## Testnet
 
-To join the Chrysalis public devnet, check out our [blog post](https://blog.iota.org/chrysalis-phase-2-testnet-out-now/). You can also learn more about the different Chrysalis components in our [Chrysalis documentation portal](https://wiki.iota.org/chrysalis-docs/welcome/).
+To join the Chrysalis public devnet, check out our [blog post](https://blog.iota.org/chrysalis-phase-2-testnet-out-now/). You can also learn more about the different Chrysalis components in our [Chrysalis documentation portal](https://wiki.iota.org/introduction/welcome/).

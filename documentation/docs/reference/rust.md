@@ -1,6 +1,6 @@
 ---
 description: Official IOTA Wallet Library Software Rust API reference.
-image: /img/logo/wallet_light.png
+image: /img/logo/logo_dark.svg
 keywords:
 - api
 - rust

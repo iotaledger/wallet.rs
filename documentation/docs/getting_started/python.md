@@ -1,6 +1,6 @@
 ---
 description: Getting started with the official IOTA Wallet Library Software Python binding.
-image: /img/logo/wallet_light.png
+image: /img/logo/logo_dark.svg
 keywords:
 - Python
 - install
@@ -14,7 +14,7 @@ keywords:
 
 :::note
 
-In a production setup, do not store passwords in the host's environment variables or in the source code. For reference, review our [backup and security recommendations](https://wiki.iota.org/chrysalis-docs/guides/backup_securityy) for production setups.
+In a production setup, do not store passwords in the host's environment variables or in the source code. For reference, review our [backup and security recommendations](https://wiki.iota.org/introduction/how_tos/backup_security/) for production setups.
 :::
 
 ## Requirements

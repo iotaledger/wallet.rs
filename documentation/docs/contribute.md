@@ -1,6 +1,6 @@
 ---
 description: Contribute to the IOTA Wallet Library joining the IOTA Libraries Initiative, contributing to the official GitHub repository, or sharing your knowledge on Discord.  
-image: /img/logo/wallet_light.png
+image: /img/logo/logo_dark.svg
 keywords:
 - join
 - documentation
