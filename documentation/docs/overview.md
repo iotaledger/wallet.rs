@@ -1,6 +1,6 @@
 ---
 description: The wallet library is a stateful package with a standardized interface for developers to build applications involving IOTA value transactions.
-image: /img/logo/logo_dark.svg
+image: /img/logo/logo.svg
 keywords:
 - layered overview
 - high level

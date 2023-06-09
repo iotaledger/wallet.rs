@@ -1,6 +1,6 @@
 ---
 description: Official IOTA Wallet Library Software Python API reference.
-image: /img/logo/logo_dark.svg
+image: /img/logo/logo.svg
 keywords:
 - api
 - python

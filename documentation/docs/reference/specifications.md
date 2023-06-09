@@ -1,6 +1,6 @@
 ---
 description: The wallet.rs library is a stateful package with a standardized interface to build applications with IOTA value transactions.
-image: /img/logo/logo_dark.svg
+image: /img/logo/logo.svg
 keywords:
 - wallet library methods
 - Rust

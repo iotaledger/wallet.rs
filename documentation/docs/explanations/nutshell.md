@@ -1,6 +1,6 @@
 ---
 description: The `wallet.rs` library is written in Rust. You can also find three bindings written in Node.js, Python, and Java.
-image: /img/logo/logo_dark.svg
+image: /img/logo/logo.svg
 keywords:
 - bindings
 - library

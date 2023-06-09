@@ -1,6 +1,6 @@
 ---
 description: Troubleshooting the IOTA Wallet Library.  
-image: /img/logo/logo_dark.svg
+image: /img/logo/logo.svg
 keywords:
 - discussion
 - channel
