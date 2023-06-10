@@ -1,6 +1,6 @@
 ---
 description: The wallet.rs library is a stateful package with a standardized interface to build applications with IOTA value transactions.
-image: /img/logo/wallet_light.png
+image: /img/logo/logo.svg
 keywords:
 - wallet library methods
 - Rust
@@ -16,9 +16,9 @@ keywords:
 
 The `wallet.rs` library is a stateful package with a standardized interface to build applications with IOTA value transactions. The package is compatible with different platforms such as web, desktop, and mobile. 
 
-The package introduces the concept of an _account_ . An _account_ is a reference to, or a label for, a [seed](https://wiki.iota.org/chrysalis-docs/guides/developer#seed). It has certain properties such as [addresses](https://github.com/Wollac/protocol-rfcs/blob/bech32-address-format/text/0020-bech32-address-format/0020-bech32-address-format.md) and [messages](https://github.com/GalRogozinski/protocol-rfcs/blob/message/text/0017-message/0017-message.md). An account also maintains various behaviours, including moving funds, looking for new messages, and making copies of message histories. Additionally, it provides a degree of financial privacy and thus does not incur any overhead. 
+The package introduces the concept of an _account_ . An _account_ is a reference to, or a label for, a [seed](https://wiki.iota.org/introduction/reference/details/#seed). It has certain properties such as [addresses](https://github.com/Wollac/protocol-rfcs/blob/bech32-address-format/text/0020-bech32-address-format/0020-bech32-address-format.md) and [messages](https://github.com/GalRogozinski/protocol-rfcs/blob/message/text/0017-message/0017-message.md). An account also maintains various behaviours, including moving funds, looking for new messages, and making copies of message histories. Additionally, it provides a degree of financial privacy and thus does not incur any overhead. 
 
-[A similar account package was used before](https://wiki.iota.org/chrysalis-docs/introduction/what_is_chrysalis#ed25519-signature-scheme) but it became obsolete with the introduction of Ed25519 signatures. The previous account package was also limited to a single account, whereas the new package manages multiple accounts. 
+[A similar account package was used before](https://wiki.iota.org/introduction/explanations/update/chrysalis_improvements/#ed25519-signature-scheme) but it became obsolete with the introduction of Ed25519 signatures. The previous account package was also limited to a single account, whereas the new package manages multiple accounts. 
 
 For IOTA, the motivation to use this package was to offer a simplified (stateful) approach to handle IOTA payments.
 
