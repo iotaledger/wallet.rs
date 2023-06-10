@@ -33,7 +33,7 @@ multiple accounts or multiple addresses. It is up to a developer whether he choo
 multi-account approach.
 
 The library is based on
-a [derivation for multiple accounts from a single seed](https://chrysalis.docs.iota.org/guides/dev_guide#addresskey-space). 
+a [derivation for multiple accounts from a single seed](https://wiki.iota.org/introduction/reference/details/#addresskey-space). 
 An account is simply a deterministic identifier from which multiple addresses can be further derived.
 
 The following image illustrates the relationships between seed, accounts and addresses. A single seed can contain
