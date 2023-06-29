@@ -10,7 +10,6 @@
     "format-check": "prettier --ignore-path .eslintignore -c {,*/**/}*.{ts,js,json}",
     "build": "node scripts/neon-build && tsc",
     "build:neon": "cargo-cp-artifact -ac iota-wallet-nodejs ./index.node -- cargo build --release --message-format=json-render-diagnostics",
-    "docs-wiki-build": "typedoc --githubPages false --disableSources --excludePrivate --excludeInternal --excludeNotDocumented --plugin typedoc-plugin-markdown --theme markdown --hideBreadcrumbs --entryDocument api_ref.md --readme none --hideGenerator --sort source-order --exclude ./**/src/index.ts --out ../../documentation/docs/references/nodejs ./lib/index.ts ",
     "prebuild": "prebuild --runtime napi --target 6 --prepack scripts/neon-build.js --strip",
     "rebuild": "node scripts/neon-build && tsc && node scripts/strip.js",
     "install": "prebuild-install --runtime napi --tag-prefix='nodejs-binding-v' && tsc || npm run rebuild",

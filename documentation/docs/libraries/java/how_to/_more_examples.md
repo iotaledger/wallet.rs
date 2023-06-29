@@ -1,1 +1,0 @@
-More advanced examples can be found in the [examples](https://github.com/iotaledger/wallet.rs/tree/develop/wallet/bindings/java/examples/src) folder.
