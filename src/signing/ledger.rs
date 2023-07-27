@@ -5,6 +5,7 @@ use crate::{account::Account, LedgerStatus};
 
 use std::{collections::HashMap, fmt, path::Path};
 
+use crypto::keys::bip39::Mnemonic;
 use iota_client::{bee_message::unlock::UnlockBlock, common::packable::Packable};
 use iota_ledger::LedgerBIP32Index;
 use tokio::sync::Mutex;
@@ -79,7 +80,7 @@ impl super::Signer for LedgerNanoSigner {
         LedgerStatus { connected, locked, app }
     }
 
-    async fn store_mnemonic(&mut self, _: &Path, _mnemonic: String) -> crate::Result<()> {
+    async fn store_mnemonic(&mut self, _: &Path, _mnemonic: Mnemonic) -> crate::Result<()> {
         Err(crate::Error::InvalidMnemonic(String::from("")))
     }
 

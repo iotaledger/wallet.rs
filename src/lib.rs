@@ -41,7 +41,8 @@ pub use error::Error;
 #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
 pub use stronghold::{
     get_status as get_stronghold_status, set_password_clear_interval as set_stronghold_password_clear_interval,
-    unload_snapshot as lock_stronghold, SnapshotStatus as StrongholdSnapshotStatus, Status as StrongholdStatus,
+    unload_snapshot as lock_stronghold, Error as StrongholdError, SnapshotStatus as StrongholdSnapshotStatus,
+    Status as StrongholdStatus,
 };
 
 /// The wallet Result type.
@@ -134,6 +135,7 @@ mod test_utils {
         message::{Message, MessagePayload, TransactionBuilderMetadata, TransactionEssence},
         signing::SignerType,
     };
+    use crypto::keys::bip39::Mnemonic;
     use iota_client::{
         bee_message::prelude::{
             Address as IotaAddress, Ed25519Address, Ed25519Signature, Essence, MessageId, Payload,
@@ -167,7 +169,7 @@ mod test_utils {
             }
         }
 
-        async fn store_mnemonic(&mut self, _: &Path, _mnemonic: String) -> crate::Result<()> {
+        async fn store_mnemonic(&mut self, _: &Path, _mnemonic: Mnemonic) -> crate::Result<()> {
             Ok(())
         }
 

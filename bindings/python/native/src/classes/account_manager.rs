@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::types::*;
+use crypto::keys::bip39::Mnemonic;
 use iota_client::bee_message::MessageId as RustMessageId;
 use iota_wallet::{
     account_manager::{AccountManager as RustAccountManager, MigrationDataFinder},
@@ -208,7 +209,7 @@ impl AccountManager {
 
     /// Stores a mnemonic for the given signer type.
     /// If the mnemonic is not provided, we'll generate one.
-    fn store_mnemonic(&mut self, signer_type: &str, mnemonic: Option<String>) -> Result<()> {
+    fn store_mnemonic(&mut self, signer_type: &str, mnemonic: Option<Mnemonic>) -> Result<()> {
         let signer_type = match signer_type {
             "Stronghold" => RustSingerType::Stronghold,
             "LedgerNano" => RustSingerType::LedgerNano,

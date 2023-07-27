@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use anyhow::anyhow;
+use crypto::keys::bip39::Mnemonic;
 use iota_wallet::{
     account_manager::{
         AccountManager as AccountManagerRust, AccountManagerBuilder as AccountManagerBuilderRust,
@@ -219,7 +220,7 @@ impl AccountManager {
         }
     }
 
-    pub fn store_mnemonic(&mut self, signer_type_enum: AccountSignerType, mnemonic: String) -> Result<()> {
+    pub fn store_mnemonic(&mut self, signer_type_enum: AccountSignerType, mnemonic: Mnemonic) -> Result<()> {
         let signer_type = signer_type_enum_to_type(signer_type_enum);
         let opt_mnemonic = match mnemonic.as_str() {
             "" => None,

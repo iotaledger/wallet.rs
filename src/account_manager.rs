@@ -20,7 +20,6 @@ use crate::{
 
 use std::{
     collections::{hash_map::DefaultHasher, HashMap, HashSet},
-    convert::TryInto,
     fs,
     hash::{Hash, Hasher},
     num::NonZeroU64,
@@ -36,6 +35,10 @@ use std::{
 };
 
 use chrono::prelude::*;
+use crypto::{
+    hashes::{blake2b::Blake2b256, Digest},
+    keys::bip39::{Mnemonic, MnemonicRef},
+};
 use futures::FutureExt;
 use getset::Getters;
 use iota_client::bee_message::prelude::{Address, MessageId, OutputId};
@@ -64,6 +67,11 @@ const DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD: usize = 100;
 #[cfg(feature = "stronghold")]
 #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
 pub const STRONGHOLD_FILENAME: &str = "wallet.stronghold";
+
+/// The path for the user-data encryption key for the Stronghold store.
+#[cfg(feature = "stronghold")]
+#[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
+pub(super) const USERDATA_STORE_KEY_RECORD_PATH: &[u8] = b"userdata-store-key";
 
 /// The default RocksDB storage path.
 pub const ROCKSDB_FILENAME: &str = "db";
@@ -96,10 +104,12 @@ enum ManagerStorage {
 }
 
 fn storage_password_to_encryption_key(password: &str) -> [u8; 32] {
-    let mut dk = [0; 64];
-    // safe to unwrap (rounds > 0)
-    crypto::keys::pbkdf::PBKDF2_HMAC_SHA512(password.as_bytes(), b"wallet.rs::storage", 100, &mut dk).unwrap();
-    let key: [u8; 32] = dk[0..32][..].try_into().unwrap();
+    let mut digest = Blake2b256::new();
+
+    digest.update(password.as_bytes());
+    let mut key = [0_u8; 32];
+    digest.finalize_into((&mut key[..]).into());
+
     key
 }
 
@@ -353,7 +363,7 @@ pub struct AccountManager {
     accounts: AccountStore,
     stop_polling_sender: StdMutex<Option<BroadcastSender<()>>>,
     polling_handle: StdMutex<Option<thread::JoinHandle<()>>>,
-    generated_mnemonic: StdMutex<Option<String>>,
+    generated_mnemonic: StdMutex<Option<Mnemonic>>,
     account_options: AccountOptions,
     sync_accounts_lock: Arc<Mutex<()>>,
     cached_migration_data: Mutex<HashMap<u64, CachedMigrationData>>,
@@ -395,13 +405,15 @@ impl Drop for AccountManager {
 
 #[cfg(feature = "stronghold")]
 fn stronghold_password<P: Into<String>>(password: P) -> Vec<u8> {
-    let mut password = password.into();
-    let mut dk = [0; 64];
-    // safe to unwrap because rounds > 0
-    crypto::keys::pbkdf::PBKDF2_HMAC_SHA512(password.as_bytes(), b"wallet.rs", 100, &mut dk).unwrap();
+    let mut digest = crypto::hashes::blake2b::Blake2b256::new();
+    let mut password: String = password.into();
+
+    digest.update(password.as_bytes());
+    let key = digest.finalize().to_vec();
+
     password.zeroize();
-    let password: [u8; 32] = dk[0..32][..].try_into().unwrap();
-    password.to_vec()
+
+    key
 }
 
 impl AccountManager {
@@ -1058,7 +1070,7 @@ impl AccountManager {
 
     /// Stores a mnemonic for the given signer type.
     /// If the mnemonic is not provided, we'll generate one.
-    pub async fn store_mnemonic(&self, signer_type: SignerType, mnemonic: Option<String>) -> crate::Result<()> {
+    pub async fn store_mnemonic(&self, signer_type: SignerType, mnemonic: Option<Mnemonic>) -> crate::Result<()> {
         let mnemonic = match mnemonic {
             Some(m) => {
                 self.verify_mnemonic(&m)?;
@@ -1084,7 +1096,7 @@ impl AccountManager {
     }
 
     /// Generates a new mnemonic.
-    pub fn generate_mnemonic(&self) -> crate::Result<String> {
+    pub fn generate_mnemonic(&self) -> crate::Result<Mnemonic> {
         let mut entropy = [0u8; 32];
         crypto::utils::rand::fill(&mut entropy).map_err(|e| crate::Error::MnemonicEncode(format!("{:?}", e)))?;
         let mnemonic = crypto::keys::bip39::wordlist::encode(&entropy, &crypto::keys::bip39::wordlist::ENGLISH)
@@ -1098,9 +1110,9 @@ impl AccountManager {
 
     /// Checks is the mnemonic is valid. If a mnemonic was generated with `generate_mnemonic()`, the mnemonic here
     /// should match the generated.
-    pub fn verify_mnemonic<S: AsRef<str>>(&self, mnemonic: S) -> crate::Result<()> {
+    pub fn verify_mnemonic(&self, mnemonic: &MnemonicRef) -> crate::Result<()> {
         // first we check if the mnemonic is valid to give meaningful errors
-        crypto::keys::bip39::wordlist::verify(mnemonic.as_ref(), &crypto::keys::bip39::wordlist::ENGLISH)
+        crypto::keys::bip39::wordlist::verify(mnemonic, &crypto::keys::bip39::wordlist::ENGLISH)
             // TODO: crypto::bip39::wordlist::Error should impl Display
             .map_err(|e| crate::Error::InvalidMnemonic(format!("{:?}", e)))?;
 
@@ -1111,7 +1123,7 @@ impl AccountManager {
             .map_err(|_| crate::Error::PoisonError)?
             .as_ref()
         {
-            if generated_mnemonic != mnemonic.as_ref() {
+            if generated_mnemonic.deref().deref() != mnemonic.deref() {
                 return Err(crate::Error::InvalidMnemonic(
                     "doesn't match the generated mnemonic".to_string(),
                 ));

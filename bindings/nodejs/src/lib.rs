@@ -190,6 +190,10 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
         "getBroadcastEventCount",
         classes::account_manager::get_broadcast_event_count,
     )?;
+    cx.export_function(
+        "migrateStrongholdSnapshotV2ToV3",
+        classes::account_manager::migrate_stronghold_snapshot_v2_to_v3,
+    )?;
 
     // Message handler methods.
     cx.export_function("sendMessage", classes::message_handler::send_message)?;
@@ -200,5 +204,6 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
     cx.export_function("removeEventListeners", classes::event_listener::remove_event_listeners)?;
 
     cx.export_function("initLogger", init_logger)?;
+
     Ok(())
 }

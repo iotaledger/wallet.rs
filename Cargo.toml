@@ -23,21 +23,21 @@ chrono = { version = "0.4.19", default-features = false, features = ["serde"] }
 futures = { version = "0.3.17", default-features = false }
 getset = { version = "0.1.1", default-features = false }
 hex = { version = "0.4.3", default-features = false }
-iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "47e5f6684e2c59237c5fac88be85950a6e5eec4f", default-features = false, features = ["async", "mqtt", "tls"] }
+iota-client = { git = "https://github.com/iotaledger/iota.rs", branch = "firefly-desktop", default-features = false, features = ["async", "mqtt", "tls"] }
 log = { version = "0.4.14", default-features = false }
 once_cell = { version = "1.8.0", default-features = false }
 rand = { version = "0.8.4", default-features = false }
-rocksdb = { git = "https://github.com/iotaledger/rust-rocksdb", rev = "89eeb926c50288666b85e4f491df912040fcdbaf", default-features = false, features = ["lz4"] }
+rocksdb = { git = "https://github.com/rust-rocksdb/rust-rocksdb", rev = "c62c8c248d84cd1dfb2f48b078ee4f6d55f9dc69", default-features = false, features = ["lz4"] }
 serde = { version = "1.0.130", default-features = false, features = ["derive"] }
 serde_json = { version = "1.0.68", default-features = false }
 serde_repr = { version = "0.1.7", default-features = false }
 thiserror = { version = "1.0.29", default-features = false }
 tokio = { version = "1.12.0", default-features = false, features = ["macros"]}
 url = { version = "2.2.2", default-features = false, features = ["serde"] }
-zeroize = { version = "1.2.0", default-features = false, features = ["zeroize_derive"] }
+zeroize = { version = "1.6.0", default-features = false, features = ["zeroize_derive"] }
 
 # stronghold
-iota_stronghold = { version = "0.4.1", default-features = false }
+iota_stronghold = { git = "https://github.com/iotaledger/stronghold.rs", branch = "0.4.2", default-features = false }
 riker = { version = "0.4.2", default-features = false }
 slog = { version = "2.7.0", default-features = false }
 
@@ -51,10 +51,7 @@ iota-migration = { git = "https://github.com/iotaledger/iota.rs", rev = "656279e
 # participation
 reqwest = { version = "0.11.6", default-features = false, features = ["json"], optional = true }
 
-[dependencies.iota-crypto]
-version = "0.5.0"
-default-features = false
-features = ["random", "sha", "pbkdf", "hmac", "bip39", "bip39-en", "chacha", "blake2b", "slip10"]
+iota-crypto = { version = "0.23.0", default-features = false, features = ["random", "sha", "pbkdf2", "hmac", "bip39", "bip39-en", "chacha", "blake2b", "slip10"]}
 
 [dev-dependencies]
 anyhow = { version = "1.0", default-features = false }
@@ -70,3 +67,8 @@ ledger-nano = ["iota-ledger"]
 ledger-nano-simulator = ["iota-ledger"]
 stronghold = []
 participation = ["reqwest"]
+
+[[example]]
+name = "migrate_stronghold_snapshot_v2_to_v3"
+path = "examples/migrate_stronghold_snapshot_v2_to_v3.rs"
+required-features = [ "stronghold" ]
