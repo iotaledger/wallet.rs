@@ -3,6 +3,7 @@
 
 use crate::account::Account;
 
+use crypto::keys::bip39::Mnemonic;
 use iota_client::bee_message::unlock::{ReferenceUnlock, UnlockBlock};
 
 use std::{
@@ -36,7 +37,7 @@ impl super::Signer for StrongholdSigner {
         }
     }
 
-    async fn store_mnemonic(&mut self, storage_path: &Path, mnemonic: String) -> crate::Result<()> {
+    async fn store_mnemonic(&mut self, storage_path: &Path, mnemonic: Mnemonic) -> crate::Result<()> {
         crate::stronghold::store_mnemonic(&stronghold_path(storage_path).await?, mnemonic).await?;
         Ok(())
     }

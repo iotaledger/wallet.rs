@@ -38,6 +38,7 @@ const {
     removeEventListeners,
     startBackgroundSync,
     stopBackgroundSync,
+    migrateStrongholdSnapshotV2ToV3,
 } = addon;
 
 let { Account } = acc;
@@ -231,6 +232,17 @@ class AccountManager {
             this.accountManager,
             [fromTimestamp].filter((e) => e != undefined),
         );
+    }
+
+    migrateStrongholdSnapshotV2ToV3(currentPath, currentPassword, salt, rounds, newPath, newPassword) {
+        return migrateStrongholdSnapshotV2ToV3.apply(this.accountManager, [
+            currentPath,
+            currentPassword,
+            salt,
+            rounds,
+            newPath,
+            newPassword,
+        ]);
     }
 }
 

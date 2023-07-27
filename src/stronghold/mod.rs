@@ -3,13 +3,20 @@
 
 //! Stronghold interface abstractions over an account
 
-use crypto::hashes::{blake2b::Blake2b256, Digest};
+mod migration;
 
-use crypto::keys::slip10::Chain;
+use crypto::{
+    hashes::{blake2b::Blake2b256, Digest},
+    keys::{
+        bip39::{Mnemonic, Passphrase},
+        slip10::Segment,
+    },
+};
 use getset::Getters;
 use iota_client::bee_message::prelude::{Address, Ed25519Address, Ed25519Signature};
 use iota_stronghold::{
-    Location, ProcResult, Procedure, RecordHint, ResultMessage, SLIP10DeriveInput, Stronghold, StrongholdFlags,
+    Location, ProcResult, Procedure, RecordHint, ResultMessage, SLIP10Chain, SLIP10DeriveInput, Stronghold,
+    StrongholdFlags,
 };
 use once_cell::sync::{Lazy, OnceCell};
 use riker::actors::*;
@@ -293,6 +300,19 @@ pub enum Error {
     TryFromInt(#[from] TryFromIntError),
     #[error("the mnemonic was already stored")]
     MnemonicAlreadyStored,
+    #[error("Stronghold migration error: {0}")]
+    Migration(#[from] iota_stronghold::engine::snapshot::migration::Error),
+    #[error("invalid number of hash rounds: {0}")]
+    InvalidRounds(u32),
+    #[error("path already exists: {0}")]
+    PathAlreadyExists(std::path::PathBuf),
+    #[error("Unsupported snapshot version, migration required")]
+    UnsupportedSnapshotVersion {
+        /// Found version
+        found: u16,
+        /// Expected version
+        expected: u16,
+    },
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -389,7 +409,7 @@ async fn save_snapshot(runtime: &mut ActorRuntime, snapshot_path: &Path) -> Resu
     )
 }
 
-async fn clear_stronghold_cache(mut runtime: &mut ActorRuntime, persist: bool) -> Result<()> {
+async fn clear_stronghold_cache(runtime: &mut ActorRuntime, persist: bool) -> Result<()> {
     if let Some(curr_snapshot_path) = CURRENT_SNAPSHOT_PATH
         .get_or_init(Default::default)
         .lock()
@@ -465,7 +485,23 @@ pub async fn unload_snapshot(storage_path: &Path, persist: bool) -> Result<()> {
 
 pub async fn load_snapshot(snapshot_path: &Path, password: Vec<u8>) -> Result<()> {
     let mut runtime = actor_runtime().lock().await;
-    load_snapshot_internal(&mut runtime, snapshot_path, password).await
+
+    load_snapshot_internal(&mut runtime, snapshot_path, password)
+        .await
+        .map_err(|e| match &e {
+            Error::FailedToPerformAction(msg) => {
+                if msg.contains("UnsupportedVersion") {
+                    if msg.contains("expected: [3, 0], found: [2, 0]") {
+                        Error::UnsupportedSnapshotVersion { found: 2, expected: 3 }
+                    } else {
+                        panic!("unsupported version mismatch");
+                    }
+                } else {
+                    e
+                }
+            }
+            _ => e,
+        })
 }
 
 async fn load_snapshot_internal(runtime: &mut ActorRuntime, snapshot_path: &Path, password: Vec<u8>) -> Result<()> {
@@ -508,7 +544,7 @@ pub async fn change_password(snapshot_path: &Path, current_password: Vec<u8>, ne
     Ok(())
 }
 
-pub async fn store_mnemonic(snapshot_path: &Path, mnemonic: String) -> Result<()> {
+pub async fn store_mnemonic(snapshot_path: &Path, mnemonic: Mnemonic) -> Result<()> {
     let mut runtime = actor_runtime().lock().await;
     check_snapshot(&mut runtime, snapshot_path, None).await?;
     load_private_data_actor(&mut runtime, snapshot_path, None).await?;
@@ -521,8 +557,8 @@ pub async fn store_mnemonic(snapshot_path: &Path, mnemonic: String) -> Result<()
     let res = runtime
         .stronghold
         .runtime_exec(Procedure::BIP39Recover {
-            mnemonic,
-            passphrase: None,
+            mnemonic: mnemonic.into(),
+            passphrase: Passphrase::default(),
             output: mnemonic_location,
             hint: RecordHint::new("wallet.rs-seed").unwrap(),
         })
@@ -536,7 +572,7 @@ pub async fn store_mnemonic(snapshot_path: &Path, mnemonic: String) -> Result<()
     }
 }
 
-async fn derive(runtime: &mut ActorRuntime, chain: Chain) -> Result<Location> {
+async fn derive(runtime: &mut ActorRuntime, chain: SLIP10Chain) -> Result<Location> {
     let derive_output = Location::generic(SECRET_VAULT_PATH, DERIVE_OUTPUT_RECORD_PATH);
     let res = runtime
         .stronghold
@@ -579,13 +615,16 @@ pub async fn generate_address(
     check_snapshot(&mut runtime, snapshot_path, None).await?;
     load_private_data_actor(&mut runtime, snapshot_path, None).await?;
 
-    let chain = Chain::from_u32_hardened(vec![
+    let chain = [
         44,
         4218,
         account_index.try_into()?,
         internal as u32,
         address_index.try_into()?,
-    ]);
+    ]
+    .into_iter()
+    .map(|s| Segment::harden(s).into())
+    .collect();
 
     let derived_location = derive(&mut runtime, chain).await?;
     let public_key = get_public_key(&mut runtime, derived_location).await?;
@@ -609,13 +648,16 @@ pub async fn sign_transaction(
     check_snapshot(&mut runtime, snapshot_path, None).await?;
     load_private_data_actor(&mut runtime, snapshot_path, None).await?;
 
-    let chain = Chain::from_u32_hardened(vec![
+    let chain = [
         44,
         4218,
         account_index.try_into()?,
         internal as u32,
         address_index.try_into()?,
-    ]);
+    ]
+    .into_iter()
+    .map(|s| Segment::harden(s).into())
+    .collect();
 
     let derived_location = derive(&mut runtime, chain).await?;
     let public_key = get_public_key(&mut runtime, derived_location.clone()).await?;
