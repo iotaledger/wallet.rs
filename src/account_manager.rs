@@ -105,10 +105,10 @@ enum ManagerStorage {
 
 fn storage_password_to_encryption_key(password: &str) -> [u8; 32] {
     let mut dk = [0; 64];
-    // safe to unwrap (rounds > 0)
     crypto::keys::pbkdf::PBKDF2_HMAC_SHA512(
         password.as_bytes(),
         b"wallet.rs::storage",
+        // safe to unwrap, historically hardcoded to this value
         NonZeroU32::new(100).unwrap(),
         &mut dk,
     );
