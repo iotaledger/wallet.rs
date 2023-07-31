@@ -68,11 +68,6 @@ const DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD: usize = 100;
 #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
 pub const STRONGHOLD_FILENAME: &str = "wallet.stronghold";
 
-/// The path for the user-data encryption key for the Stronghold store.
-#[cfg(feature = "stronghold")]
-#[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
-pub(super) const USERDATA_STORE_KEY_RECORD_PATH: &[u8] = b"userdata-store-key";
-
 /// The default RocksDB storage path.
 pub const ROCKSDB_FILENAME: &str = "db";
 
