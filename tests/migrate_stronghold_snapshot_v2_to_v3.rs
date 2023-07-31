@@ -158,8 +158,8 @@ async fn stronghold_snapshot_v2_v3_migration() -> Result<(), Error> {
 
 //     assert!(matches!(
 //         manager.set_stronghold_password("password").await,
-//         Err(Error::StrongholdError(StrongholdError::UnsupportedSnapshotVersion { found, expected })) if found == 2 && expected == 3
-//     ));
+//         Err(Error::StrongholdError(StrongholdError::UnsupportedSnapshotVersion { found, expected })) if found == 2 &&
+// expected == 3     ));
 
 //     std::fs::copy(
 //         "tests/fixtures/stronghold_snapshot_v2_v3_migration_with_backup/wallet.stronghold",
@@ -207,8 +207,8 @@ async fn stronghold_snapshot_v2_v3_migration() -> Result<(), Error> {
 //     //         .await
 //     //         .unwrap();
 
-//     //     // mnemonic: brisk egg allow van merge process chest type dove bomb proud purity monitor snap load verb utility
-//     //     // hungry cube coast fetch pioneer gadget credit
+//     //     // mnemonic: brisk egg allow van merge process chest type dove bomb proud purity monitor snap load verb
+// utility     //     // hungry cube coast fetch pioneer gadget credit
 //     //     assert_eq!(
 //     //         addresses,
 //     //         [
