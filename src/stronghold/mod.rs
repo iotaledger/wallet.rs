@@ -286,26 +286,37 @@ async fn get_password(snapshot_path: &Path) -> Result<Arc<Password>> {
         .ok_or(Error::PasswordNotSet)
 }
 
+/// Stronghold error type.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    /// Stronghold error.
     #[error("`{0}`")]
     Stronghold(#[from] iota_stronghold::Error),
+    /// Record not found in the stronghold snapshot.
     #[error("record not found")]
     RecordNotFound,
+    /// Failed to perform an action.
     #[error("failed to perform action: `{0}`")]
     FailedToPerformAction(String),
+    /// Stronghold snapshot password not set.
     #[error("snapshot password not set")]
     PasswordNotSet,
+    /// Invalid address or account index.
     #[error("invalid address or account index {0}")]
     TryFromInt(#[from] TryFromIntError),
+    /// The derived seed of a mnemonic was already stored.
     #[error("the mnemonic was already stored")]
     MnemonicAlreadyStored,
     #[error("Stronghold migration error: {0}")]
+    /// Stronghold migration error.
     Migration(#[from] iota_stronghold::engine::snapshot::migration::Error),
+    /// Invalid number of hash rounds.
     #[error("invalid number of hash rounds: {0}")]
     InvalidRounds(u32),
+    /// Path already exists.
     #[error("path already exists: {0}")]
     PathAlreadyExists(std::path::PathBuf),
+    /// Unsupported stronghold snapshot version, migration required.
     #[error("Unsupported snapshot version, migration required")]
     UnsupportedSnapshotVersion {
         /// Found version
