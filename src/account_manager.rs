@@ -22,7 +22,7 @@ use std::{
     collections::{hash_map::DefaultHasher, HashMap, HashSet},
     fs,
     hash::{Hash, Hasher},
-    num::NonZeroU64,
+    num::{NonZeroU32, NonZeroU64},
     ops::{Deref, Range},
     panic::AssertUnwindSafe,
     path::{Path, PathBuf},
@@ -36,7 +36,7 @@ use std::{
 
 use chrono::prelude::*;
 use crypto::{
-    hashes::{blake2b::Blake2b256, Digest},
+    hashes::Digest,
     keys::bip39::{Mnemonic, MnemonicRef},
 };
 use futures::FutureExt;
@@ -104,11 +104,15 @@ enum ManagerStorage {
 }
 
 fn storage_password_to_encryption_key(password: &str) -> [u8; 32] {
-    let mut digest = Blake2b256::new();
-
-    digest.update(password.as_bytes());
-    let mut key = [0_u8; 32];
-    digest.finalize_into((&mut key[..]).into());
+    let mut dk = [0; 64];
+    // safe to unwrap (rounds > 0)
+    crypto::keys::pbkdf::PBKDF2_HMAC_SHA512(
+        password.as_bytes(),
+        b"wallet.rs::storage",
+        NonZeroU32::new(100).unwrap(),
+        &mut dk,
+    );
+    let key: [u8; 32] = dk[0..32][..].try_into().unwrap();
 
     key
 }
