@@ -161,7 +161,7 @@ impl WalletMessageHandler {
             MessageType::GenerateMnemonic => convert_panics(|| {
                 self.account_manager
                     .generate_mnemonic()
-                    .map(|mnemonic| ResponseType::GeneratedMnemonic((**mnemonic).to_owned()))
+                    .map(|mnemonic| ResponseType::GeneratedMnemonic((**mnemonic).to_owned().into()))
             }),
             MessageType::VerifyMnemonic(mnemonic) => convert_panics(|| {
                 let mnemonic = Mnemonic::from(mnemonic.clone());

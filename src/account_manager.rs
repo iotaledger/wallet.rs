@@ -98,6 +98,9 @@ enum ManagerStorage {
     Rocksdb,
 }
 
+// Unsecure, remove in the future. It's not safe to derive strong encryption keys from weak passwords using fixed salt
+// and low iteration count. Currently still needed for compatibility with old DBs, but here not really a security issue,
+// since the encrypted data is actually public information anyways(addresses, transactions...).
 fn storage_password_to_encryption_key(password: &str) -> [u8; 32] {
     let mut dk = [0; 64];
     crypto::keys::pbkdf::PBKDF2_HMAC_SHA512(
@@ -272,7 +275,6 @@ impl AccountManagerBuilder {
             accounts,
             stop_polling_sender: StdMutex::new(None),
             polling_handle: StdMutex::new(None),
-            generated_mnemonic: StdMutex::new(None),
             account_options: self.account_options,
             sync_accounts_lock,
             cached_migration_data: Default::default(),
@@ -362,7 +364,6 @@ pub struct AccountManager {
     accounts: AccountStore,
     stop_polling_sender: StdMutex<Option<BroadcastSender<()>>>,
     polling_handle: StdMutex<Option<thread::JoinHandle<()>>>,
-    generated_mnemonic: StdMutex<Option<Mnemonic>>,
     account_options: AccountOptions,
     sync_accounts_lock: Arc<Mutex<()>>,
     cached_migration_data: Mutex<HashMap<u64, CachedMigrationData>>,
@@ -387,7 +388,6 @@ impl Clone for AccountManager {
                     .clone(),
             ),
             polling_handle: StdMutex::new(None),
-            generated_mnemonic: StdMutex::new(None),
             account_options: self.account_options,
             sync_accounts_lock: self.sync_accounts_lock.clone(),
             cached_migration_data: Default::default(),
@@ -403,16 +403,16 @@ impl Drop for AccountManager {
 }
 
 #[cfg(feature = "stronghold")]
-fn stronghold_password<P: Into<String>>(password: P) -> Vec<u8> {
+fn stronghold_password<P: Into<String>>(password: P) -> zeroize::Zeroizing<Vec<u8>> {
     let mut digest = crypto::hashes::blake2b::Blake2b256::new();
     let mut password: String = password.into();
 
     digest.update(password.as_bytes());
-    let key = digest.finalize().to_vec();
+    let password_hash = zeroize::Zeroizing::new(digest.finalize().to_vec());
 
     password.zeroize();
 
-    key
+    password_hash
 }
 
 impl AccountManager {
@@ -1083,15 +1083,6 @@ impl AccountManager {
         let mut signer = signer.lock().await;
         signer.store_mnemonic(&self.storage_path, mnemonic).await?;
 
-        if let Some(mut mnemonic) = self
-            .generated_mnemonic
-            .lock()
-            .map_err(|_| crate::Error::PoisonError)?
-            .take()
-        {
-            mnemonic.zeroize();
-        }
-
         Ok(())
     }
 
@@ -1101,10 +1092,6 @@ impl AccountManager {
         crypto::utils::rand::fill(&mut entropy).map_err(|e| crate::Error::MnemonicEncode(format!("{:?}", e)))?;
         let mnemonic = crypto::keys::bip39::wordlist::encode(&entropy, &crypto::keys::bip39::wordlist::ENGLISH)
             .map_err(|e| crate::Error::MnemonicEncode(format!("{:?}", e)))?;
-        self.generated_mnemonic
-            .lock()
-            .map_err(|_| crate::Error::PoisonError)?
-            .replace(mnemonic.clone());
         Ok(mnemonic)
     }
 
@@ -1115,20 +1102,6 @@ impl AccountManager {
         crypto::keys::bip39::wordlist::verify(mnemonic, &crypto::keys::bip39::wordlist::ENGLISH)
             // TODO: crypto::bip39::wordlist::Error should impl Display
             .map_err(|e| crate::Error::InvalidMnemonic(format!("{:?}", e)))?;
-
-        // then we check if the provided mnemonic matches the mnemonic generated with `generate_mnemonic`
-        if let Some(generated_mnemonic) = self
-            .generated_mnemonic
-            .lock()
-            .map_err(|_| crate::Error::PoisonError)?
-            .as_ref()
-        {
-            if generated_mnemonic.deref().deref() != mnemonic.deref() {
-                return Err(crate::Error::InvalidMnemonic(
-                    "doesn't match the generated mnemonic".to_string(),
-                ));
-            }
-        }
         Ok(())
     }
 

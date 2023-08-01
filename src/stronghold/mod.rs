@@ -9,6 +9,7 @@ use crypto::{
     hashes::{blake2b::Blake2b256, Digest},
     keys::{
         bip39::{Mnemonic, Passphrase},
+        bip44::Bip44,
         slip10::Segment,
     },
 };
@@ -34,11 +35,11 @@ use tokio::{
     sync::Mutex,
     time::{sleep, Duration},
 };
-use zeroize::Zeroize;
+use zeroize::{Zeroize, Zeroizing};
 
 #[derive(PartialEq, Eq, Zeroize)]
 #[zeroize(drop)]
-struct Password(Vec<u8>);
+struct Password(Zeroizing<Vec<u8>>);
 
 type SnapshotToPasswordMap = HashMap<PathBuf, Arc<Password>>;
 static PASSWORD_STORE: OnceCell<Arc<Mutex<SnapshotToPasswordMap>>> = OnceCell::new();
@@ -260,7 +261,7 @@ fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, Arc<Password>>>> {
     Default::default()
 }
 
-pub async fn set_password<S: AsRef<Path>>(snapshot_path: S, password: Vec<u8>) {
+pub async fn set_password<S: AsRef<Path>>(snapshot_path: S, password: Zeroizing<Vec<u8>>) {
     let mut passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
     let mut access_store = STRONGHOLD_ACCESS_STORE.get_or_init(Default::default).lock().await;
 
@@ -307,7 +308,7 @@ pub enum Error {
     /// The derived seed of a mnemonic was already stored.
     #[error("the mnemonic was already stored")]
     MnemonicAlreadyStored,
-    #[error("Stronghold migration error: {0}")]
+    #[error("stronghold migration error: {0}")]
     /// Stronghold migration error.
     Migration(#[from] iota_stronghold::engine::snapshot::migration::Error),
     /// Invalid number of hash rounds.
@@ -317,7 +318,7 @@ pub enum Error {
     #[error("path already exists: {0}")]
     PathAlreadyExists(std::path::PathBuf),
     /// Unsupported stronghold snapshot version, migration required.
-    #[error("Unsupported snapshot version, migration required")]
+    #[error("unsupported snapshot version, migration required")]
     UnsupportedSnapshotVersion {
         /// Found version
         found: u16,
@@ -494,7 +495,7 @@ pub async fn unload_snapshot(storage_path: &Path, persist: bool) -> Result<()> {
     Ok(())
 }
 
-pub async fn load_snapshot(snapshot_path: &Path, password: Vec<u8>) -> Result<()> {
+pub async fn load_snapshot(snapshot_path: &Path, password: Zeroizing<Vec<u8>>) -> Result<()> {
     let mut runtime = actor_runtime().lock().await;
 
     load_snapshot_internal(&mut runtime, snapshot_path, password)
@@ -515,7 +516,11 @@ pub async fn load_snapshot(snapshot_path: &Path, password: Vec<u8>) -> Result<()
         })
 }
 
-async fn load_snapshot_internal(runtime: &mut ActorRuntime, snapshot_path: &Path, password: Vec<u8>) -> Result<()> {
+async fn load_snapshot_internal(
+    runtime: &mut ActorRuntime,
+    snapshot_path: &Path,
+    password: Zeroizing<Vec<u8>>,
+) -> Result<()> {
     if CURRENT_SNAPSHOT_PATH
         .get_or_init(Default::default)
         .lock()
@@ -539,7 +544,11 @@ async fn load_snapshot_internal(runtime: &mut ActorRuntime, snapshot_path: &Path
 }
 
 /// Changes the snapshot password.
-pub async fn change_password(snapshot_path: &Path, current_password: Vec<u8>, new_password: Vec<u8>) -> Result<()> {
+pub async fn change_password(
+    snapshot_path: &Path,
+    current_password: Zeroizing<Vec<u8>>,
+    new_password: Zeroizing<Vec<u8>>,
+) -> Result<()> {
     let mut runtime = actor_runtime().lock().await;
     load_snapshot_internal(&mut runtime, snapshot_path, current_password).await?;
 

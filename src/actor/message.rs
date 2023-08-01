@@ -15,6 +15,7 @@ use iota_client::NodeInfoWrapper;
 use iota_migration::{ternary::T3B1Buf, transaction::bundled::BundledTransactionField};
 use serde::{ser::Serializer, Deserialize, Serialize};
 use tokio::sync::mpsc::UnboundedSender;
+use zeroize::Zeroizing;
 
 use std::{num::NonZeroU64, path::PathBuf, time::Duration};
 
@@ -621,7 +622,7 @@ pub enum ResponseType {
     /// A panic occurred.
     Panic(String),
     /// GenerateMnemonic response.
-    GeneratedMnemonic(String),
+    GeneratedMnemonic(Zeroizing<String>),
     /// VerifyMnemonic response.
     VerifiedMnemonic,
     /// StoreMnemonic response.
