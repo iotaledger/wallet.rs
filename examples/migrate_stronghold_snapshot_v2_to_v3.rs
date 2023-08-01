@@ -39,16 +39,5 @@ async fn main() -> Result<(), Error> {
     // This shouldn't fail anymore as snapshot has been migrated.
     manager.set_stronghold_password("new_password").await?;
 
-    // Generate addresses with custom account index and range
-    // let addresses = GetAddressesBuilder::new(&SecretManager::Stronghold(stronghold_secret_manager))
-    //     .with_bech32_hrp(SHIMMER_TESTNET_BECH32_HRP)
-    //     .with_coin_type(SHIMMER_COIN_TYPE)
-    //     .with_account_index(0)
-    //     .with_range(0..1)
-    //     .finish()
-    //     .await?;
-
-    // println!("First public address: {}", addresses[0]);
-
     Ok(())
 }

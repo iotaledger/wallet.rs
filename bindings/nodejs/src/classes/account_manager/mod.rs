@@ -725,13 +725,9 @@ pub fn migrate_stronghold_snapshot_v2_to_v3(mut cx: FunctionContext) -> JsResult
         new_path.as_ref(),
         new_password.as_deref(),
     )
-    .unwrap();
-    // .or_else(|e| {
-    //     cx.throw_error(
-    //         serde_json::to_string(&Response::Error(e.into()))
-    //             .expect("the response is generated manually, so unwrap is safe."),
-    //     )
-    // })?;
+    .or_else(|e| {
+        cx.throw_error(serde_json::to_string(&e).expect("the response is generated manually, so unwrap is safe."))
+    })?;
 
     Ok(cx.undefined())
 }

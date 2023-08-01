@@ -7,17 +7,9 @@ use std::{
     path::{Path, PathBuf},
 };
 
-// use crypto::ciphers::chacha::{self};
-// use iota_stronghold::{Client, SnapshotPath, Stronghold};
 use zeroize::Zeroize;
 
-// use super::common::PRIVATE_DATA_CLIENT_PATH;
-use crate::{
-    actor::AccountManager,
-    // stronghold::{check_or_create_snapshot, storage::insert as v3_insert},
-    Result,
-    StrongholdError,
-};
+use crate::{actor::AccountManager, Result, StrongholdError};
 
 impl AccountManager {
     /// Migrates a stronghold snapshot from version 2 to version 3.
