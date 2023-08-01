@@ -9,7 +9,6 @@ use crypto::{
     hashes::{blake2b::Blake2b256, Digest},
     keys::{
         bip39::{Mnemonic, Passphrase},
-        bip44::Bip44,
         slip10::Segment,
     },
 };
@@ -35,10 +34,9 @@ use tokio::{
     sync::Mutex,
     time::{sleep, Duration},
 };
-use zeroize::{Zeroize, Zeroizing};
+use zeroize::{Zeroize, ZeroizeOnDrop, Zeroizing};
 
-#[derive(PartialEq, Eq, Zeroize)]
-#[zeroize(drop)]
+#[derive(PartialEq, Eq, Zeroize, ZeroizeOnDrop)]
 struct Password(Zeroizing<Vec<u8>>);
 
 type SnapshotToPasswordMap = HashMap<PathBuf, Arc<Password>>;
