@@ -575,7 +575,7 @@ pub async fn store_mnemonic(snapshot_path: &Path, mnemonic: Mnemonic) -> Result<
     let res = runtime
         .stronghold
         .runtime_exec(Procedure::BIP39Recover {
-            mnemonic: mnemonic.into(),
+            mnemonic,
             passphrase: Passphrase::default(),
             output: mnemonic_location,
             hint: RecordHint::new("wallet.rs-seed").unwrap(),
@@ -648,7 +648,7 @@ pub async fn generate_address(
     let public_key = get_public_key(&mut runtime, derived_location).await?;
 
     // Hash the public key to get the address
-    let hash = Blake2b256::digest(&public_key);
+    let hash = Blake2b256::digest(public_key);
 
     let ed25519_address = Ed25519Address::new(hash.try_into().unwrap());
     let address = Address::Ed25519(ed25519_address);
