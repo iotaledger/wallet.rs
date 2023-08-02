@@ -1615,7 +1615,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "1.1.1"
-source = "git+https://github.com/iotaledger/iota.rs?branch=firefly-desktop#f3e3fba11a2a0a21dc62df5c612414856cfceeb0"
+source = "git+https://github.com/iotaledger/iota.rs?rev=f3e3fba11a2a0a21dc62df5c612414856cfceeb0#f3e3fba11a2a0a21dc62df5c612414856cfceeb0"
 dependencies = [
  "async-trait",
  "bee-common 0.5.0",

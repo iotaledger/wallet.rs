@@ -209,7 +209,7 @@ impl AccountManager {
 
     /// Stores a mnemonic for the given signer type.
     /// If the mnemonic is not provided, we'll generate one.
-    fn store_mnemonic(&mut self, signer_type: &str, mnemonic: Option<Mnemonic>) -> Result<()> {
+    fn store_mnemonic(&mut self, signer_type: &str, mnemonic: Option<String>) -> Result<()> {
         let signer_type = match signer_type {
             "Stronghold" => RustSingerType::Stronghold,
             "LedgerNano" => RustSingerType::LedgerNano,
@@ -217,19 +217,32 @@ impl AccountManager {
             _ => RustSingerType::Custom(signer_type.to_string()),
         };
         Ok(crate::block_on(async {
-            self.account_manager.store_mnemonic(signer_type, mnemonic).await
+            self.account_manager
+                .as_ref()
+                .expect("account_manager got destroyed")
+                .store_mnemonic(signer_type, mnemonic.map(Mnemonic::from))
+                .await
         })?)
     }
 
     /// Generates a new mnemonic.
     fn generate_mnemonic(&mut self) -> Result<String> {
-        Ok(self.account_manager.generate_mnemonic()?)
+        Ok(self
+            .account_manager
+            .as_ref()
+            .expect("account_manager got destroyed")
+            .generate_mnemonic()?
+            .to_string())
     }
 
     /// Checks is the mnemonic is valid. If a mnemonic was generated with `generate_mnemonic()`, the mnemonic here
     /// should match the generated.
-    fn verify_mnemonic(&mut self, mnemonic: &str) -> Result<()> {
-        Ok(self.account_manager.verify_mnemonic(mnemonic)?)
+    fn verify_mnemonic(&mut self, mnemonic: String) -> Result<()> {
+        Ok(self
+            .account_manager
+            .as_ref()
+            .expect("account_manager got destroyed")
+            .verify_mnemonic(&Mnemonic::from(mnemonic))?)
     }
 
     /// Adds a new account.

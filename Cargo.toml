@@ -23,7 +23,7 @@ chrono = { version = "0.4.19", default-features = false, features = ["serde"] }
 futures = { version = "0.3.17", default-features = false }
 getset = { version = "0.1.1", default-features = false }
 hex = { version = "0.4.3", default-features = false }
-iota-client = { git = "https://github.com/iotaledger/iota.rs", branch = "firefly-desktop", default-features = false, features = ["async", "mqtt", "tls"] }
+iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "f3e3fba11a2a0a21dc62df5c612414856cfceeb0", default-features = false, features = ["async", "mqtt", "tls"] }
 log = { version = "0.4.14", default-features = false }
 once_cell = { version = "1.8.0", default-features = false }
 rand = { version = "0.8.4", default-features = false }
