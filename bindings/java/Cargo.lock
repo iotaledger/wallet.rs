@@ -1973,6 +1973,7 @@ dependencies = [
  "futures",
  "getset",
  "hex",
+ "iota-crypto 0.23.0",
  "iota-wallet",
  "jni",
  "log",

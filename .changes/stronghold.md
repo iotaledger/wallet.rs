@@ -1,5 +1,5 @@
 ---
-"nodejs-binding": patch
+"nodejs-binding": minor
 ---
 
 Added migrateStrongholdSnapshotV2ToV3();
