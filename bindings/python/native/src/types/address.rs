@@ -2,9 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use dict_derive::{FromPyObject as DeriveFromPyObject, IntoPyObject as DeriveIntoPyObject};
-use iota_wallet::{
-    account::AccountBalance as RustAccountBalance,
-    address::{Address as RustWalletAddress, AddressOutput as RustAddressOutput, AddressWrapper as RustAddressWrapper},
+use iota_wallet::address::{
+    Address as RustWalletAddress, AddressOutput as RustAddressOutput, AddressWrapper as RustAddressWrapper,
 };
 use std::{
     collections::HashMap,
@@ -43,33 +42,6 @@ pub struct AddressOutput {
     is_spent: bool,
     /// Associated address.
     address: AddressWrapper,
-}
-
-#[derive(Debug, DeriveFromPyObject, DeriveIntoPyObject)]
-pub struct AccountBalance {
-    /// Account's total balance.
-    pub total: u64,
-    // The available balance is the balance users are allowed to spend.
-    /// For example, if a user with 50i total account balance has made a message spending 20i,
-    /// the available balance should be (50i-30i) = 20i.
-    pub available: u64,
-    /// Balances from message with `incoming: true`.
-    /// Note that this may not be accurate since the node prunes the messags.
-    pub incoming: u64,
-    /// Balances from message with `incoming: false`.
-    /// Note that this may not be accurate since the node prunes the messags.
-    pub outgoing: u64,
-}
-
-impl From<RustAccountBalance> for AccountBalance {
-    fn from(acount_balance: RustAccountBalance) -> Self {
-        Self {
-            total: acount_balance.total,
-            available: acount_balance.available,
-            incoming: acount_balance.incoming,
-            outgoing: acount_balance.outgoing,
-        }
-    }
 }
 
 impl From<&RustAddressOutput> for AddressOutput {
