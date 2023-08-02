@@ -216,15 +216,15 @@ impl AccountManager {
     pub fn generate_mnemonic(&mut self) -> Result<String> {
         match self.manager.generate_mnemonic() {
             Err(e) => Err(anyhow!(e.to_string())),
-            Ok(mnemonic) => Ok(mnemonic),
+            Ok(mnemonic) => Ok(mnemonic.to_string()),
         }
     }
 
-    pub fn store_mnemonic(&mut self, signer_type_enum: AccountSignerType, mnemonic: Mnemonic) -> Result<()> {
+    pub fn store_mnemonic(&mut self, signer_type_enum: AccountSignerType, mnemonic: String) -> Result<()> {
         let signer_type = signer_type_enum_to_type(signer_type_enum);
         let opt_mnemonic = match mnemonic.as_str() {
             "" => None,
-            _ => Some(mnemonic),
+            _ => Some(Mnemonic::from(mnemonic)),
         };
 
         match crate::block_on(async move { self.manager.store_mnemonic(signer_type, opt_mnemonic).await }) {

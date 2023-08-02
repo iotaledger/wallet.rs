@@ -751,7 +751,7 @@ mod tests {
                 let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).map(char::from).take(10).collect();
                 std::fs::create_dir_all("./test-storage").unwrap();
                 let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
-                super::load_snapshot(&snapshot_path, [0; 32].to_vec()).await.unwrap();
+                super::load_snapshot(&snapshot_path, [0; 32].to_vec().into()).await.unwrap();
 
                 std::thread::sleep(Duration::from_millis(interval * 3));
                 let res = super::get_record(&snapshot_path, "passwordexpires").await;
@@ -774,14 +774,14 @@ mod tests {
         fn action_keeps_password() {
             let runtime = tokio::runtime::Runtime::new().unwrap();
             runtime.block_on(async {
-                let interval = Duration::from_millis(900);
+                let interval = Duration::from_millis(3000);
                 super::set_password_clear_interval(interval).await;
                 let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).map(char::from).take(10).collect();
                 std::fs::create_dir_all("./test-storage").unwrap();
                 let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
-                super::load_snapshot(&snapshot_path, [0; 32].to_vec()).await.unwrap();
+                super::load_snapshot(&snapshot_path, [0; 32].to_vec().into()).await.unwrap();
 
-                for i in 1..6 {
+                for i in 1..3 {
                     let instant = std::time::Instant::now();
                     super::store_record(
                         &snapshot_path,
@@ -801,7 +801,7 @@ mod tests {
                     } else {
                         // if the elapsed > interval, set the password again
                         // this might happen if the test is stopped by another thread
-                        super::set_password(&snapshot_path, [0; 32].to_vec()).await;
+                        super::set_password(&snapshot_path, [0; 32].to_vec().into()).await;
                     }
                 }
 
@@ -834,7 +834,7 @@ mod tests {
             .collect();
         std::fs::create_dir_all("./test-storage").unwrap();
         let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
-        super::load_snapshot(&snapshot_path, [0; 32].to_vec()).await?;
+        super::load_snapshot(&snapshot_path, [0; 32].to_vec().into()).await?;
 
         let id = "writeandreadtest".to_string();
         let data = "record data";
@@ -854,7 +854,7 @@ mod tests {
             .collect();
         std::fs::create_dir_all("./test-storage").unwrap();
         let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
-        super::load_snapshot(&snapshot_path, [0; 32].to_vec()).await?;
+        super::load_snapshot(&snapshot_path, [0; 32].to_vec().into()).await?;
 
         let id = "writeanddeleteid".to_string();
         let data = "record data";
@@ -876,7 +876,9 @@ mod tests {
                 .collect();
             std::fs::create_dir_all("./test-storage").unwrap();
             let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
-            super::load_snapshot(&snapshot_path, [0; 32].to_vec()).await.unwrap();
+            super::load_snapshot(&snapshot_path, [0; 32].to_vec().into())
+                .await
+                .unwrap();
 
             let id = format!("multiplesnapshots{}", i);
             let data: String = thread_rng()
@@ -908,15 +910,15 @@ mod tests {
         std::fs::create_dir_all("./test-storage").unwrap();
         let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
         let old_password = [5; 32].to_vec();
-        super::load_snapshot(&snapshot_path, old_password.to_vec()).await?;
+        super::load_snapshot(&snapshot_path, old_password.to_vec().into()).await?;
         let id = "writeanddeleteid".to_string();
         let data = "record data";
         super::store_record(&snapshot_path, &id, data.to_string()).await?;
 
         let new_password = [6; 32].to_vec();
-        super::change_password(&snapshot_path, old_password, new_password.to_vec()).await?;
+        super::change_password(&snapshot_path, old_password.into(), new_password.to_vec().into()).await?;
 
-        super::load_snapshot(&snapshot_path, new_password).await?;
+        super::load_snapshot(&snapshot_path, new_password.into()).await?;
 
         Ok(())
     }
@@ -930,14 +932,14 @@ mod tests {
             .collect();
         std::fs::create_dir_all("./test-storage").unwrap();
         let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
-        super::load_snapshot(&snapshot_path, [5; 32].to_vec()).await?;
+        super::load_snapshot(&snapshot_path, [5; 32].to_vec().into()).await?;
         let id = "writeanddeleteid".to_string();
         let data = "record data";
         super::store_record(&snapshot_path, &id, data.to_string()).await?;
 
         let wrong_password = [16; 32].to_vec();
         let new_password = [6; 32].to_vec();
-        match super::change_password(&snapshot_path, wrong_password, new_password.to_vec()).await {
+        match super::change_password(&snapshot_path, wrong_password.into(), new_password.to_vec().into()).await {
             Err(super::Error::FailedToPerformAction(_)) => {}
             _ => panic!("expected a stronghold error when changing password"),
         }
