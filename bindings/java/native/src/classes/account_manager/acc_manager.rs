@@ -234,7 +234,7 @@ impl AccountManager {
     }
 
     pub fn verify_mnemonic(&mut self, mnemonic: String) -> Result<()> {
-        match self.manager.verify_mnemonic(mnemonic) {
+        match self.manager.verify_mnemonic(&Mnemonic::from(mnemonic)) {
             Err(e) => Err(anyhow!(e.to_string())),
             Ok(_) => Ok(()),
         }
