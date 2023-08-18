@@ -1140,6 +1140,19 @@ impl AccountManager {
             .remove_account(&account_id)
             .await?;
 
+        if crate::stronghold::PASSWORD_STORE
+            .get_or_init(crate::stronghold::default_password_store)
+            .lock()
+            .await
+            .get(&self.storage_folder.join(STRONGHOLD_FILENAME))
+            .is_some()
+        {
+            let mut runtime = crate::stronghold::actor_runtime().lock().await;
+            runtime
+                .loaded_client_paths
+                .insert(crate::stronghold::records_client_path());
+            crate::stronghold::save_snapshot(&mut runtime, &self.storage_folder.join(STRONGHOLD_FILENAME)).await?;
+        }
         Ok(())
     }
 
@@ -1217,6 +1230,19 @@ impl AccountManager {
                 account.save_messages(messages).await?;
                 // revert to original storage_path
                 account.set_storage_path(self.storage_path.clone());
+            }
+            if crate::stronghold::PASSWORD_STORE
+                .get_or_init(crate::stronghold::default_password_store)
+                .lock()
+                .await
+                .get(&stronghold_storage_path)
+                .is_some()
+            {
+                let mut runtime = crate::stronghold::actor_runtime().lock().await;
+                runtime
+                    .loaded_client_paths
+                    .insert(crate::stronghold::records_client_path());
+                crate::stronghold::save_snapshot(&mut runtime, &stronghold_storage_path).await?;
             }
             self.storage_folder.join(STRONGHOLD_FILENAME)
         };

@@ -37,10 +37,10 @@ use tokio::{
 use zeroize::{Zeroize, ZeroizeOnDrop, Zeroizing};
 
 #[derive(PartialEq, Eq, Zeroize, ZeroizeOnDrop)]
-struct Password(Zeroizing<Vec<u8>>);
+pub(crate) struct Password(Zeroizing<Vec<u8>>);
 
 type SnapshotToPasswordMap = HashMap<PathBuf, Arc<Password>>;
-static PASSWORD_STORE: OnceCell<Arc<Mutex<SnapshotToPasswordMap>>> = OnceCell::new();
+pub(crate) static PASSWORD_STORE: OnceCell<Arc<Mutex<SnapshotToPasswordMap>>> = OnceCell::new();
 static STRONGHOLD_ACCESS_STORE: OnceCell<Arc<Mutex<HashMap<PathBuf, Instant>>>> = OnceCell::new();
 static CURRENT_SNAPSHOT_PATH: OnceCell<Arc<Mutex<Option<PathBuf>>>> = OnceCell::new();
 static PASSWORD_CLEAR_INTERVAL: OnceCell<Arc<Mutex<Duration>>> = OnceCell::new();
@@ -51,7 +51,7 @@ const SECRET_VAULT_PATH: &str = "iota-wallet-secret";
 const SEED_RECORD_PATH: &str = "iota-wallet-seed";
 const DERIVE_OUTPUT_RECORD_PATH: &str = "iota-wallet-derived";
 
-fn records_client_path() -> Vec<u8> {
+pub(crate) fn records_client_path() -> Vec<u8> {
     b"iota-wallet-records".to_vec()
 }
 
@@ -211,7 +211,7 @@ pub async fn get_status(snapshot_path: &Path) -> Status {
     }
 }
 
-fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, Arc<Password>>>> {
+pub(crate) fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, Arc<Password>>>> {
     thread::spawn(|| {
         crate::spawn(async {
             loop {
@@ -329,7 +329,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub struct ActorRuntime {
     pub stronghold: Stronghold,
     spawned_client_paths: HashSet<Vec<u8>>,
-    loaded_client_paths: HashSet<Vec<u8>>,
+    pub(crate) loaded_client_paths: HashSet<Vec<u8>>,
 }
 
 pub fn actor_runtime() -> &'static Arc<Mutex<ActorRuntime>> {
@@ -405,7 +405,7 @@ async fn check_snapshot(
 }
 
 // saves the snapshot to the file system.
-async fn save_snapshot(runtime: &mut ActorRuntime, snapshot_path: &Path) -> Result<()> {
+pub(crate) async fn save_snapshot(runtime: &mut ActorRuntime, snapshot_path: &Path) -> Result<()> {
     stronghold_response_to_result(
         runtime
             .stronghold
@@ -717,9 +717,6 @@ pub async fn store_record(snapshot_path: &Path, key: &str, record: String) -> Re
             .write_to_store(Location::generic(key, key), record.as_bytes().to_vec(), None)
             .await,
     )?;
-
-    save_snapshot(&mut runtime, snapshot_path).await?;
-
     Ok(())
 }
 
@@ -729,8 +726,7 @@ pub async fn remove_record(snapshot_path: &Path, key: &str) -> Result<()> {
 
     load_records_actor(&mut runtime, snapshot_path, None).await?;
     stronghold_response_to_result(runtime.stronghold.delete_from_store(Location::generic(key, key)).await)?;
-
-    save_snapshot(&mut runtime, snapshot_path).await
+    Ok(())
 }
 
 #[cfg(test)]
