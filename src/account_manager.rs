@@ -1140,19 +1140,6 @@ impl AccountManager {
             .remove_account(&account_id)
             .await?;
 
-        if crate::stronghold::PASSWORD_STORE
-            .get_or_init(crate::stronghold::default_password_store)
-            .lock()
-            .await
-            .get(&self.storage_folder.join(STRONGHOLD_FILENAME))
-            .is_some()
-        {
-            let mut runtime = crate::stronghold::actor_runtime().lock().await;
-            runtime
-                .loaded_client_paths
-                .insert(crate::stronghold::records_client_path());
-            crate::stronghold::save_snapshot(&mut runtime, &self.storage_folder.join(STRONGHOLD_FILENAME)).await?;
-        }
         Ok(())
     }
 
