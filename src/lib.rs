@@ -266,6 +266,8 @@ mod test_utils {
         manager.store_mnemonic(signer_type, None).await.unwrap();
 
         #[cfg(feature = "stronghold")]
+        iota_stronghold::engine::snapshot::try_set_encrypt_work_factor(0).unwrap();
+        #[cfg(feature = "stronghold")]
         manager.set_stronghold_password("password").await.unwrap();
 
         #[cfg(feature = "stronghold")]
@@ -351,6 +353,8 @@ mod test_utils {
 
             let manager = manager_builder.with_skip_polling().finish().await.unwrap();
 
+            #[cfg(feature = "stronghold")]
+            iota_stronghold::engine::snapshot::try_set_encrypt_work_factor(0).unwrap();
             #[cfg(feature = "stronghold")]
             manager.set_stronghold_password("password").await.unwrap();
 
