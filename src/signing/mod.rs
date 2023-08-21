@@ -7,6 +7,7 @@ use crate::{
     account::Account,
     address::{Address, IotaAddress},
 };
+use crypto::keys::bip39::Mnemonic;
 use getset::Getters;
 use iota_client::bee_message::input::Input;
 use once_cell::sync::OnceCell;
@@ -94,7 +95,7 @@ pub trait Signer {
     /// Get the ledger status.
     async fn get_ledger_status(&self, is_simulator: bool) -> crate::LedgerStatus;
     /// Initialises a mnemonic.
-    async fn store_mnemonic(&mut self, storage_path: &Path, mnemonic: String) -> crate::Result<()>;
+    async fn store_mnemonic(&mut self, storage_path: &Path, mnemonic: Mnemonic) -> crate::Result<()>;
     /// Generates an address.
     async fn generate_address(
         &mut self,

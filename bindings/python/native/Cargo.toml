@@ -20,7 +20,8 @@ chrono = { version = "0.4.19", default-features = false }
 dict_derive = "0.3.0"
 futures = { version = "0.3.17", default-features = false }
 hex = { version = "0.4.3", default-features = false }
-iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "47e5f6684e2c59237c5fac88be85950a6e5eec4f", default-features = false, features = ["async", "mqtt", "tls"] }
+iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "f3e3fba11a2a0a21dc62df5c612414856cfceeb0", default-features = false, features = ["async", "mqtt", "tls"] }
+iota-crypto = { version = "0.23.0", default-features = false, features = ["bip39"]}
 iota-wallet = { path = "../../../", version = "0.2.0", features = ["stronghold", "ledger-nano", "ledger-nano-simulator"] }
 once_cell = { version = "1.8.0", default-features = false }
 serde = { version = "1.0.130", default-features = false, features = ["derive"] }

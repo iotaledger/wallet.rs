@@ -312,7 +312,7 @@ pub fn store_mnemonic(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     };
 
     let mnemonic = match cx.argument_opt(1) {
-        Some(_) => Some(cx.argument::<JsString>(1)?.value(&mut cx)),
+        Some(_) => Some(cx.argument::<JsString>(1)?.value(&mut cx).into()),
         None => None,
     };
 
@@ -699,4 +699,35 @@ pub fn get_broadcast_events(mut cx: FunctionContext) -> JsResult<JsArray> {
 
 pub fn get_broadcast_event_count(mut cx: FunctionContext) -> JsResult<JsNumber> {
     event_count_getter!(cx, get_broadcast_event_count)
+}
+
+pub fn migrate_stronghold_snapshot_v2_to_v3(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let current_path = cx.argument::<JsString>(0)?.value(&mut cx);
+    let current_password = cx.argument::<JsString>(1)?.value(&mut cx);
+    let salt = cx.argument::<JsString>(2)?.value(&mut cx);
+    let rounds = cx.argument::<JsNumber>(3)?.value(&mut cx);
+    let new_path = cx
+        .argument_opt(4)
+        .map(|opt| opt.downcast_or_throw::<JsString, _>(&mut cx))
+        .transpose()?
+        .map(|opt| opt.value(&mut cx));
+    let new_password = cx
+        .argument_opt(5)
+        .map(|opt| opt.downcast_or_throw::<JsString, _>(&mut cx))
+        .transpose()?
+        .map(|opt| opt.value(&mut cx));
+
+    AccountManager::migrate_stronghold_snapshot_v2_to_v3(
+        &current_path,
+        &current_password,
+        &salt,
+        rounds as u32,
+        new_path.as_ref(),
+        new_password.as_deref(),
+    )
+    .or_else(|e| {
+        cx.throw_error(serde_json::to_string(&e).expect("the response is generated manually, so unwrap is safe."))
+    })?;
+
+    Ok(cx.undefined())
 }

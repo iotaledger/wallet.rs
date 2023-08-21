@@ -20,10 +20,9 @@ use crate::{
 
 use std::{
     collections::{hash_map::DefaultHasher, HashMap, HashSet},
-    convert::TryInto,
     fs,
     hash::{Hash, Hasher},
-    num::NonZeroU64,
+    num::{NonZeroU32, NonZeroU64},
     ops::{Deref, Range},
     panic::AssertUnwindSafe,
     path::{Path, PathBuf},
@@ -36,6 +35,10 @@ use std::{
 };
 
 use chrono::prelude::*;
+use crypto::{
+    hashes::Digest,
+    keys::bip39::{Mnemonic, MnemonicRef},
+};
 use futures::FutureExt;
 use getset::Getters;
 use iota_client::bee_message::prelude::{Address, MessageId, OutputId};
@@ -95,11 +98,20 @@ enum ManagerStorage {
     Rocksdb,
 }
 
+// Unsecure, remove in the future. It's not safe to derive strong encryption keys from weak passwords using fixed salt
+// and low iteration count. Currently still needed for compatibility with old DBs, but here not really a security issue,
+// since the encrypted data is actually public information anyways(addresses, transactions...).
 fn storage_password_to_encryption_key(password: &str) -> [u8; 32] {
     let mut dk = [0; 64];
-    // safe to unwrap (rounds > 0)
-    crypto::keys::pbkdf::PBKDF2_HMAC_SHA512(password.as_bytes(), b"wallet.rs::storage", 100, &mut dk).unwrap();
+    crypto::keys::pbkdf::PBKDF2_HMAC_SHA512(
+        password.as_bytes(),
+        b"wallet.rs::storage",
+        // safe to unwrap, historically hardcoded to this value
+        NonZeroU32::new(100).unwrap(),
+        &mut dk,
+    );
     let key: [u8; 32] = dk[0..32][..].try_into().unwrap();
+
     key
 }
 
@@ -263,7 +275,6 @@ impl AccountManagerBuilder {
             accounts,
             stop_polling_sender: StdMutex::new(None),
             polling_handle: StdMutex::new(None),
-            generated_mnemonic: StdMutex::new(None),
             account_options: self.account_options,
             sync_accounts_lock,
             cached_migration_data: Default::default(),
@@ -353,7 +364,6 @@ pub struct AccountManager {
     accounts: AccountStore,
     stop_polling_sender: StdMutex<Option<BroadcastSender<()>>>,
     polling_handle: StdMutex<Option<thread::JoinHandle<()>>>,
-    generated_mnemonic: StdMutex<Option<String>>,
     account_options: AccountOptions,
     sync_accounts_lock: Arc<Mutex<()>>,
     cached_migration_data: Mutex<HashMap<u64, CachedMigrationData>>,
@@ -378,7 +388,6 @@ impl Clone for AccountManager {
                     .clone(),
             ),
             polling_handle: StdMutex::new(None),
-            generated_mnemonic: StdMutex::new(None),
             account_options: self.account_options,
             sync_accounts_lock: self.sync_accounts_lock.clone(),
             cached_migration_data: Default::default(),
@@ -394,14 +403,16 @@ impl Drop for AccountManager {
 }
 
 #[cfg(feature = "stronghold")]
-fn stronghold_password<P: Into<String>>(password: P) -> Vec<u8> {
-    let mut password = password.into();
-    let mut dk = [0; 64];
-    // safe to unwrap because rounds > 0
-    crypto::keys::pbkdf::PBKDF2_HMAC_SHA512(password.as_bytes(), b"wallet.rs", 100, &mut dk).unwrap();
+fn stronghold_password<P: Into<String>>(password: P) -> zeroize::Zeroizing<Vec<u8>> {
+    let mut digest = crypto::hashes::blake2b::Blake2b256::new();
+    let mut password: String = password.into();
+
+    digest.update(password.as_bytes());
+    let password_hash = zeroize::Zeroizing::new(digest.finalize().to_vec());
+
     password.zeroize();
-    let password: [u8; 32] = dk[0..32][..].try_into().unwrap();
-    password.to_vec()
+
+    password_hash
 }
 
 impl AccountManager {
@@ -1059,7 +1070,7 @@ impl AccountManager {
 
     /// Stores a mnemonic for the given signer type.
     /// If the mnemonic is not provided, we'll generate one.
-    pub async fn store_mnemonic(&self, signer_type: SignerType, mnemonic: Option<String>) -> crate::Result<()> {
+    pub async fn store_mnemonic(&self, signer_type: SignerType, mnemonic: Option<Mnemonic>) -> crate::Result<()> {
         let mnemonic = match mnemonic {
             Some(m) => {
                 self.verify_mnemonic(&m)?;
@@ -1072,52 +1083,25 @@ impl AccountManager {
         let mut signer = signer.lock().await;
         signer.store_mnemonic(&self.storage_path, mnemonic).await?;
 
-        if let Some(mut mnemonic) = self
-            .generated_mnemonic
-            .lock()
-            .map_err(|_| crate::Error::PoisonError)?
-            .take()
-        {
-            mnemonic.zeroize();
-        }
-
         Ok(())
     }
 
     /// Generates a new mnemonic.
-    pub fn generate_mnemonic(&self) -> crate::Result<String> {
+    pub fn generate_mnemonic(&self) -> crate::Result<Mnemonic> {
         let mut entropy = [0u8; 32];
         crypto::utils::rand::fill(&mut entropy).map_err(|e| crate::Error::MnemonicEncode(format!("{:?}", e)))?;
         let mnemonic = crypto::keys::bip39::wordlist::encode(&entropy, &crypto::keys::bip39::wordlist::ENGLISH)
             .map_err(|e| crate::Error::MnemonicEncode(format!("{:?}", e)))?;
-        self.generated_mnemonic
-            .lock()
-            .map_err(|_| crate::Error::PoisonError)?
-            .replace(mnemonic.clone());
         Ok(mnemonic)
     }
 
     /// Checks is the mnemonic is valid. If a mnemonic was generated with `generate_mnemonic()`, the mnemonic here
     /// should match the generated.
-    pub fn verify_mnemonic<S: AsRef<str>>(&self, mnemonic: S) -> crate::Result<()> {
+    pub fn verify_mnemonic(&self, mnemonic: &MnemonicRef) -> crate::Result<()> {
         // first we check if the mnemonic is valid to give meaningful errors
-        crypto::keys::bip39::wordlist::verify(mnemonic.as_ref(), &crypto::keys::bip39::wordlist::ENGLISH)
+        crypto::keys::bip39::wordlist::verify(mnemonic, &crypto::keys::bip39::wordlist::ENGLISH)
             // TODO: crypto::bip39::wordlist::Error should impl Display
             .map_err(|e| crate::Error::InvalidMnemonic(format!("{:?}", e)))?;
-
-        // then we check if the provided mnemonic matches the mnemonic generated with `generate_mnemonic`
-        if let Some(generated_mnemonic) = self
-            .generated_mnemonic
-            .lock()
-            .map_err(|_| crate::Error::PoisonError)?
-            .as_ref()
-        {
-            if generated_mnemonic != mnemonic.as_ref() {
-                return Err(crate::Error::InvalidMnemonic(
-                    "doesn't match the generated mnemonic".to_string(),
-                ));
-            }
-        }
         Ok(())
     }
 
@@ -1234,6 +1218,19 @@ impl AccountManager {
                 account.save_messages(messages).await?;
                 // revert to original storage_path
                 account.set_storage_path(self.storage_path.clone());
+            }
+            if crate::stronghold::PASSWORD_STORE
+                .get_or_init(crate::stronghold::default_password_store)
+                .lock()
+                .await
+                .get(&stronghold_storage_path)
+                .is_some()
+            {
+                let mut runtime = crate::stronghold::actor_runtime().lock().await;
+                runtime
+                    .loaded_client_paths
+                    .insert(crate::stronghold::records_client_path());
+                crate::stronghold::save_snapshot(&mut runtime, &stronghold_storage_path).await?;
             }
             self.storage_folder.join(STRONGHOLD_FILENAME)
         };

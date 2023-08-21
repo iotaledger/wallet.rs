@@ -12,3 +12,4 @@ book
 wallet.log
 /.idea
 alice-database
+!**/tests/**/**.stronghold

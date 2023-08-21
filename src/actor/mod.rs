@@ -8,6 +8,7 @@ pub use crate::{
     message::{Message as WalletMessage, Transfer},
     Result,
 };
+use crypto::keys::bip39::Mnemonic;
 use futures::{Future, FutureExt};
 use iota_client::bee_message::MessageId;
 use iota_migration::{
@@ -160,17 +161,18 @@ impl WalletMessageHandler {
             MessageType::GenerateMnemonic => convert_panics(|| {
                 self.account_manager
                     .generate_mnemonic()
-                    .map(ResponseType::GeneratedMnemonic)
+                    .map(|mnemonic| ResponseType::GeneratedMnemonic((**mnemonic).to_owned().into()))
             }),
             MessageType::VerifyMnemonic(mnemonic) => convert_panics(|| {
+                let mnemonic = Mnemonic::from(mnemonic.clone());
                 self.account_manager
-                    .verify_mnemonic(mnemonic)
+                    .verify_mnemonic(&mnemonic)
                     .map(|_| ResponseType::VerifiedMnemonic)
             }),
             MessageType::StoreMnemonic { signer_type, mnemonic } => {
                 convert_async_panics(|| async {
                     self.account_manager
-                        .store_mnemonic(signer_type.clone(), mnemonic.clone())
+                        .store_mnemonic(signer_type.clone(), mnemonic.clone().map(Mnemonic::from))
                         .await
                         .map(|_| ResponseType::StoredMnemonic)
                 })

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::types::*;
+use crypto::keys::bip39::Mnemonic;
 use iota_client::bee_message::MessageId as RustMessageId;
 use iota_wallet::{
     account_manager::{AccountManager as RustAccountManager, MigrationDataFinder},
@@ -265,7 +266,7 @@ impl AccountManager {
             self.account_manager
                 .as_ref()
                 .expect("account_manager got destroyed")
-                .store_mnemonic(signer_type, mnemonic)
+                .store_mnemonic(signer_type, mnemonic.map(Mnemonic::from))
                 .await
         })?)
     }
@@ -276,17 +277,18 @@ impl AccountManager {
             .account_manager
             .as_ref()
             .expect("account_manager got destroyed")
-            .generate_mnemonic()?)
+            .generate_mnemonic()?
+            .to_string())
     }
 
     /// Checks is the mnemonic is valid. If a mnemonic was generated with `generate_mnemonic()`, the mnemonic here
     /// should match the generated.
-    fn verify_mnemonic(&mut self, mnemonic: &str) -> Result<()> {
+    fn verify_mnemonic(&mut self, mnemonic: String) -> Result<()> {
         Ok(self
             .account_manager
             .as_ref()
             .expect("account_manager got destroyed")
-            .verify_mnemonic(mnemonic)?)
+            .verify_mnemonic(&Mnemonic::from(mnemonic))?)
     }
 
     /// Adds a new account.

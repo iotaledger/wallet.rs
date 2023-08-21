@@ -3,13 +3,20 @@
 
 //! Stronghold interface abstractions over an account
 
-use crypto::hashes::{blake2b::Blake2b256, Digest};
+mod migration;
 
-use crypto::keys::slip10::Chain;
+use crypto::{
+    hashes::{blake2b::Blake2b256, Digest},
+    keys::{
+        bip39::{Mnemonic, Passphrase},
+        slip10::Segment,
+    },
+};
 use getset::Getters;
 use iota_client::bee_message::prelude::{Address, Ed25519Address, Ed25519Signature};
 use iota_stronghold::{
-    Location, ProcResult, Procedure, RecordHint, ResultMessage, SLIP10DeriveInput, Stronghold, StrongholdFlags,
+    Location, ProcResult, Procedure, RecordHint, ResultMessage, SLIP10Chain, SLIP10DeriveInput, Stronghold,
+    StrongholdFlags,
 };
 use once_cell::sync::{Lazy, OnceCell};
 use riker::actors::*;
@@ -27,14 +34,13 @@ use tokio::{
     sync::Mutex,
     time::{sleep, Duration},
 };
-use zeroize::Zeroize;
+use zeroize::{Zeroize, ZeroizeOnDrop, Zeroizing};
 
-#[derive(PartialEq, Eq, Zeroize)]
-#[zeroize(drop)]
-struct Password(Vec<u8>);
+#[derive(PartialEq, Eq, Zeroize, ZeroizeOnDrop)]
+pub(crate) struct Password(Zeroizing<Vec<u8>>);
 
 type SnapshotToPasswordMap = HashMap<PathBuf, Arc<Password>>;
-static PASSWORD_STORE: OnceCell<Arc<Mutex<SnapshotToPasswordMap>>> = OnceCell::new();
+pub(crate) static PASSWORD_STORE: OnceCell<Arc<Mutex<SnapshotToPasswordMap>>> = OnceCell::new();
 static STRONGHOLD_ACCESS_STORE: OnceCell<Arc<Mutex<HashMap<PathBuf, Instant>>>> = OnceCell::new();
 static CURRENT_SNAPSHOT_PATH: OnceCell<Arc<Mutex<Option<PathBuf>>>> = OnceCell::new();
 static PASSWORD_CLEAR_INTERVAL: OnceCell<Arc<Mutex<Duration>>> = OnceCell::new();
@@ -45,7 +51,7 @@ const SECRET_VAULT_PATH: &str = "iota-wallet-secret";
 const SEED_RECORD_PATH: &str = "iota-wallet-seed";
 const DERIVE_OUTPUT_RECORD_PATH: &str = "iota-wallet-derived";
 
-fn records_client_path() -> Vec<u8> {
+pub(crate) fn records_client_path() -> Vec<u8> {
     b"iota-wallet-records".to_vec()
 }
 
@@ -205,7 +211,7 @@ pub async fn get_status(snapshot_path: &Path) -> Status {
     }
 }
 
-fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, Arc<Password>>>> {
+pub(crate) fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, Arc<Password>>>> {
     thread::spawn(|| {
         crate::spawn(async {
             loop {
@@ -253,7 +259,7 @@ fn default_password_store() -> Arc<Mutex<HashMap<PathBuf, Arc<Password>>>> {
     Default::default()
 }
 
-pub async fn set_password<S: AsRef<Path>>(snapshot_path: S, password: Vec<u8>) {
+pub async fn set_password<S: AsRef<Path>>(snapshot_path: S, password: Zeroizing<Vec<u8>>) {
     let mut passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
     let mut access_store = STRONGHOLD_ACCESS_STORE.get_or_init(Default::default).lock().await;
 
@@ -279,20 +285,44 @@ async fn get_password(snapshot_path: &Path) -> Result<Arc<Password>> {
         .ok_or(Error::PasswordNotSet)
 }
 
+/// Stronghold error type.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    /// Stronghold error.
     #[error("`{0}`")]
     Stronghold(#[from] iota_stronghold::Error),
+    /// Record not found in the stronghold snapshot.
     #[error("record not found")]
     RecordNotFound,
+    /// Failed to perform an action.
     #[error("failed to perform action: `{0}`")]
     FailedToPerformAction(String),
+    /// Stronghold snapshot password not set.
     #[error("snapshot password not set")]
     PasswordNotSet,
+    /// Invalid address or account index.
     #[error("invalid address or account index {0}")]
     TryFromInt(#[from] TryFromIntError),
+    /// The derived seed of a mnemonic was already stored.
     #[error("the mnemonic was already stored")]
     MnemonicAlreadyStored,
+    #[error("stronghold migration error: {0}")]
+    /// Stronghold migration error.
+    Migration(#[from] iota_stronghold::engine::snapshot::migration::Error),
+    /// Invalid number of hash rounds.
+    #[error("invalid number of hash rounds: {0}")]
+    InvalidRounds(u32),
+    /// Path already exists.
+    #[error("path already exists: {0}")]
+    PathAlreadyExists(std::path::PathBuf),
+    /// Unsupported stronghold snapshot version, migration required.
+    #[error("unsupported snapshot version, migration required")]
+    UnsupportedSnapshotVersion {
+        /// Found version
+        found: u16,
+        /// Expected version
+        expected: u16,
+    },
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -300,7 +330,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub struct ActorRuntime {
     pub stronghold: Stronghold,
     spawned_client_paths: HashSet<Vec<u8>>,
-    loaded_client_paths: HashSet<Vec<u8>>,
+    pub(crate) loaded_client_paths: HashSet<Vec<u8>>,
 }
 
 pub fn actor_runtime() -> &'static Arc<Mutex<ActorRuntime>> {
@@ -376,7 +406,7 @@ async fn check_snapshot(
 }
 
 // saves the snapshot to the file system.
-async fn save_snapshot(runtime: &mut ActorRuntime, snapshot_path: &Path) -> Result<()> {
+pub(crate) async fn save_snapshot(runtime: &mut ActorRuntime, snapshot_path: &Path) -> Result<()> {
     stronghold_response_to_result(
         runtime
             .stronghold
@@ -389,7 +419,7 @@ async fn save_snapshot(runtime: &mut ActorRuntime, snapshot_path: &Path) -> Resu
     )
 }
 
-async fn clear_stronghold_cache(mut runtime: &mut ActorRuntime, persist: bool) -> Result<()> {
+async fn clear_stronghold_cache(runtime: &mut ActorRuntime, persist: bool) -> Result<()> {
     if let Some(curr_snapshot_path) = CURRENT_SNAPSHOT_PATH
         .get_or_init(Default::default)
         .lock()
@@ -463,12 +493,32 @@ pub async fn unload_snapshot(storage_path: &Path, persist: bool) -> Result<()> {
     Ok(())
 }
 
-pub async fn load_snapshot(snapshot_path: &Path, password: Vec<u8>) -> Result<()> {
+pub async fn load_snapshot(snapshot_path: &Path, password: Zeroizing<Vec<u8>>) -> Result<()> {
     let mut runtime = actor_runtime().lock().await;
-    load_snapshot_internal(&mut runtime, snapshot_path, password).await
+
+    load_snapshot_internal(&mut runtime, snapshot_path, password)
+        .await
+        .map_err(|e| match &e {
+            Error::FailedToPerformAction(msg) => {
+                if msg.contains("UnsupportedVersion") {
+                    if msg.contains("expected: [3, 0], found: [2, 0]") {
+                        Error::UnsupportedSnapshotVersion { found: 2, expected: 3 }
+                    } else {
+                        panic!("unsupported version mismatch");
+                    }
+                } else {
+                    e
+                }
+            }
+            _ => e,
+        })
 }
 
-async fn load_snapshot_internal(runtime: &mut ActorRuntime, snapshot_path: &Path, password: Vec<u8>) -> Result<()> {
+async fn load_snapshot_internal(
+    runtime: &mut ActorRuntime,
+    snapshot_path: &Path,
+    password: Zeroizing<Vec<u8>>,
+) -> Result<()> {
     if CURRENT_SNAPSHOT_PATH
         .get_or_init(Default::default)
         .lock()
@@ -492,7 +542,11 @@ async fn load_snapshot_internal(runtime: &mut ActorRuntime, snapshot_path: &Path
 }
 
 /// Changes the snapshot password.
-pub async fn change_password(snapshot_path: &Path, current_password: Vec<u8>, new_password: Vec<u8>) -> Result<()> {
+pub async fn change_password(
+    snapshot_path: &Path,
+    current_password: Zeroizing<Vec<u8>>,
+    new_password: Zeroizing<Vec<u8>>,
+) -> Result<()> {
     let mut runtime = actor_runtime().lock().await;
     load_snapshot_internal(&mut runtime, snapshot_path, current_password).await?;
 
@@ -508,7 +562,7 @@ pub async fn change_password(snapshot_path: &Path, current_password: Vec<u8>, ne
     Ok(())
 }
 
-pub async fn store_mnemonic(snapshot_path: &Path, mnemonic: String) -> Result<()> {
+pub async fn store_mnemonic(snapshot_path: &Path, mnemonic: Mnemonic) -> Result<()> {
     let mut runtime = actor_runtime().lock().await;
     check_snapshot(&mut runtime, snapshot_path, None).await?;
     load_private_data_actor(&mut runtime, snapshot_path, None).await?;
@@ -522,7 +576,7 @@ pub async fn store_mnemonic(snapshot_path: &Path, mnemonic: String) -> Result<()
         .stronghold
         .runtime_exec(Procedure::BIP39Recover {
             mnemonic,
-            passphrase: None,
+            passphrase: Passphrase::default(),
             output: mnemonic_location,
             hint: RecordHint::new("wallet.rs-seed").unwrap(),
         })
@@ -536,7 +590,7 @@ pub async fn store_mnemonic(snapshot_path: &Path, mnemonic: String) -> Result<()
     }
 }
 
-async fn derive(runtime: &mut ActorRuntime, chain: Chain) -> Result<Location> {
+async fn derive(runtime: &mut ActorRuntime, chain: SLIP10Chain) -> Result<Location> {
     let derive_output = Location::generic(SECRET_VAULT_PATH, DERIVE_OUTPUT_RECORD_PATH);
     let res = runtime
         .stronghold
@@ -579,19 +633,22 @@ pub async fn generate_address(
     check_snapshot(&mut runtime, snapshot_path, None).await?;
     load_private_data_actor(&mut runtime, snapshot_path, None).await?;
 
-    let chain = Chain::from_u32_hardened(vec![
+    let chain = [
         44,
         4218,
         account_index.try_into()?,
         internal as u32,
         address_index.try_into()?,
-    ]);
+    ]
+    .into_iter()
+    .map(|s| Segment::harden(s).into())
+    .collect();
 
     let derived_location = derive(&mut runtime, chain).await?;
     let public_key = get_public_key(&mut runtime, derived_location).await?;
 
     // Hash the public key to get the address
-    let hash = Blake2b256::digest(&public_key);
+    let hash = Blake2b256::digest(public_key);
 
     let ed25519_address = Ed25519Address::new(hash.try_into().unwrap());
     let address = Address::Ed25519(ed25519_address);
@@ -609,13 +666,16 @@ pub async fn sign_transaction(
     check_snapshot(&mut runtime, snapshot_path, None).await?;
     load_private_data_actor(&mut runtime, snapshot_path, None).await?;
 
-    let chain = Chain::from_u32_hardened(vec![
+    let chain = [
         44,
         4218,
         account_index.try_into()?,
         internal as u32,
         address_index.try_into()?,
-    ]);
+    ]
+    .into_iter()
+    .map(|s| Segment::harden(s).into())
+    .collect();
 
     let derived_location = derive(&mut runtime, chain).await?;
     let public_key = get_public_key(&mut runtime, derived_location.clone()).await?;
@@ -658,9 +718,6 @@ pub async fn store_record(snapshot_path: &Path, key: &str, record: String) -> Re
             .write_to_store(Location::generic(key, key), record.as_bytes().to_vec(), None)
             .await,
     )?;
-
-    save_snapshot(&mut runtime, snapshot_path).await?;
-
     Ok(())
 }
 
@@ -670,8 +727,7 @@ pub async fn remove_record(snapshot_path: &Path, key: &str) -> Result<()> {
 
     load_records_actor(&mut runtime, snapshot_path, None).await?;
     stronghold_response_to_result(runtime.stronghold.delete_from_store(Location::generic(key, key)).await)?;
-
-    save_snapshot(&mut runtime, snapshot_path).await
+    Ok(())
 }
 
 #[cfg(test)]
@@ -684,6 +740,7 @@ mod tests {
     rusty_fork_test! {
         #[test]
         fn password_expires() {
+            iota_stronghold::engine::snapshot::try_set_encrypt_work_factor(0).unwrap();
             let runtime = tokio::runtime::Runtime::new().unwrap();
             runtime.block_on(async {
                 let interval = 500;
@@ -691,7 +748,7 @@ mod tests {
                 let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).map(char::from).take(10).collect();
                 std::fs::create_dir_all("./test-storage").unwrap();
                 let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
-                super::load_snapshot(&snapshot_path, [0; 32].to_vec()).await.unwrap();
+                super::load_snapshot(&snapshot_path, [0; 32].to_vec().into()).await.unwrap();
 
                 std::thread::sleep(Duration::from_millis(interval * 3));
                 let res = super::get_record(&snapshot_path, "passwordexpires").await;
@@ -712,16 +769,17 @@ mod tests {
     rusty_fork_test! {
         #[test]
         fn action_keeps_password() {
+            iota_stronghold::engine::snapshot::try_set_encrypt_work_factor(0).unwrap();
             let runtime = tokio::runtime::Runtime::new().unwrap();
             runtime.block_on(async {
-                let interval = Duration::from_millis(900);
+                let interval = Duration::from_millis(3000);
                 super::set_password_clear_interval(interval).await;
                 let snapshot_path: String = thread_rng().sample_iter(&Alphanumeric).map(char::from).take(10).collect();
                 std::fs::create_dir_all("./test-storage").unwrap();
                 let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
-                super::load_snapshot(&snapshot_path, [0; 32].to_vec()).await.unwrap();
+                super::load_snapshot(&snapshot_path, [0; 32].to_vec().into()).await.unwrap();
 
-                for i in 1..6 {
+                for i in 1..3 {
                     let instant = std::time::Instant::now();
                     super::store_record(
                         &snapshot_path,
@@ -741,7 +799,7 @@ mod tests {
                     } else {
                         // if the elapsed > interval, set the password again
                         // this might happen if the test is stopped by another thread
-                        super::set_password(&snapshot_path, [0; 32].to_vec()).await;
+                        super::set_password(&snapshot_path, [0; 32].to_vec().into()).await;
                     }
                 }
 
@@ -767,6 +825,7 @@ mod tests {
 
     #[tokio::test]
     async fn write_and_read() -> super::Result<()> {
+        iota_stronghold::engine::snapshot::try_set_encrypt_work_factor(0).unwrap();
         let snapshot_path: String = thread_rng()
             .sample_iter(&Alphanumeric)
             .map(char::from)
@@ -774,7 +833,7 @@ mod tests {
             .collect();
         std::fs::create_dir_all("./test-storage").unwrap();
         let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
-        super::load_snapshot(&snapshot_path, [0; 32].to_vec()).await?;
+        super::load_snapshot(&snapshot_path, [0; 32].to_vec().into()).await?;
 
         let id = "writeandreadtest".to_string();
         let data = "record data";
@@ -787,6 +846,7 @@ mod tests {
 
     #[tokio::test]
     async fn write_and_delete() -> super::Result<()> {
+        iota_stronghold::engine::snapshot::try_set_encrypt_work_factor(0).unwrap();
         let snapshot_path: String = thread_rng()
             .sample_iter(&Alphanumeric)
             .map(char::from)
@@ -794,7 +854,7 @@ mod tests {
             .collect();
         std::fs::create_dir_all("./test-storage").unwrap();
         let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
-        super::load_snapshot(&snapshot_path, [0; 32].to_vec()).await?;
+        super::load_snapshot(&snapshot_path, [0; 32].to_vec().into()).await?;
 
         let id = "writeanddeleteid".to_string();
         let data = "record data";
@@ -806,6 +866,7 @@ mod tests {
 
     #[tokio::test]
     async fn write_and_read_multiple_snapshots() {
+        iota_stronghold::engine::snapshot::try_set_encrypt_work_factor(0).unwrap();
         let mut snapshot_saves = vec![];
 
         for i in 1..3 {
@@ -816,7 +877,9 @@ mod tests {
                 .collect();
             std::fs::create_dir_all("./test-storage").unwrap();
             let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
-            super::load_snapshot(&snapshot_path, [0; 32].to_vec()).await.unwrap();
+            super::load_snapshot(&snapshot_path, [0; 32].to_vec().into())
+                .await
+                .unwrap();
 
             let id = format!("multiplesnapshots{}", i);
             let data: String = thread_rng()
@@ -840,6 +903,7 @@ mod tests {
 
     #[tokio::test]
     async fn change_password() -> super::Result<()> {
+        iota_stronghold::engine::snapshot::try_set_encrypt_work_factor(0).unwrap();
         let snapshot_path: String = thread_rng()
             .sample_iter(&Alphanumeric)
             .map(char::from)
@@ -848,21 +912,22 @@ mod tests {
         std::fs::create_dir_all("./test-storage").unwrap();
         let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
         let old_password = [5; 32].to_vec();
-        super::load_snapshot(&snapshot_path, old_password.to_vec()).await?;
+        super::load_snapshot(&snapshot_path, old_password.to_vec().into()).await?;
         let id = "writeanddeleteid".to_string();
         let data = "record data";
         super::store_record(&snapshot_path, &id, data.to_string()).await?;
 
         let new_password = [6; 32].to_vec();
-        super::change_password(&snapshot_path, old_password, new_password.to_vec()).await?;
+        super::change_password(&snapshot_path, old_password.into(), new_password.to_vec().into()).await?;
 
-        super::load_snapshot(&snapshot_path, new_password).await?;
+        super::load_snapshot(&snapshot_path, new_password.into()).await?;
 
         Ok(())
     }
 
     #[tokio::test]
     async fn change_password_invalid() -> super::Result<()> {
+        iota_stronghold::engine::snapshot::try_set_encrypt_work_factor(0).unwrap();
         let snapshot_path: String = thread_rng()
             .sample_iter(&Alphanumeric)
             .map(char::from)
@@ -870,14 +935,14 @@ mod tests {
             .collect();
         std::fs::create_dir_all("./test-storage").unwrap();
         let snapshot_path = PathBuf::from(format!("./test-storage/{}.stronghold", snapshot_path));
-        super::load_snapshot(&snapshot_path, [5; 32].to_vec()).await?;
+        super::load_snapshot(&snapshot_path, [5; 32].to_vec().into()).await?;
         let id = "writeanddeleteid".to_string();
         let data = "record data";
         super::store_record(&snapshot_path, &id, data.to_string()).await?;
 
         let wrong_password = [16; 32].to_vec();
         let new_password = [6; 32].to_vec();
-        match super::change_password(&snapshot_path, wrong_password, new_password.to_vec()).await {
+        match super::change_password(&snapshot_path, wrong_password.into(), new_password.to_vec().into()).await {
             Err(super::Error::FailedToPerformAction(_)) => {}
             _ => panic!("expected a stronghold error when changing password"),
         }

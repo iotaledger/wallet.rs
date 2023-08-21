@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use anyhow::anyhow;
+use crypto::keys::bip39::Mnemonic;
 use iota_wallet::{
     account_manager::{
         AccountManager as AccountManagerRust, AccountManagerBuilder as AccountManagerBuilderRust,
@@ -215,7 +216,7 @@ impl AccountManager {
     pub fn generate_mnemonic(&mut self) -> Result<String> {
         match self.manager.generate_mnemonic() {
             Err(e) => Err(anyhow!(e.to_string())),
-            Ok(mnemonic) => Ok(mnemonic),
+            Ok(mnemonic) => Ok(mnemonic.to_string()),
         }
     }
 
@@ -223,7 +224,7 @@ impl AccountManager {
         let signer_type = signer_type_enum_to_type(signer_type_enum);
         let opt_mnemonic = match mnemonic.as_str() {
             "" => None,
-            _ => Some(mnemonic),
+            _ => Some(Mnemonic::from(mnemonic)),
         };
 
         match crate::block_on(async move { self.manager.store_mnemonic(signer_type, opt_mnemonic).await }) {
@@ -233,7 +234,7 @@ impl AccountManager {
     }
 
     pub fn verify_mnemonic(&mut self, mnemonic: String) -> Result<()> {
-        match self.manager.verify_mnemonic(mnemonic) {
+        match self.manager.verify_mnemonic(&Mnemonic::from(mnemonic)) {
             Err(e) => Err(anyhow!(e.to_string())),
             Ok(_) => Ok(()),
         }
