@@ -1,3 +1,6 @@
+> **Warning**
+> Deprecated - The cli-wallet has been moved to https://github.com/iotaledger/iota-sdk
+
 # IOTA Stardust CLI Wallet
 
 ![cli-wallet](./documentation/static/img/cli-wallet.gif)

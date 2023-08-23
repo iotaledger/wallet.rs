@@ -1,3 +1,6 @@
+> **Warning**
+> Deprecated - The wallet has been moved to https://github.com/iotaledger/iota-sdk
+
 # IOTA Wallet Library
 
 [![status](https://img.shields.io/badge/Status-Alpha-yellow.svg)](https://github.com/iotaledger/wallet.rs)
