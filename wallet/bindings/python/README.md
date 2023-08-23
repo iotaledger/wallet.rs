@@ -1,3 +1,6 @@
+> **Warning**
+> Deprecated - The wallet has been moved to https://github.com/iotaledger/iota-sdk
+
 # IOTA Wallet Library - Python binding
 
 Python binding to the iota.rs wallet library.

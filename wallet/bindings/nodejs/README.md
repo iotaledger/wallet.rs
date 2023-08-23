@@ -1,3 +1,6 @@
+> **Warning**
+> Deprecated - The wallet has been moved to https://github.com/iotaledger/iota-sdk
+
 # IOTA Wallet Library - Node.js binding
 
 ## Requirements (only for building the binary yourself)
