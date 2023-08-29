@@ -141,12 +141,12 @@ plugins: [
 ### Web Usage
 
 ```javascript
-import init, { AccountManager, CoinType } from "@iota/wallet-wasm/web";
+import * as wallet from "@iota/wallet-wasm/web";
 
-init().then(() => {
-  const manager = new AccountManager({
+wallet.init().then(() => {
+  const manager = new wallet.AccountManager({
         storagePath: './my-database',
-        coinType: CoinType.Shimmer,
+        coinType: wallet.CoinType.Shimmer,
         clientOptions: {
             nodes: ['https://api.testnet.shimmer.network'],
         },
@@ -167,5 +167,5 @@ init().then(() => {
 // Default path to load is "iota_wallet_wasm_bg.wasm", 
 // but you can override it by passing a path explicitly.
 //
-// init("./static/iota_wallet_wasm_bg.wasm").then(...)
+// wallet.init("./static/iota_wallet_wasm_bg.wasm").then(...)
 ```
